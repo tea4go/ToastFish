@@ -265,39 +265,6 @@ namespace ToastFish
 
 
 
-            if (Select.TABLE_NAME == "CET4_1")
-                CET4_1.PerformClick();
-            else if (Select.TABLE_NAME == "CET4_3")
-                CET4_3.PerformClick();
-            else if (Select.TABLE_NAME == "CET6_1")
-                CET6_1.PerformClick();
-            else if (Select.TABLE_NAME == "CET6_3")
-                CET6_3.PerformClick();
-            else if (Select.TABLE_NAME == "GMAT_3")
-                GMAT_3.PerformClick();
-            else if (Select.TABLE_NAME == "GRE_2")
-                GRE_2.PerformClick();
-            else if (Select.TABLE_NAME == "IELTS_3")
-                IELTS_3.PerformClick();
-            else if (Select.TABLE_NAME == "TOEFL_2")
-                TOEFL_2.PerformClick();
-            else if (Select.TABLE_NAME == "SAT_2")
-                SAT_2.PerformClick();
-            else if (Select.TABLE_NAME == "KaoYan_1")
-                KaoYan_1.PerformClick();
-            else if (Select.TABLE_NAME == "KaoYan_2")
-                KaoYan_2.PerformClick();
-            else if (Select.TABLE_NAME == "Level4_1")
-                Level4_1.PerformClick();
-            else if (Select.TABLE_NAME == "Level4luan_2")
-                Level4luan_2.PerformClick();
-            else if (Select.TABLE_NAME == "Level8_1")
-                Level8_1.PerformClick();
-            else if (Select.TABLE_NAME == "Level8luan_2")
-                Level8luan_2.PerformClick();
-            else if (Select.TABLE_NAME == "Goin")
-                Goin.PerformClick();
-
             Cms.Items.Add(Begin);
             //Cms.Items.Add(SetNumber);
             //Cms.Items.Add(SetEngType);
@@ -339,7 +306,41 @@ namespace ToastFish
             ((ToolStripDropDownItem)Cms.Items[6]).DropDownItems.Add(Shortcuts);
             ((ToolStripDropDownItem)Cms.Items[6]).DropDownItems.Add(Use);
             ((ToolStripDropDownItem)Cms.Items[6]).DropDownItems.Add(Site);
-            ((ToolStripDropDownItem)Cms.Items[6]).DropDownItems.Add(Pdf);            
+            ((ToolStripDropDownItem)Cms.Items[6]).DropDownItems.Add(Pdf);
+
+            // 同步当前词库必须放在菜单项全部添加完成之后，否则中途一旦卡住，托盘菜单就是空的
+            if (Select.TABLE_NAME == "CET4_1")
+                CET4_1.PerformClick();
+            else if (Select.TABLE_NAME == "CET4_3")
+                CET4_3.PerformClick();
+            else if (Select.TABLE_NAME == "CET6_1")
+                CET6_1.PerformClick();
+            else if (Select.TABLE_NAME == "CET6_3")
+                CET6_3.PerformClick();
+            else if (Select.TABLE_NAME == "GMAT_3")
+                GMAT_3.PerformClick();
+            else if (Select.TABLE_NAME == "GRE_2")
+                GRE_2.PerformClick();
+            else if (Select.TABLE_NAME == "IELTS_3")
+                IELTS_3.PerformClick();
+            else if (Select.TABLE_NAME == "TOEFL_2")
+                TOEFL_2.PerformClick();
+            else if (Select.TABLE_NAME == "SAT_2")
+                SAT_2.PerformClick();
+            else if (Select.TABLE_NAME == "KaoYan_1")
+                KaoYan_1.PerformClick();
+            else if (Select.TABLE_NAME == "KaoYan_2")
+                KaoYan_2.PerformClick();
+            else if (Select.TABLE_NAME == "Level4_1")
+                Level4_1.PerformClick();
+            else if (Select.TABLE_NAME == "Level4luan_2")
+                Level4luan_2.PerformClick();
+            else if (Select.TABLE_NAME == "Level8_1")
+                Level8_1.PerformClick();
+            else if (Select.TABLE_NAME == "Level8luan_2")
+                Level8luan_2.PerformClick();
+            else if (Select.TABLE_NAME == "Goin")
+                Goin.PerformClick();
         }
 
         private void Begin_Click(object sender, EventArgs e)
@@ -569,7 +570,11 @@ namespace ToastFish
             // else
             //{
             List<int> res = Se.SelectCount();
-                pushWords.PushMessage("当前词库：" + sender.ToString() + "\n当前进度：" + res[0].ToString() + "/" + res[1].ToString());
+            string message = "当前词库：" + sender.ToString() + "\n当前进度：" + res[0].ToString() + "/" + res[1].ToString();
+            // 通知平台无响应时 ToastContentBuilder().Show() 会永久阻塞，必须放后台线程，否则会卡死 UI 线程
+            Thread notifyThread = new Thread(() => pushWords.PushMessage(message));
+            notifyThread.IsBackground = true;
+            notifyThread.Start();
            // }
         }
 
