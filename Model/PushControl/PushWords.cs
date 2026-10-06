@@ -605,13 +605,26 @@ namespace ToastFish.Model.PushControl
 
         public void UnorderWord(Object Num)
         {
-            int Number = (int)Num;
+            RunUnorderWord((int)Num, false);
+        }
+
+        public void UnorderWordEn2Cn(Object Num)
+        {
+            RunUnorderWord((int)Num, true);
+        }
+
+        /// <summary>
+        /// 随机抽词做三选一翻译测试。en2cn 为 true 时看英文选中文，否则看中文选英文。
+        /// </summary>
+        private void RunUnorderWord(int Number, bool en2cn)
+        {
             Select Query = new Select();
             Query.SelectWordList();
             List<Word> TestList = Query.GetRandomWords(Number);
 
             CreateLog Log = new CreateLog();
-            String LogName = "Log\\" + DateTime.Now.ToString().Replace('/', '-').Replace(' ', '_').Replace(':', '-') + "_随机英语单词.xlsx";
+            String LogName = "Log\\" + DateTime.Now.ToString().Replace('/', '-').Replace(' ', '_').Replace(':', '-')
+                + (en2cn ? "_随机英语单词(英译中).xlsx" : "_随机英语单词.xlsx");
             Log.OutputExcel(LogName, TestList, "英语");
 
             Word CurrentWord = new Word();
@@ -622,7 +635,10 @@ namespace ToastFish.Model.PushControl
                 CurrentWord = GetRandomWord(TestList);
                 List<Word> FakeWordList = Query.GetRandomWords(2);
 
-                PushOneTransQuestion(CurrentWord, FakeWordList[0].headWord, FakeWordList[1].headWord);
+                if (en2cn)
+                    PushOneTransQuestionEn2Cn(CurrentWord, FakeWordList[0].tranCN, FakeWordList[1].tranCN);
+                else
+                    PushOneTransQuestion(CurrentWord, FakeWordList[0].headWord, FakeWordList[1].headWord);
 
                 QUESTION_CURRENT_STATUS = 2;
                 while (QUESTION_CURRENT_STATUS == 2)
@@ -644,7 +660,8 @@ namespace ToastFish.Model.PushControl
                 else if (QUESTION_CURRENT_STATUS == 0)
                 {
                     //CopyList.Remove(CurrentWord);
-                    MessageWindow.ShowMessage("错误 正确答案：" + AnswerDict[QUESTION_CURRENT_RIGHT_ANSWER.ToString()] + '.' + CurrentWord.headWord);
+                    string rightAnswer = en2cn ? CurrentWord.tranCN : CurrentWord.headWord;
+                    MessageWindow.ShowMessage("错误 正确答案：" + AnswerDict[QUESTION_CURRENT_RIGHT_ANSWER.ToString()] + '.' + rightAnswer);
                     Thread.Sleep(3000);
                 }
             }
@@ -934,22 +951,33 @@ namespace ToastFish.Model.PushControl
 
         public void PushOneTransQuestion(Word CurrentWord, string B, string C)
         {
-            string Question = CurrentWord.tranCN;
-            string A = CurrentWord.headWord;
+            ShowTransQuestion(CurrentWord.tranCN, CurrentWord.headWord, B, C);
+        }
 
+        /// <summary>
+        /// 英译中的三选一翻译题：题面是英文单词，选项是中文释义。
+        /// </summary>
+        public void PushOneTransQuestionEn2Cn(Word CurrentWord, string B, string C)
+        {
+            ShowTransQuestion(CurrentWord.headWord, CurrentWord.tranCN, B, C);
+        }
+
+        /// <summary>三选一翻译题的公共部分。right 是正确选项，b / c 是干扰项，三者的位置随机打乱。</summary>
+        private void ShowTransQuestion(string question, string right, string b, string c)
+        {
             Random Rd = new Random();
             int AnswerIndex = Rd.Next(3);
             QUESTION_CURRENT_RIGHT_ANSWER = AnswerIndex;
 
             string[] options = AnswerIndex == 0
-                ? new[] { A, B, C }
+                ? new[] { right, b, c }
                 : AnswerIndex == 1
-                    ? new[] { B, A, C }
-                    : new[] { C, B, A };
+                    ? new[] { b, right, c }
+                    : new[] { c, b, right };
 
             ChoiceWindow.ShowChoice(
                 "翻译",
-                Question,
+                question,
                 ("A." + options[0], 0),
                 ("B." + options[1], 1),
                 ("C." + options[2], 2));

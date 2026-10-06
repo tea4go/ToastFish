@@ -251,8 +251,10 @@ namespace ToastFish
             Goin.Click += new EventHandler(SelectBook_Click);
             ToolStripItem StdJp_Mid = new ToolStripMenuItem("标准日本语中级词汇");
             StdJp_Mid.Click += new EventHandler(SelectBook_Click);
-            ToolStripItem RandomWord = new ToolStripMenuItem("随机单词测试");
+            ToolStripItem RandomWord = new ToolStripMenuItem("随机单词测试（中译英）");
             RandomWord.Click += new EventHandler(RandomWordTest_Click);
+            ToolStripItem RandomWordEn2Cn = new ToolStripMenuItem("随机单词测试（英译中）");
+            RandomWordEn2Cn.Click += new EventHandler(RandomWordEn2CnTest_Click);
             ToolStripItem RandomGoin = new ToolStripMenuItem("随机五十音测试");
             RandomGoin.Click += new EventHandler(RandomGoinTest_Click);
             ToolStripItem RandomJpWord = new ToolStripMenuItem("随机日语单词测试");
@@ -305,6 +307,7 @@ namespace ToastFish
             SelectJpBook.DropDownItems.Add(Goin);
             SelectJpBook.DropDownItems.Add(StdJp_Mid);
             RandomTest.DropDownItems.Add(RandomWord);
+            RandomTest.DropDownItems.Add(RandomWordEn2Cn);
             RandomTest.DropDownItems.Add(RandomGoin);
             RandomTest.DropDownItems.Add(RandomJpWord);
             Settings.DropDownItems.Add(OpenSettings);
@@ -598,6 +601,23 @@ namespace ToastFish
             if (Select.TABLE_NAME == "StdJp_Mid" || Select.TABLE_NAME == "Goin")
                 Select.TABLE_NAME = "GRE_2";
             thread = new Thread(new ParameterizedThreadStart(pushWords.UnorderWord));
+            thread.Start(Select.WORD_NUMBER);
+        }
+
+        private void RandomWordEn2CnTest_Click(object sender, EventArgs e)
+        {
+            var state = thread.ThreadState;
+            if (state == System.Threading.ThreadState.WaitSleepJoin || state == System.Threading.ThreadState.Stopped)
+            {
+                thread.Abort();
+                while (thread.ThreadState != System.Threading.ThreadState.Aborted)
+                {
+                    Thread.Sleep(100);
+                }
+            }
+            if (Select.TABLE_NAME == "StdJp_Mid" || Select.TABLE_NAME == "Goin")
+                Select.TABLE_NAME = "GRE_2";
+            thread = new Thread(new ParameterizedThreadStart(pushWords.UnorderWordEn2Cn));
             thread.Start(Select.WORD_NUMBER);
         }
 
