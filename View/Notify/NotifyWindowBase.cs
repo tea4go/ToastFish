@@ -197,7 +197,9 @@ namespace ToastFish.View.Notify
                 Padding = new Thickness(10, 6, 10, 6),
                 Background = NotifyTheme.ButtonBackground,
                 BorderBrush = NotifyTheme.ButtonBorder,
-                Foreground = NotifyTheme.ButtonForeground
+                Foreground = NotifyTheme.ButtonForeground,
+                Cursor = Cursors.Hand,
+                Template = CreateButtonTemplate()
             };
             button.Click += (s, e) =>
             {
@@ -205,6 +207,40 @@ namespace ToastFish.View.Notify
                 Close();
             };
             return button;
+        }
+
+        /// <summary>
+        /// 按钮模板。系统默认模板在鼠标悬停时把底色写死成浅蓝，暗色主题下配浅色文字
+        /// 几乎看不清，所以自带一套走主题色的模板。悬停/按下的底色只在模板触发器里给，
+        /// 光设 Button.Background 压不住默认模板里的触发器。
+        /// </summary>
+        private static ControlTemplate CreateButtonTemplate()
+        {
+            var border = new FrameworkElementFactory(typeof(Border), "border");
+            border.SetValue(Border.BackgroundProperty, new TemplateBindingExtension(Control.BackgroundProperty));
+            border.SetValue(Border.BorderBrushProperty, new TemplateBindingExtension(Control.BorderBrushProperty));
+            border.SetValue(Border.BorderThicknessProperty, new TemplateBindingExtension(Control.BorderThicknessProperty));
+
+            var presenter = new FrameworkElementFactory(typeof(ContentPresenter));
+            presenter.SetValue(FrameworkElement.MarginProperty, new TemplateBindingExtension(Control.PaddingProperty));
+            presenter.SetValue(ContentPresenter.HorizontalAlignmentProperty,
+                new TemplateBindingExtension(Control.HorizontalContentAlignmentProperty));
+            presenter.SetValue(ContentPresenter.VerticalAlignmentProperty,
+                new TemplateBindingExtension(Control.VerticalContentAlignmentProperty));
+            border.AppendChild(presenter);
+
+            var template = new ControlTemplate(typeof(Button)) { VisualTree = border };
+
+            var hover = new Trigger { Property = UIElement.IsMouseOverProperty, Value = true };
+            hover.Setters.Add(new Setter(Border.BackgroundProperty, NotifyTheme.ButtonHoverBackground, "border"));
+            hover.Setters.Add(new Setter(Border.BorderBrushProperty, NotifyTheme.ButtonHoverBorder, "border"));
+            template.Triggers.Add(hover);
+
+            var pressed = new Trigger { Property = Button.IsPressedProperty, Value = true };
+            pressed.Setters.Add(new Setter(Border.BackgroundProperty, NotifyTheme.ButtonPressedBackground, "border"));
+            template.Triggers.Add(pressed);
+
+            return template;
         }
 
         protected TextBlock AddLine(string text, double fontSize, Brush foreground, double topMargin = 0, bool copyable = false)
