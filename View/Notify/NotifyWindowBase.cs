@@ -24,9 +24,6 @@ namespace ToastFish.View.Notify
         /// <summary>当前正在显示的通知窗口。同一时刻只可能有一个。</summary>
         public static NotifyWindowBase Current { get; private set; }
 
-        /// <summary>true 表示这个窗口可以被后来的窗口顶掉（提示消息用）。</summary>
-        protected bool AutoClose;
-
         /// <summary>窗口被异常关闭时回传给等待方的值。</summary>
         protected int DefaultResult = 1;
 
@@ -84,7 +81,8 @@ namespace ToastFish.View.Notify
             _shell.Background = NotifyTheme.Background;
             _shell.BorderBrush = NotifyTheme.Border;
 
-            if (Current != null && Current != this && (AutoClose || Current.AutoClose))
+            // 同一时刻只留一个窗口：新窗口直接把上一个顶掉
+            if (Current != null && Current != this)
                 Current.Close();
 
             Current = this;

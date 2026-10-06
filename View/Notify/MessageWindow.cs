@@ -7,11 +7,6 @@ namespace ToastFish.View.Notify
     /// </summary>
     public class MessageWindow : NotifyWindowBase
     {
-        private MessageWindow()
-        {
-            AutoClose = true;
-        }
-
         public static void ShowMessage(string text, int autoCloseMs = 4000)
         {
             OnUi(() =>
