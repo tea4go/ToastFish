@@ -510,30 +510,30 @@ namespace ToastFish
                     Thread.Sleep(100);
                 }
                 if (Select.TABLE_NAME == "Goin")
-                    thread = new Thread(new ParameterizedThreadStart(PushGoinWords.OrderGoin));
+                    thread = GuardedThread(new ParameterizedThreadStart(PushGoinWords.OrderGoin));
                 else if (Select.TABLE_NAME == "StdJp_Mid")
-                    thread = new Thread(new ParameterizedThreadStart(PushJpWords.Recitation));
+                    thread = GuardedThread(new ParameterizedThreadStart(PushJpWords.Recitation));
                 //else if (Select.TABLE_NAME == "自定义英语")
                 //    thread = new Thread(new ParameterizedThreadStart(PushWords.Recitation));
                 else if (Select.TABLE_NAME == "自定义")
-                    thread = new Thread(new ParameterizedThreadStart(PushCustomizeWords.Recitation));
+                    thread = GuardedThread(new ParameterizedThreadStart(PushCustomizeWords.Recitation));
                 else
-                    thread = new Thread(new ParameterizedThreadStart(PushWords.Recitation));
+                    thread = GuardedThread(new ParameterizedThreadStart(PushWords.Recitation));
 
                 thread.Start(Words);
             }
             else
             {
                 if (Select.TABLE_NAME == "Goin")
-                    thread = new Thread(new ParameterizedThreadStart(PushGoinWords.OrderGoin));
+                    thread = GuardedThread(new ParameterizedThreadStart(PushGoinWords.OrderGoin));
                 else if (Select.TABLE_NAME == "StdJp_Mid")
-                    thread = new Thread(new ParameterizedThreadStart(PushJpWords.Recitation));
+                    thread = GuardedThread(new ParameterizedThreadStart(PushJpWords.Recitation));
                 //else if (Select.TABLE_NAME == "自定义英语")
                 //    thread = new Thread(new ParameterizedThreadStart(PushWords.Recitation));
                 else if (Select.TABLE_NAME == "自定义")
-                    thread = new Thread(new ParameterizedThreadStart(PushCustomizeWords.Recitation));
+                    thread = GuardedThread(new ParameterizedThreadStart(PushCustomizeWords.Recitation));
                 else
-                    thread = new Thread(new ParameterizedThreadStart(PushWords.Recitation));
+                    thread = GuardedThread(new ParameterizedThreadStart(PushWords.Recitation));
 
                 thread.Start(Words);
             }
