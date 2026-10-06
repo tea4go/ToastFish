@@ -368,6 +368,35 @@ namespace ToastFish
                 Goin.PerformClick();
         }
 
+        /// <summary>
+        /// 起一个带兜底的背诵线程。背诵跑在独立线程上，异常没人接会直接终止整个进程，
+        /// 所以统一在这里写日志并弹提示。提示投回 UI 线程弹，免得工作线程卡在对话框里，
+        /// 影响「开始！」中止旧线程。ThreadAbortException 是中止旧测试时主动抛的，
+        /// 属于正常流程，放行给 CLR 继续中止。
+        /// </summary>
+        private Thread GuardedThread(ParameterizedThreadStart body)
+        {
+            return new Thread(new ParameterizedThreadStart(argument =>
+            {
+                try
+                {
+                    body(argument);
+                }
+                catch (ThreadAbortException)
+                {
+                    throw;
+                }
+                catch (Exception ex)
+                {
+                    Logger.Write("背诵线程异常：" + ex);
+                    Dispatcher.BeginInvoke(new Action(() =>
+                        System.Windows.Forms.MessageBox.Show(
+                            "背诵过程出错，已停止。\n\n" + ex.Message,
+                            "出错了", MessageBoxButtons.OK, MessageBoxIcon.Error)));
+                }
+            }));
+        }
+
         private void Begin_Click(object sender, EventArgs e)
         {
             if (!System.IO.Directory.Exists("Log"))  {
@@ -388,26 +417,26 @@ namespace ToastFish
                     Thread.Sleep(100);
                 }
                 if(Select.TABLE_NAME == "Goin")
-                    thread = new Thread(new ParameterizedThreadStart(PushGoinWords.OrderGoin));
+                    thread = GuardedThread(new ParameterizedThreadStart(PushGoinWords.OrderGoin));
                 else if(Select.TABLE_NAME == "StdJp_Mid")
-                    thread = new Thread(new ParameterizedThreadStart(PushJpWords.Recitation));
+                    thread = GuardedThread(new ParameterizedThreadStart(PushJpWords.Recitation));
                 //else if (Select.TABLE_NAME == "自定义英语")
                 //    thread = new Thread(new ParameterizedThreadStart(PushWords.Recitation));
                 else
-                    thread = new Thread(new ParameterizedThreadStart(PushWords.RecitationSM2));
+                    thread = GuardedThread(new ParameterizedThreadStart(PushWords.RecitationSM2));
 
                 thread.Start(Words);
             }
             else
             {
                 if (Select.TABLE_NAME == "Goin")
-                    thread = new Thread(new ParameterizedThreadStart(PushGoinWords.OrderGoin));
+                    thread = GuardedThread(new ParameterizedThreadStart(PushGoinWords.OrderGoin));
                 else if (Select.TABLE_NAME == "StdJp_Mid")
-                    thread = new Thread(new ParameterizedThreadStart(PushJpWords.Recitation));
+                    thread = GuardedThread(new ParameterizedThreadStart(PushJpWords.Recitation));
                 //else if (Select.TABLE_NAME == "自定义英语")
                 //    thread = new Thread(new ParameterizedThreadStart(PushWords.Recitation));
                 else
-                    thread = new Thread(new ParameterizedThreadStart(PushWords.RecitationSM2));
+                    thread = GuardedThread(new ParameterizedThreadStart(PushWords.RecitationSM2));
                 
                 thread.Start(Words);
             }
