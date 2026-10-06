@@ -78,7 +78,7 @@ namespace ToastFish.View.Notify
         /// <summary>播放图标。几何图形而非字符，避免用户把字体换成不含 ▶ 的字库后显示成方框。</summary>
         private static InlineUIContainer ReplayIcon(Action onReplay)
         {
-            double size = NotifyTheme.ButtonSize * 0.85;
+            double size = NotifyTheme.ButtonSize * 1.7;
             var icon = new Path
             {
                 Data = Geometry.Parse("M 0,0 L 8,5 L 0,10 Z"),
@@ -93,6 +93,8 @@ namespace ToastFish.View.Notify
                 FontSize = NotifyTheme.ButtonSize,
                 FontFamily = NotifyTheme.Font,
                 Padding = new Thickness(7, 3, 7, 3),
+                // 和左边的音标拉开 10px，否则图标会贴着音标
+                Margin = new Thickness(10, 0, 0, 0),
                 Background = NotifyTheme.ButtonBackground,
                 BorderBrush = NotifyTheme.ButtonBorder,
                 BorderThickness = new Thickness(1),
