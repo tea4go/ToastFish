@@ -12,6 +12,7 @@ using System.Diagnostics;
 using ToastFish.Model.PushControl;
 using ToastFish.Model.Log;
 using ToastFish.Model.Notify;
+using ToastFish.View.Notify;
 using System.Speech.Synthesis;
 using ToastFish.Model.StartWithWindows;
 using System.IO;
@@ -151,6 +152,7 @@ namespace ToastFish
         System.Windows.Forms.ToolStripMenuItem Start = new System.Windows.Forms.ToolStripMenuItem();
         System.Windows.Forms.ToolStripMenuItem ExitMenuItem = new System.Windows.Forms.ToolStripMenuItem();
         System.Windows.Forms.ToolStripMenuItem ShowLog = new System.Windows.Forms.ToolStripMenuItem();
+        System.Windows.Forms.ToolStripMenuItem ResumeTest = new System.Windows.Forms.ToolStripMenuItem();
 
         System.Windows.Forms.ToolStripMenuItem SetAutoPlay = new System.Windows.Forms.ToolStripMenuItem();
         System.Windows.Forms.ToolStripMenuItem SetAutoLog = new System.Windows.Forms.ToolStripMenuItem();
@@ -204,6 +206,9 @@ namespace ToastFish
 
             ShowLog.Text = "显示日志";
             ShowLog.Click += new EventHandler(ShowLog_Click);
+
+            ResumeTest.Text = "恢复测试";
+            ResumeTest.Click += new EventHandler(ResumeTest_Click);
 
             Start.Text = "开机启动";
             Start.Click += new EventHandler(Start_Click);
@@ -310,6 +315,11 @@ namespace ToastFish
             RandomTest.DropDownItems.Add(RandomWordEn2Cn);
             RandomTest.DropDownItems.Add(RandomGoin);
             RandomTest.DropDownItems.Add(RandomJpWord);
+            // 前四项是「开始一个新测试」，恢复是对当前测试的操作，用分隔线隔开
+            RandomTest.DropDownItems.Add(new ToolStripSeparator());
+            RandomTest.DropDownItems.Add(ResumeTest);
+            // 没有收起的窗口时置灰。菜单弹出时才判定，状态总是最新
+            RandomTest.DropDownOpening += (s, e) => ResumeTest.Enabled = NotifyWindowBase.Paused != null;
             Settings.DropDownItems.Add(OpenSettings);
             Settings.DropDownItems.Add(SetAutoPlay);
             Settings.DropDownItems.Add(SetAutoLog);
@@ -619,6 +629,11 @@ namespace ToastFish
                 Select.TABLE_NAME = "GRE_2";
             thread = new Thread(new ParameterizedThreadStart(pushWords.UnorderWordEn2Cn));
             thread.Start(Select.WORD_NUMBER);
+        }
+
+        private void ResumeTest_Click(object sender, EventArgs e)
+        {
+            NotifyWindowBase.Resume();
         }
 
         private void RandomGoinTest_Click(object sender, EventArgs e)

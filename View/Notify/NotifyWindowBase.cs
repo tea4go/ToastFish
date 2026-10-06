@@ -7,6 +7,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Interop;
 using System.Windows.Media;
+using System.Windows.Shapes;
 using System.Windows.Threading;
 using ToastFish.Model.Notify;
 using ToastFish.Model.Log;
@@ -26,11 +27,18 @@ namespace ToastFish.View.Notify
         /// <summary>当前正在显示的通知窗口。同一时刻只可能有一个。</summary>
         public static NotifyWindowBase Current { get; private set; }
 
+        /// <summary>被 ✕ 暂时收起的窗口。同一时刻只可能有一个，等用户从托盘恢复。</summary>
+        public static NotifyWindowBase Paused { get; private set; }
+
         /// <summary>窗口被异常关闭时回传给等待方的值。</summary>
         protected int DefaultResult = 1;
 
+        /// <summary>子类置 true 后窗口右上角出现 ✕。在子类构造函数里赋值，ShowAsCurrent 里建按钮。</summary>
+        protected bool Closable;
+
         protected readonly StackPanel Root = new StackPanel();
         private readonly Border _shell = new Border();
+        private readonly Grid _closeHost = new Grid();
         private readonly TaskCompletionSource<int> _tcs = new TaskCompletionSource<int>();
         private DispatcherTimer _timer;
         private bool _shown;
@@ -48,7 +56,9 @@ namespace ToastFish.View.Notify
             _shell.Padding = new Thickness(14, 12, 14, 12);
             _shell.CornerRadius = new CornerRadius(10);
             _shell.BorderThickness = new Thickness(1);
-            _shell.Child = Root;
+            // 叠放而不是分两行：SizeToContent 下 star 行会被量成 0，且多一行会给每张卡片平白加高
+            _closeHost.Children.Add(Root);
+            _shell.Child = _closeHost;
             Content = _shell;
         }
 
@@ -61,7 +71,36 @@ namespace ToastFish.View.Notify
         /// <summary>供快捷键回调用；与点按钮等效。</summary>
         public void SetResult(int value)
         {
+            // 收起的窗口不接受作答：此时看不到选项，误按全局热键会把暂停的题答掉
+            if (Paused == this)
+                return;
             _tcs.TrySetResult(value);
+        }
+
+        /// <summary>暂时收起窗口。测试线程继续等在 WaitAsync 上，题目和进度都不丢。</summary>
+        protected void Pause()
+        {
+            if (!_shown || Paused == this)
+                return;
+            Paused = this;
+            Hide();
+        }
+
+        /// <summary>把暂时收起的窗口放回来。当前没有收起的窗口时返回 false。</summary>
+        public static bool Resume()
+        {
+            NotifyWindowBase window = Paused;
+            if (window == null)
+                return false;
+            // 必须先清 Paused：SetResult 的守卫认这个标记，留着会把恢复后的作答也吃掉
+            Paused = null;
+            OnUi(() =>
+            {
+                window.Show();
+                // Show 不设 Current，不补上下一个窗口就不会把它顶掉
+                Current = window;
+            });
+            return true;
         }
 
         /// <summary>把要在 UI 线程执行的建窗动作切过去。</summary>
@@ -83,8 +122,12 @@ namespace ToastFish.View.Notify
             _shell.Background = NotifyTheme.Background;
             _shell.BorderBrush = NotifyTheme.Border;
 
-            // 同一时刻只留一个窗口：新窗口直接把上一个顶掉
-            if (Current != null && Current != this)
+            if (Closable)
+                AddCloseButton();
+
+            // 同一时刻只留一个窗口：新窗口直接把上一个顶掉。
+            // 收起的窗口不顶掉——它还在等用户从托盘恢复
+            if (Current != null && Current != this && Current != Paused)
                 Current.Close();
 
             Current = this;
@@ -101,6 +144,36 @@ namespace ToastFish.View.Notify
                     Current = null;
                 _tcs.TrySetResult(DefaultResult);
             }
+        }
+
+        /// <summary>
+        /// 右上角的 ✕。用 Path 画交叉线而不是文字字形，免得受用户自定义字体影响。
+        /// 点击区包一层透明 Border：Transparent 参与命中测试而 null 不参与（同 MakeCopyable）。
+        /// </summary>
+        private void AddCloseButton()
+        {
+            var glyph = new Path
+            {
+                Data = Geometry.Parse("M 0,0 L 8,8 M 8,0 L 0,8"),
+                Stroke = NotifyTheme.Muted,
+                StrokeThickness = 1.4,
+                StrokeStartLineCap = PenLineCap.Round,
+                StrokeEndLineCap = PenLineCap.Round
+            };
+            var hit = new Border
+            {
+                Padding = new Thickness(5),
+                Background = Brushes.Transparent,
+                Cursor = Cursors.Hand,
+                ToolTip = "暂时收起，稍后可从托盘「随机测试 → 恢复测试」找回",
+                HorizontalAlignment = HorizontalAlignment.Right,
+                VerticalAlignment = VerticalAlignment.Top,
+                Child = glyph
+            };
+            hit.MouseLeftButtonUp += (s, e) => Pause();
+            hit.MouseEnter += (s, e) => glyph.Stroke = NotifyTheme.Foreground;
+            hit.MouseLeave += (s, e) => glyph.Stroke = NotifyTheme.Muted;
+            _closeHost.Children.Add(hit);
         }
 
         /// <summary>autoCloseMs &gt; 0 时定时自动关闭。</summary>
@@ -370,6 +443,8 @@ namespace ToastFish.View.Notify
             _tcs.TrySetResult(DefaultResult);
             if (Current == this)
                 Current = null;
+            if (Paused == this)
+                Paused = null;
             base.OnClosed(e);
         }
 

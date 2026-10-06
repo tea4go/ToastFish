@@ -18,6 +18,7 @@ namespace ToastFish.View.Notify
     {
         private WordCardWindow()
         {
+            Closable = true;
         }
 
         /// <summary>

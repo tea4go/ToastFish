@@ -11,6 +11,7 @@ namespace ToastFish.View.Notify
         {
             // 异常关闭时按「答错」处理，与原 OnActivated 解析失败时的 -1 语义一致
             DefaultResult = -1;
+            Closable = true;
         }
 
         public static void ShowChoice(
