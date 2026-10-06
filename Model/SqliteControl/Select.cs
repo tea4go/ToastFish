@@ -15,7 +15,7 @@ namespace ToastFish.Model.SqliteControl
             DataBase.Open();
         }
  
-        public static string TABLE_NAME = "CET4_1";  // 当前书籍名字
+        public static string TABLE_NAME = "VOA_1500";  // 当前书籍名字
         public static int WORD_NUMBER = 10;  // 当前单词数量
         public static int ENG_TYPE = 2;  // 英语类型1：美语，2：英语
         public static int AUTO_PLAY = 1;  // 英语自动发音
