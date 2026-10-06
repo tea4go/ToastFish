@@ -21,7 +21,7 @@ namespace ToastFish.View.Notify
         }
 
         /// <summary>
-        /// onReplay 非 null 时，单词行右侧会出现播放图标，点击只重播发音，不关窗、不回传结果。
+        /// onReplay 非 null 时，音标行可点击重播发音，不关窗、不回传结果。
         /// </summary>
         public static void ShowCard(
             string word,
@@ -68,39 +68,35 @@ namespace ToastFish.View.Notify
             Action onReplay,
             (string Text, int Result)[] buttons)
         {
-            var headText = new TextBlock
+            var wordText = new TextBlock
             {
                 FontSize = NotifyTheme.WordSize,
                 FontFamily = NotifyTheme.Font,
                 Foreground = NotifyTheme.Foreground,
                 TextWrapping = TextWrapping.Wrap,
                 MaxWidth = NotifyTheme.CardWidth,
-                VerticalAlignment = VerticalAlignment.Center
+                VerticalAlignment = VerticalAlignment.Bottom
             };
-            headText.Inlines.Add(new Run(word));
-            if (!string.IsNullOrEmpty(phonetic))
-            {
-                headText.Inlines.Add(new Run("  "));
-                headText.Inlines.Add(new Run(phonetic)
-                {
-                    FontSize = NotifyTheme.PhoneticSize,
-                    Foreground = NotifyTheme.Muted
-                });
-            }
-            MakeCopyable(headText, word);
+            wordText.Inlines.Add(new Run(word));
+            MakeCopyable(wordText, word);
 
-            if (onReplay == null)
+            if (string.IsNullOrEmpty(phonetic))
             {
-                Root.Children.Add(headText);
+                Root.Children.Add(wordText);
             }
             else
             {
-                // 图标 dock 在右侧，卡片多宽就贴到多右，不再跟着音标长度浮动
-                var head = new DockPanel { MaxWidth = NotifyTheme.CardWidth };
-                Button replay = ReplayButton(onReplay);
-                DockPanel.SetDock(replay, Dock.Right);
-                head.Children.Add(replay);
-                head.Children.Add(headText);
+                // 音标跟在单词后面同一行，按底部对齐，点它播放发音
+                var head = new StackPanel
+                {
+                    Orientation = Orientation.Horizontal,
+                    MaxWidth = NotifyTheme.CardWidth
+                };
+                TextBlock phoneticText = PhoneticBlock(phonetic, onReplay);
+                phoneticText.Margin = new Thickness(10, 0, 0, 0);
+                phoneticText.VerticalAlignment = VerticalAlignment.Bottom;
+                head.Children.Add(wordText);
+                head.Children.Add(phoneticText);
                 Root.Children.Add(head);
             }
 
@@ -141,26 +137,14 @@ namespace ToastFish.View.Notify
             };
             wordText.Inlines.Add(new Run(word));
             MakeCopyable(wordText, word);
-
-            if (onReplay == null)
-            {
-                Root.Children.Add(wordText);
-            }
-            else
-            {
-                // 图标仍贴卡片右侧，单词在剩下的空间里居中
-                var head = new DockPanel { MaxWidth = NotifyTheme.CardWidth };
-                Button replay = ReplayButton(onReplay);
-                DockPanel.SetDock(replay, Dock.Right);
-                head.Children.Add(replay);
-                head.Children.Add(wordText);
-                Root.Children.Add(head);
-            }
+            Root.Children.Add(wordText);
 
             if (!string.IsNullOrEmpty(phonetic))
             {
-                TextBlock phoneticLine = AddLine(phonetic, NotifyTheme.PhoneticSize, NotifyTheme.Muted, 4);
+                TextBlock phoneticLine = PhoneticBlock(phonetic, onReplay);
                 phoneticLine.TextAlignment = TextAlignment.Center;
+                phoneticLine.Margin = new Thickness(0, 4, 0, 0);
+                Root.Children.Add(phoneticLine);
             }
 
             // 首行是释义，与单词、音标同属上半部分，一起居中，字号比例句大一号
@@ -213,35 +197,27 @@ namespace ToastFish.View.Notify
             });
         }
 
-        /// <summary>播放图标。几何图形而非字符，避免用户把字体换成不含 ▶ 的字库后显示成方框。</summary>
-        private static Button ReplayButton(Action onReplay)
+        /// <summary>音标文字块。onReplay 非 null 时点它播放发音。</summary>
+        private static TextBlock PhoneticBlock(string phonetic, Action onReplay)
         {
-            double size = NotifyTheme.ButtonSize * 1.7;
-            var icon = new Path
+            var block = new TextBlock
             {
-                Data = Geometry.Parse("M 0,0 L 8,5 L 0,10 Z"),
-                Fill = NotifyTheme.ButtonForeground,
-                Stretch = Stretch.Uniform,
-                Width = size * 0.8,
-                Height = size
-            };
-            var button = new Button
-            {
-                Content = icon,
-                FontSize = NotifyTheme.ButtonSize,
+                Text = phonetic,
+                FontSize = NotifyTheme.PhoneticSize,
                 FontFamily = NotifyTheme.Font,
-                Padding = new Thickness(7, 3, 7, 3),
-                // 单词特别长时保证图标和文字之间仍有 10px
-                Margin = new Thickness(10, 0, 0, 0),
-                VerticalAlignment = VerticalAlignment.Center,
-                Background = NotifyTheme.ButtonBackground,
-                BorderBrush = NotifyTheme.ButtonBorder,
-                BorderThickness = new Thickness(1),
-                Cursor = Cursors.Hand,
-                ToolTip = "播放发音"
+                Foreground = NotifyTheme.Muted,
+                TextWrapping = TextWrapping.Wrap,
+                MaxWidth = NotifyTheme.CardWidth
             };
-            button.Click += (s, e) => onReplay();
-            return button;
+            if (onReplay != null)
+            {
+                block.Cursor = Cursors.Hand;
+                block.ToolTip = "点击播放发音";
+                // Transparent 参与命中测试而 null 不参与，设成 Transparent 后整行空白也能点中
+                block.Background = Brushes.Transparent;
+                block.MouseLeftButtonUp += (s, e) => onReplay();
+            }
+            return block;
         }
     }
 }
