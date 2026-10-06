@@ -45,6 +45,9 @@ namespace ToastFish.Model.Notify
         public static Brush ButtonBorder { get; private set; }
         public static Brush ButtonForeground { get; private set; }
 
+        /// <summary>点击复制成功后，该行文字短暂变成的颜色。</summary>
+        public static Brush Copied { get; private set; }
+
         public static void Load()
         {
             int baseSize = Select.FONT_SIZE;
@@ -76,6 +79,7 @@ namespace ToastFish.Model.Notify
                 ButtonBackground = Brush("#33383F");
                 ButtonBorder = Brush("#434A53");
                 ButtonForeground = Brush("#EAEEF3");
+                Copied = Brush("#5FD08A");
             }
             else
             {
@@ -86,6 +90,7 @@ namespace ToastFish.Model.Notify
                 ButtonBackground = Brush("#E8EAEE");
                 ButtonBorder = Brush("#D6D9DE");
                 ButtonForeground = Brush("#22262C");
+                Copied = Brush("#2E9E5B");
             }
         }
 

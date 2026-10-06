@@ -1,8 +1,10 @@
 using System;
 using System.Runtime.InteropServices;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Threading;
@@ -177,7 +179,7 @@ namespace ToastFish.View.Notify
             return button;
         }
 
-        protected TextBlock AddLine(string text, double fontSize, Brush foreground, double topMargin = 0)
+        protected TextBlock AddLine(string text, double fontSize, Brush foreground, double topMargin = 0, bool copyable = false)
         {
             var block = new TextBlock
             {
@@ -189,8 +191,68 @@ namespace ToastFish.View.Notify
                 MaxWidth = NotifyTheme.CardWidth,
                 Margin = new Thickness(0, topMargin, 0, 0)
             };
+            if (copyable)
+                MakeCopyable(block);
             Root.Children.Add(block);
             return block;
+        }
+
+        /// <summary>
+        /// 点击该行即把文字复制到剪贴板，成功后被点的那行短暂变色。
+        /// copyText 用于显示内容与实际要复制的内容不一致的情况（如单词行还带着音标）。
+        /// </summary>
+        protected static void MakeCopyable(TextBlock block, string copyText = null)
+        {
+            block.Cursor = Cursors.Hand;
+            block.ToolTip = "点击复制";
+            // Transparent 参与命中测试而 null 不参与，设成 Transparent 后整行空白也能点中
+            block.Background = Brushes.Transparent;
+            block.MouseLeftButtonUp += (s, e) => CopyText(block, copyText ?? block.Text);
+        }
+
+        private static void CopyText(TextBlock block, string text)
+        {
+            if (string.IsNullOrEmpty(text))
+                return;
+            if (!TrySetClipboard(text))
+                return;
+            FlashCopied(block);
+        }
+
+        /// <summary>剪贴板常被其他程序短暂占用，失败时重试几次再放弃。</summary>
+        private static bool TrySetClipboard(string text)
+        {
+            for (int attempt = 0; attempt < 3; attempt++)
+            {
+                try
+                {
+                    // 用 WinForms 的 Win32 实现而非 System.Windows 的 OLE 实现：
+                    // 后者在某些受限的启动上下文里会抛 CLIPBRD_E_CANT_OPEN，前者不会
+                    System.Windows.Forms.Clipboard.SetText(text);
+                    return true;
+                }
+                catch (ExternalException)
+                {
+                    Thread.Sleep(60);
+                }
+            }
+            return false;
+        }
+
+        private static void FlashCopied(TextBlock block)
+        {
+            // 原色存进 Tag，连点时第二次不会把提示色当成原色存下来
+            if (block.Tag == null)
+                block.Tag = block.Foreground;
+            block.Foreground = NotifyTheme.Copied;
+
+            var timer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(900) };
+            timer.Tick += (s, e) =>
+            {
+                timer.Stop();
+                block.Foreground = (Brush)block.Tag;
+            };
+            timer.Start();
         }
 
         protected override void OnSourceInitialized(EventArgs e)

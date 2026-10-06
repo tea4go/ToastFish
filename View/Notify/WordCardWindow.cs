@@ -85,6 +85,7 @@ namespace ToastFish.View.Notify
                     Foreground = NotifyTheme.Muted
                 });
             }
+            MakeCopyable(headText, word);
 
             if (onReplay == null)
             {
@@ -107,7 +108,7 @@ namespace ToastFish.View.Notify
                 {
                     if (string.IsNullOrEmpty(line))
                         continue;
-                    AddLine(line, NotifyTheme.SentenceSize, NotifyTheme.Foreground, 4);
+                    AddLine(line, NotifyTheme.SentenceSize, NotifyTheme.Foreground, 4, copyable: true);
                 }
             }
 
@@ -137,6 +138,7 @@ namespace ToastFish.View.Notify
                 VerticalAlignment = VerticalAlignment.Center
             };
             wordText.Inlines.Add(new Run(word));
+            MakeCopyable(wordText, word);
 
             if (onReplay == null)
             {
@@ -165,7 +167,7 @@ namespace ToastFish.View.Notify
                 {
                     if (string.IsNullOrEmpty(line))
                         continue;
-                    AddLine(line, NotifyTheme.SentenceSize, NotifyTheme.Foreground, 10);
+                    AddLine(line, NotifyTheme.SentenceSize, NotifyTheme.Foreground, 10, copyable: true);
                 }
             }
 
