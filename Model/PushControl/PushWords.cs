@@ -156,7 +156,9 @@ namespace ToastFish.Model.PushControl
         }
 
         /// <summary>
-        /// 推送问题的Task
+        /// 推送问题的Task。返回 1 表示答对，0 表示答错。
+        /// 热键和按钮都只回传选项序号，对错在这里统一判定——按钮回传的是选项
+        /// 序号而非对错，判定若留在别处，点按钮答题除第 2 个选项外都会判错。
         /// </summary>
         public async Task<int> ProcessToastNotificationQuestion()
         {
@@ -186,18 +188,12 @@ namespace ToastFish.Model.PushControl
                     default:
                         break;
                 }
-                if (Ans == QUESTION_CURRENT_RIGHT_ANSWER)
-                {
-                    window.SetResult(1);
-                }
-                else
-                {
-                    window.SetResult(0);
-                }
-
+                if (Ans >= 0)
+                    window.SetResult(Ans);
             }))
             {
-                return await window.WaitAsync();
+                int answer = await window.WaitAsync();
+                return answer == QUESTION_CURRENT_RIGHT_ANSWER ? 1 : 0;
             }
         }
 
