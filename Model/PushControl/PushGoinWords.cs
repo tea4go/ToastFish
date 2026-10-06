@@ -142,6 +142,7 @@ namespace ToastFish.Model.PushControl
                 }
             }
             pushGoinWords.PushMessage("结束了！恭喜！");
+            Query.RecordRecite();
         }
 
         public static void UnorderGoin(Object Num)
@@ -163,6 +164,11 @@ namespace ToastFish.Model.PushControl
             Log.OutputExcel(LogName, TestList, "五十音");
 
             GoinWord CurrentWord = new GoinWord();
+
+            int total = TestList.Count;
+            int correct = 0;
+            var wrongWords = new HashSet<GoinWord>();
+
             while (TestList.Count != 0)
             {
                 Thread.Sleep(500);
@@ -202,6 +208,9 @@ namespace ToastFish.Model.PushControl
 
                 if (pushGoinWords.QUESTION_CURRENT_STATUS == 1)
                 {
+                    // Add 返回 true 表示这个词之前没答错过，即首轮答对
+                    if (wrongWords.Add(CurrentWord))
+                        correct++;
                     TestList.Remove(CurrentWord);
                     //PushWords.PushMessage("正确,太强了吧！");
                     //Thread.Sleep(3000);
@@ -209,11 +218,13 @@ namespace ToastFish.Model.PushControl
                 else if (pushGoinWords.QUESTION_CURRENT_STATUS == 0)
                 {
                     //CopyList.Remove(CurrentWord);
+                    wrongWords.Add(CurrentWord);
                     MessageWindow.ShowMessage("错误\n正确答案：" + pushGoinWords.AnswerDict[pushGoinWords.QUESTION_CURRENT_RIGHT_ANSWER.ToString()] + "\n" + RightAnswer);
                     Thread.Sleep(3000);
                 }
             }
             pushGoinWords.PushMessage("结束了！恭喜！");
+            Query.RecordTest(correct, total);
         }
 
         /// <summary>

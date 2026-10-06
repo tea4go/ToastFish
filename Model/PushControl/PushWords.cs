@@ -455,6 +455,7 @@ namespace ToastFish.Model.PushControl
                 pushWords.PushWaitAllQuestions(RandomList, (List<Word>)Query.AllWordList);
             }
             pushWords.PushMessage("结束了！恭喜！");
+            Query.RecordRecite();
 
             if (Select.AUTO_LOG != 0)
             {
@@ -601,6 +602,8 @@ namespace ToastFish.Model.PushControl
             Logger.Write("结束了！恭喜！");
 
             pushWords.PushMessage("结束了！恭喜！");
+            if (ImportFlag == false)
+                Query.RecordRecite();
         }
 
         public void UnorderWord(Object Num)
@@ -629,6 +632,10 @@ namespace ToastFish.Model.PushControl
 
             Word CurrentWord = new Word();
 
+            int total = TestList.Count;
+            int correct = 0;
+            var wrongWords = new HashSet<Word>();
+
             while (TestList.Count != 0)
             {
                 Thread.Sleep(500);
@@ -654,18 +661,23 @@ namespace ToastFish.Model.PushControl
 
                 if (QUESTION_CURRENT_STATUS == 1)
                 {
+                    // Add 返回 true 表示这个词之前没答错过，即首轮答对
+                    if (wrongWords.Add(CurrentWord))
+                        correct++;
                     TestList.Remove(CurrentWord);
                     Thread.Sleep(500);
                 }
                 else if (QUESTION_CURRENT_STATUS == 0)
                 {
                     //CopyList.Remove(CurrentWord);
+                    wrongWords.Add(CurrentWord);
                     string rightAnswer = en2cn ? CurrentWord.tranCN : CurrentWord.headWord;
                     MessageWindow.ShowMessage("错误\n正确答案：" + AnswerDict[QUESTION_CURRENT_RIGHT_ANSWER.ToString()] + "\n" + rightAnswer);
                     Thread.Sleep(3000);
                 }
             }
             PushMessage("结束了！恭喜！");
+            Query.RecordTest(correct, total);
         }
 
         /// <summary>

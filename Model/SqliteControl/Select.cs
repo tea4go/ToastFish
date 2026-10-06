@@ -114,6 +114,36 @@ namespace ToastFish.Model.SqliteControl
             }
         }
 
+        /// <summary>
+        /// 给 Count 表补上状态统计列。老库没有这些列，启动时补一次。重复调用无副作用。
+        /// </summary>
+        public void EnsureCountColumns()
+        {
+            SQLiteCommand Update = DataBase.CreateCommand();
+            Update.CommandText = "PRAGMA table_info(Count)";
+            var dr = Update.ExecuteReader();
+            List<string> HeadTileList = new List<string>();
+            while (dr.Read())
+                HeadTileList.Add((string)dr.GetValue(1));
+            dr.Close();
+
+            AddCountColumn(HeadTileList, "reciteCount", "INTEGER NOT NULL DEFAULT 0");
+            AddCountColumn(HeadTileList, "lastReciteTime", "TEXT DEFAULT NULL");
+            AddCountColumn(HeadTileList, "testCount", "INTEGER NOT NULL DEFAULT 0");
+            AddCountColumn(HeadTileList, "lastTestTime", "TEXT DEFAULT NULL");
+            AddCountColumn(HeadTileList, "lastTestCorrect", "INTEGER NOT NULL DEFAULT 0");
+            AddCountColumn(HeadTileList, "lastTestTotal", "INTEGER NOT NULL DEFAULT 0");
+        }
+
+        private void AddCountColumn(List<string> existing, string name, string definition)
+        {
+            if (existing.Contains(name))
+                return;
+            SQLiteCommand Update = DataBase.CreateCommand();
+            Update.CommandText = "ALTER TABLE Count ADD COLUMN " + name + " " + definition;
+            Update.ExecuteNonQuery();
+        }
+
         public void LoadGlobalConfig()
         {
             String cmdtext = $"PRAGMA table_info(Global)";
@@ -163,6 +193,7 @@ namespace ToastFish.Model.SqliteControl
             FONT_FAMILY = GlobalVariable[0].fontFamily;
             FONT_SIZE = GlobalVariable[0].fontSize;
             THEME = GlobalVariable[0].theme;
+            EnsureCountColumns();
         }
 
         public void UpdateGlobalConfig()
@@ -214,6 +245,36 @@ namespace ToastFish.Model.SqliteControl
             // }
             // }
             // return Output;
+        }
+
+        /// <summary>记一次背诵完成。计数与时间落到当前库那一行。</summary>
+        public void RecordRecite()
+        {
+            SQLiteCommand Update = DataBase.CreateCommand();
+            Update.CommandText = "UPDATE Count SET reciteCount = reciteCount + 1" +
+                ", lastReciteTime = '" + DateTime.Now.ToString("yyyy-MM-dd HH:mm") + "'" +
+                " WHERE bookName = '" + TABLE_NAME + "'";
+            Update.ExecuteNonQuery();
+        }
+
+        /// <summary>记一次测试完成。correct 是首轮答对题数，total 是总题数。</summary>
+        public void RecordTest(int correct, int total)
+        {
+            SQLiteCommand Update = DataBase.CreateCommand();
+            Update.CommandText = "UPDATE Count SET testCount = testCount + 1" +
+                ", lastTestTime = '" + DateTime.Now.ToString("yyyy-MM-dd HH:mm") + "'" +
+                ", lastTestCorrect = " + correct +
+                ", lastTestTotal = " + total +
+                " WHERE bookName = '" + TABLE_NAME + "'";
+            Update.ExecuteNonQuery();
+        }
+
+        /// <summary>读当前库的状态行。表里没有这个库时返回 null。</summary>
+        public BookCount SelectStatus()
+        {
+            BookCount Temp = new BookCount();
+            var rows = DataBase.Query<BookCount>($"select * from Count where bookName = '{TABLE_NAME}'", Temp).ToArray();
+            return rows.Length == 0 ? null : rows[0];
         }
         #endregion
 
@@ -540,6 +601,12 @@ namespace ToastFish.Model.SqliteControl
         public String bookName { get; set; }
         public int number { get; set; }
         public int current { get; set; }
+        public int reciteCount { get; set; }
+        public string lastReciteTime { get; set; }
+        public int testCount { get; set; }
+        public string lastTestTime { get; set; }
+        public int lastTestCorrect { get; set; }
+        public int lastTestTotal { get; set; }
     }
 
     [Serializable]

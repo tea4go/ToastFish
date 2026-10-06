@@ -153,6 +153,7 @@ namespace ToastFish
         System.Windows.Forms.ToolStripMenuItem ExitMenuItem = new System.Windows.Forms.ToolStripMenuItem();
         System.Windows.Forms.ToolStripMenuItem ShowLog = new System.Windows.Forms.ToolStripMenuItem();
         System.Windows.Forms.ToolStripMenuItem ResumeTest = new System.Windows.Forms.ToolStripMenuItem();
+        System.Windows.Forms.ToolStripMenuItem LibraryStatus = new System.Windows.Forms.ToolStripMenuItem();
 
         System.Windows.Forms.ToolStripMenuItem SetAutoPlay = new System.Windows.Forms.ToolStripMenuItem();
         System.Windows.Forms.ToolStripMenuItem SetAutoLog = new System.Windows.Forms.ToolStripMenuItem();
@@ -209,6 +210,9 @@ namespace ToastFish
 
             ResumeTest.Text = "恢复测试";
             ResumeTest.Click += new EventHandler(ResumeTest_Click);
+
+            LibraryStatus.Text = "当前词库状态";
+            LibraryStatus.Click += new EventHandler(LibraryStatus_Click);
 
             Start.Text = "开机启动";
             Start.Click += new EventHandler(Start_Click);
@@ -287,6 +291,7 @@ namespace ToastFish
             Cms.Items.Add(SelectBook);
             Cms.Items.Add(SelectJpBook);
             Cms.Items.Add(RandomTest);
+            Cms.Items.Add(LibraryStatus);
             Cms.Items.Add(Settings);
             Cms.Items.Add(GotoHtml);
             Cms.Items.Add(ShowLog);
@@ -663,6 +668,50 @@ namespace ToastFish
         private void ResumeTest_Click(object sender, EventArgs e)
         {
             NotifyWindowBase.Resume();
+        }
+
+        /// <summary>
+        /// 把当前库的状态拼成多行文本弹出来。用 ShowStatus 而不是 ShowMessage：
+        /// 前者不抢 Current，不会把屏幕上的测试题顶掉。
+        /// </summary>
+        private void LibraryStatus_Click(object sender, EventArgs e)
+        {
+            BookCount status = Se.SelectStatus();
+            if (status == null)
+                return;
+
+            string name = TablelDictionary.ContainsKey(Select.TABLE_NAME)
+                ? TablelDictionary[Select.TABLE_NAME]
+                : Select.TABLE_NAME;
+
+            string text = "当前词库：" + name
+                + "\n背诵进度：" + status.current + " / " + status.number
+                + "\n背诵：" + status.reciteCount + " 次" + RecentTime(status.lastReciteTime);
+
+            if (status.testCount == 0)
+            {
+                text += "\n测试：暂无";
+            }
+            else
+            {
+                text += "\n测试：" + status.testCount + " 次" + RecentTime(status.lastTestTime)
+                    + "\n最近测试：首轮 " + status.lastTestCorrect + "/" + status.lastTestTotal
+                    + "（" + Percent(status.lastTestCorrect, status.lastTestTotal) + "）";
+            }
+
+            MessageWindow.ShowStatus(text);
+        }
+
+        private static string RecentTime(string time)
+        {
+            return string.IsNullOrEmpty(time) ? "" : "，最近 " + time;
+        }
+
+        private static string Percent(int correct, int total)
+        {
+            if (total <= 0)
+                return "0%";
+            return (int)Math.Round(correct * 100.0 / total) + "%";
         }
 
         private void RandomGoinTest_Click(object sender, EventArgs e)

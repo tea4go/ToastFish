@@ -209,6 +209,8 @@ namespace ToastFish.Model.PushControl
             }
 
             pushJpWords.PushMessage("结束了！恭喜！");
+            if (ImportFlag == false)
+                Query.RecordRecite();
         }
 
         public static new void UnorderWord(Object Num)
@@ -223,6 +225,10 @@ namespace ToastFish.Model.PushControl
             Log.OutputExcel(LogName, TestList, "日语");
 
             JpWord CurrentWord = new JpWord();
+
+            int total = TestList.Count;
+            int correct = 0;
+            var wrongWords = new HashSet<JpWord>();
 
             while (TestList.Count != 0)
             {
@@ -246,17 +252,22 @@ namespace ToastFish.Model.PushControl
 
                 if (pushJpWords.QUESTION_CURRENT_STATUS == 1)
                 {
+                    // Add 返回 true 表示这个词之前没答错过，即首轮答对
+                    if (wrongWords.Add(CurrentWord))
+                        correct++;
                     TestList.Remove(CurrentWord);
                     Thread.Sleep(500);
                 }
                 else if (pushJpWords.QUESTION_CURRENT_STATUS == 0)
                 {
                     //CopyList.Remove(CurrentWord);
+                    wrongWords.Add(CurrentWord);
                     MessageWindow.ShowMessage("错误\n正确答案：" + pushJpWords.AnswerDict[pushJpWords.QUESTION_CURRENT_RIGHT_ANSWER.ToString()] + "\n" + CurrentWord.headWord);
                     Thread.Sleep(3000);
                 }
             }
             pushJpWords.PushMessage("结束了！恭喜！");
+            Query.RecordTest(correct, total);
         }
     }
 }

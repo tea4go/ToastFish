@@ -147,6 +147,26 @@ namespace ToastFish.View.Notify
         }
 
         /// <summary>
+        /// 只显示、不抢 Current。用于状态查询这类不该打断正在进行的测试的提示：
+        /// 走 ShowAsCurrent 会把屏幕上的测试题顶掉，测试线程被推进到下一题。
+        /// </summary>
+        protected void ShowTransient()
+        {
+            NotifyTheme.Apply(this);
+            _shell.Background = NotifyTheme.Background;
+            _shell.BorderBrush = NotifyTheme.Border;
+            try
+            {
+                Show();
+                _shown = true;
+            }
+            catch (Exception ex)
+            {
+                Logger.Write("提示窗口显示失败：" + ex);
+            }
+        }
+
+        /// <summary>
         /// 右上角的 ✕。用 Path 画交叉线而不是文字字形，免得受用户自定义字体影响。
         /// 点击区包一层透明 Border：Transparent 参与命中测试而 null 不参与（同 MakeCopyable）。
         /// </summary>

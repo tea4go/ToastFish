@@ -125,11 +125,22 @@ new Select().RecordTest(correct, total);
 
 测试成绩记到 `TABLE_NAME` 指向的库 —— 随机测试入口会先把 `TABLE_NAME` 设成被测的库（`RandomWordTest_Click` 设 `GRE_2`、`RandomJpWordTest_Click` 设 `StdJp_Mid`、`RandomGoinTest_Click` 设 `Goin`），所以归属天然正确。
 
-### `PushWords.Recitation` 特殊处理
+### `PushWords.Recitation` / `PushJpWords.Recitation` 特殊处理
 
-`PushWords.Recitation`（`PushWords.cs:472`）目前只被 `ImportWords_Click` 走到（导入英语词表，`ImportFlag == true`）。既有代码在导入模式下**刻意跳过**进度记录（`PushWords.cs:568-572` 的 `if (ImportFlag == false)` 守卫），因为导入的一批词不是「背 GRE_2 这个库」。
+这两个函数都有导入模式（`ImportFlag`）。目前 `PushWords.Recitation`（`PushWords.cs:472`）只被 `ImportWords_Click` 走到（导入英语词表，`TABLE_NAME` 被设成 `GRE_2`），`PushJpWords.Recitation`（`PushJpWords.cs:94`）则两种模式都会走。
 
-所以这里也按同一守卫加：`if (ImportFlag == false) new Select().RecordRecite();`。导入模式下不计数，与既有语义一致；将来若有人以非导入模式调它，计数也不会漏。
+既有代码在导入模式下**刻意跳过**进度记录（`PushWords.cs:568-572` 的 `if (ImportFlag == false)` 守卫），因为导入的一批词不是「背这个库」。
+
+所以计数也按同一守卫加：
+
+```csharp
+if (ImportFlag == false)
+    Query.RecordRecite();
+```
+
+导入模式下不计数，与既有语义一致；将来若有人以非导入模式调它们，计数也不会漏。
+
+`PushGoinWords.OrderGoin` 没有导入模式，直接无条件调用。
 
 ## 数据层新增方法（`Model/SqliteControl/Select.cs`）
 
