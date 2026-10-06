@@ -639,7 +639,7 @@ namespace ToastFish
             }
             if (Select.TABLE_NAME == "StdJp_Mid" || Select.TABLE_NAME == "Goin")
                 Select.TABLE_NAME = "GRE_2";
-            thread = new Thread(new ParameterizedThreadStart(pushWords.UnorderWord));
+            thread = GuardedThread(new ParameterizedThreadStart(pushWords.UnorderWord));
             thread.Start(Select.WORD_NUMBER);
         }
 
@@ -656,7 +656,7 @@ namespace ToastFish
             }
             if (Select.TABLE_NAME == "StdJp_Mid" || Select.TABLE_NAME == "Goin")
                 Select.TABLE_NAME = "GRE_2";
-            thread = new Thread(new ParameterizedThreadStart(pushWords.UnorderWordEn2Cn));
+            thread = GuardedThread(new ParameterizedThreadStart(pushWords.UnorderWordEn2Cn));
             thread.Start(Select.WORD_NUMBER);
         }
 
@@ -678,13 +678,13 @@ namespace ToastFish
                     Thread.Sleep(100);
                 }
                 if (Select.TABLE_NAME == "Goin")
-                    thread = new Thread(new ParameterizedThreadStart(PushGoinWords.UnorderGoin));
+                    thread = GuardedThread(new ParameterizedThreadStart(PushGoinWords.UnorderGoin));
                 thread.Start(Select.WORD_NUMBER);
             }
             else
             {
                 if (Select.TABLE_NAME == "Goin")
-                    thread = new Thread(new ParameterizedThreadStart(PushGoinWords.UnorderGoin));
+                    thread = GuardedThread(new ParameterizedThreadStart(PushGoinWords.UnorderGoin));
                 thread.Start(Select.WORD_NUMBER);
             }
         }
@@ -701,7 +701,7 @@ namespace ToastFish
                 }
             }
             Select.TABLE_NAME = "StdJp_Mid";
-            thread = new Thread(new ParameterizedThreadStart(PushJpWords.UnorderWord));
+            thread = GuardedThread(new ParameterizedThreadStart(PushJpWords.UnorderWord));
             thread.Start(Select.WORD_NUMBER);
         }
 
