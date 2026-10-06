@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
@@ -39,7 +40,8 @@ namespace ToastFish.View.Notify
         }
 
         /// <summary>
-        /// 大字分层：单词居中放大，音标 / 释义 / 例句各占一段，按钮排成两列。
+        /// 大字分层：单词 / 音标 / 释义整块居中，下面用分隔线隔出例句段，
+        /// 按钮排成两列，状态行放在最底部。
         /// 英语卡片专用，日语 / 五十音 / 自定义仍走 ShowCard。
         /// </summary>
         public static void ShowLayeredCard(
@@ -118,7 +120,7 @@ namespace ToastFish.View.Notify
             SetButtons(buttons);
         }
 
-        /// <summary>大字分层布局。单词居中放大，音标独立成行并居中，释义与例句各占一段，按钮两列。</summary>
+        /// <summary>大字分层布局。上半部分（单词 / 音标 / 释义）整块居中，例句段用分隔线隔开，按钮两列，状态行压在最底部。</summary>
         private void BuildLayered(
             string word,
             string phonetic,
@@ -161,20 +163,54 @@ namespace ToastFish.View.Notify
                 phoneticLine.TextAlignment = TextAlignment.Center;
             }
 
+            // 首行是释义，与单词、音标同属上半部分，一起居中，字号比例句大一号
+            if (bodyLines != null && bodyLines.Length > 0 && !string.IsNullOrEmpty(bodyLines[0]))
+            {
+                TextBlock meaning = AddLine(bodyLines[0], NotifyTheme.MeaningSize, NotifyTheme.Foreground, 6, copyable: true);
+                meaning.TextAlignment = TextAlignment.Center;
+            }
+
+            // 例句段整段可能为空（该词既无例句也无短语），这时一条分隔线都不留，免得两条贴在一起
+            var sentences = new List<string>();
             if (bodyLines != null)
             {
-                foreach (string line in bodyLines)
+                for (int i = 1; i < bodyLines.Length; i++)
                 {
-                    if (string.IsNullOrEmpty(line))
-                        continue;
-                    AddLine(line, NotifyTheme.SentenceSize, NotifyTheme.Foreground, 10, copyable: true);
+                    if (!string.IsNullOrEmpty(bodyLines[i]))
+                        sentences.Add(bodyLines[i]);
                 }
             }
 
-            if (!string.IsNullOrEmpty(statusLine))
-                AddLine(statusLine, NotifyTheme.StatusSize, NotifyTheme.Muted, 10);
+            if (sentences.Count > 0)
+            {
+                AddSeparator();
+                foreach (string line in sentences)
+                {
+                    TextBlock sentence = AddLine(line, NotifyTheme.SentenceSize, NotifyTheme.Foreground, 0, copyable: true);
+                    sentence.TextAlignment = TextAlignment.Center;
+                }
+                AddSeparator();
+            }
 
             SetButtonsTwoColumns(buttons);
+
+            if (!string.IsNullOrEmpty(statusLine))
+            {
+                TextBlock status = AddLine(statusLine, NotifyTheme.StatusSize, NotifyTheme.Muted, 10);
+                status.TextAlignment = TextAlignment.Center;
+            }
+        }
+
+        /// <summary>分层卡片里分隔各段的细横线，取卡片边框色。</summary>
+        private void AddSeparator()
+        {
+            Root.Children.Add(new Rectangle
+            {
+                Height = 1,
+                Width = NotifyTheme.CardWidth,
+                Fill = NotifyTheme.Border,
+                Margin = new Thickness(0, 10, 0, 10)
+            });
         }
 
         /// <summary>播放图标。几何图形而非字符，避免用户把字体换成不含 ▶ 的字库后显示成方框。</summary>
