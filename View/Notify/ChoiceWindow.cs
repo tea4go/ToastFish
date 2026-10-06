@@ -30,7 +30,7 @@ namespace ToastFish.View.Notify
         {
             AddLine(title, NotifyTheme.StatusSize, NotifyTheme.Muted);
             AddLine(question, NotifyTheme.MeaningSize, NotifyTheme.Foreground, 4);
-            SetButtons(options);
+            SetButtonsStacked(options);
         }
     }
 }

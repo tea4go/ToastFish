@@ -135,6 +135,32 @@ namespace ToastFish.View.Notify
             Root.Children.Add(row);
         }
 
+        /// <summary>每行一个的按钮列。按钮等宽铺满卡片，长文本在按钮内部折行。</summary>
+        protected void SetButtonsStacked(params (string Text, int Result)[] buttons)
+        {
+            var column = new StackPanel
+            {
+                Width = NotifyTheme.CardWidth,
+                Margin = new Thickness(0, 12, 0, 0)
+            };
+            foreach ((string text, int result) in buttons)
+            {
+                Button button = CreateButton(text, result);
+                // 字符串内容不会折行，长释义会把按钮撑得超出卡片宽度，换成可折行的 TextBlock
+                button.Content = new TextBlock
+                {
+                    Text = text,
+                    TextWrapping = TextWrapping.Wrap,
+                    TextAlignment = TextAlignment.Center,
+                    FontSize = NotifyTheme.ButtonSize,
+                    FontFamily = NotifyTheme.Font
+                };
+                button.Margin = new Thickness(0, 0, 0, 6);
+                column.Children.Add(button);
+            }
+            Root.Children.Add(column);
+        }
+
         /// <summary>每行两个的按钮网格，按钮等宽铺满各自格子。奇数个时最后一格留空。</summary>
         protected void SetButtonsTwoColumns(params (string Text, int Result)[] buttons)
         {
