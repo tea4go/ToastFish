@@ -33,12 +33,32 @@ namespace ToastFish.View.Notify
             OnUi(() =>
             {
                 var window = new WordCardWindow();
-                window.Build(word, phonetic, bodyLines, statusLine, onReplay, buttons);
+                window.BuildCompact(word, phonetic, bodyLines, statusLine, onReplay, buttons);
                 window.ShowAsCurrent();
             });
         }
 
-        private void Build(
+        /// <summary>
+        /// 大字分层：单词居中放大，音标 / 释义 / 例句各占一段，按钮排成两列。
+        /// 英语卡片专用，日语 / 五十音 / 自定义仍走 ShowCard。
+        /// </summary>
+        public static void ShowLayeredCard(
+            string word,
+            string phonetic,
+            string[] bodyLines,
+            string statusLine,
+            Action onReplay,
+            params (string Text, int Result)[] buttons)
+        {
+            OnUi(() =>
+            {
+                var window = new WordCardWindow();
+                window.BuildLayered(word, phonetic, bodyLines, statusLine, onReplay, buttons);
+                window.ShowAsCurrent();
+            });
+        }
+
+        private void BuildCompact(
             string word,
             string phonetic,
             string[] bodyLines,
@@ -95,6 +115,64 @@ namespace ToastFish.View.Notify
                 AddLine(statusLine, NotifyTheme.StatusSize, NotifyTheme.Muted, 8);
 
             SetButtons(buttons);
+        }
+
+        /// <summary>大字分层布局。单词居中放大，音标独立成行并居中，释义与例句各占一段，按钮两列。</summary>
+        private void BuildLayered(
+            string word,
+            string phonetic,
+            string[] bodyLines,
+            string statusLine,
+            Action onReplay,
+            (string Text, int Result)[] buttons)
+        {
+            var wordText = new TextBlock
+            {
+                FontSize = NotifyTheme.LayeredWordSize,
+                FontFamily = NotifyTheme.Font,
+                Foreground = NotifyTheme.Foreground,
+                TextWrapping = TextWrapping.Wrap,
+                TextAlignment = TextAlignment.Center,
+                MaxWidth = 348,
+                VerticalAlignment = VerticalAlignment.Center
+            };
+            wordText.Inlines.Add(new Run(word));
+
+            if (onReplay == null)
+            {
+                Root.Children.Add(wordText);
+            }
+            else
+            {
+                // 图标仍贴卡片右侧，单词在剩下的空间里居中
+                var head = new DockPanel { MaxWidth = 348 };
+                Button replay = ReplayButton(onReplay);
+                DockPanel.SetDock(replay, Dock.Right);
+                head.Children.Add(replay);
+                head.Children.Add(wordText);
+                Root.Children.Add(head);
+            }
+
+            if (!string.IsNullOrEmpty(phonetic))
+            {
+                TextBlock phoneticLine = AddLine(phonetic, NotifyTheme.PhoneticSize, NotifyTheme.Muted, 4);
+                phoneticLine.TextAlignment = TextAlignment.Center;
+            }
+
+            if (bodyLines != null)
+            {
+                foreach (string line in bodyLines)
+                {
+                    if (string.IsNullOrEmpty(line))
+                        continue;
+                    AddLine(line, NotifyTheme.SentenceSize, NotifyTheme.Foreground, 10);
+                }
+            }
+
+            if (!string.IsNullOrEmpty(statusLine))
+                AddLine(statusLine, NotifyTheme.StatusSize, NotifyTheme.Muted, 10);
+
+            SetButtonsTwoColumns(buttons);
         }
 
         /// <summary>播放图标。几何图形而非字符，避免用户把字体换成不含 ▶ 的字库后显示成方框。</summary>

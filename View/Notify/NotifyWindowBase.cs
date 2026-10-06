@@ -126,26 +126,55 @@ namespace ToastFish.View.Notify
             };
             foreach ((string text, int result) in buttons)
             {
-                var button = new Button
-                {
-                    Content = text,
-                    FontSize = NotifyTheme.ButtonSize,
-                    FontFamily = NotifyTheme.Font,
-                    Padding = new Thickness(10, 6, 10, 6),
-                    Margin = new Thickness(0, 0, 6, 0),
-                    Background = NotifyTheme.ButtonBackground,
-                    BorderBrush = NotifyTheme.ButtonBorder,
-                    Foreground = NotifyTheme.ButtonForeground
-                };
-                int value = result;
-                button.Click += (s, e) =>
-                {
-                    SetResult(value);
-                    Close();
-                };
+                Button button = CreateButton(text, result);
+                button.Margin = new Thickness(0, 0, 6, 0);
                 row.Children.Add(button);
             }
             Root.Children.Add(row);
+        }
+
+        /// <summary>每行两个的按钮网格，按钮等宽铺满各自格子。奇数个时最后一格留空。</summary>
+        protected void SetButtonsTwoColumns(params (string Text, int Result)[] buttons)
+        {
+            var grid = new Grid { Margin = new Thickness(0, 12, 0, 0) };
+            grid.ColumnDefinitions.Add(new ColumnDefinition());
+            grid.ColumnDefinitions.Add(new ColumnDefinition());
+            for (int row = 0; row < (buttons.Length + 1) / 2; row++)
+                grid.RowDefinitions.Add(new RowDefinition());
+
+            for (int i = 0; i < buttons.Length; i++)
+            {
+                Button button = CreateButton(buttons[i].Text, buttons[i].Result);
+                button.Margin = new Thickness(
+                    i % 2 == 0 ? 0 : 3,
+                    i < 2 ? 0 : 6,
+                    i % 2 == 0 ? 3 : 0,
+                    0);
+                Grid.SetRow(button, i / 2);
+                Grid.SetColumn(button, i % 2);
+                grid.Children.Add(button);
+            }
+            Root.Children.Add(grid);
+        }
+
+        private Button CreateButton(string text, int result)
+        {
+            var button = new Button
+            {
+                Content = text,
+                FontSize = NotifyTheme.ButtonSize,
+                FontFamily = NotifyTheme.Font,
+                Padding = new Thickness(10, 6, 10, 6),
+                Background = NotifyTheme.ButtonBackground,
+                BorderBrush = NotifyTheme.ButtonBorder,
+                Foreground = NotifyTheme.ButtonForeground
+            };
+            button.Click += (s, e) =>
+            {
+                SetResult(result);
+                Close();
+            };
+            return button;
         }
 
         protected TextBlock AddLine(string text, double fontSize, Brush foreground, double topMargin = 0)

@@ -719,7 +719,7 @@ namespace ToastFish.Model.PushControl
             {
                 SentenceTran = CurrentWord.phrase + '\n' + CurrentWord.phraseCN;
             }
-            WordCardWindow.ShowCard(
+            WordCardWindow.ShowLayeredCard(
                 CurrentWord.headWord,
                 Phoneme,
                 new[] { CurrentWord.pos + ". " + CurrentWord.tranCN, SentenceTran },
@@ -761,7 +761,7 @@ namespace ToastFish.Model.PushControl
             else
                 HeadTile = "状态：重学-阶段" + ((int)cardstatus - (int)Cardstatus.Step2) + " 新:" + numNewCards + " 背:" + numLearingCards + " 复:" + numReviewedCards;
 
-            WordCardWindow.ShowCard(
+            WordCardWindow.ShowLayeredCard(
                 CurrentWord.headWord,
                 Phoneme,
                 new[] { CurrentWord.pos + ". " + CurrentWord.tranCN, SentenceTran },

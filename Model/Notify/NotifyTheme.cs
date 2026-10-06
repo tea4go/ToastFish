@@ -13,6 +13,7 @@ namespace ToastFish.Model.Notify
     {
         // 相对基准字号的比例，基准 15 时对应 26 / 14 / 16 / 13 / 11 / 13
         private const double WordRatio = 1.75;
+        private const double LayeredWordRatio = 2.2;
         private const double PhoneticRatio = 0.95;
         private const double MeaningRatio = 1.05;
         private const double SentenceRatio = 0.85;
@@ -22,6 +23,7 @@ namespace ToastFish.Model.Notify
         public static bool IsDark { get; private set; }
         public static FontFamily Font { get; private set; }
         public static double WordSize { get; private set; }
+        public static double LayeredWordSize { get; private set; }
         public static double PhoneticSize { get; private set; }
         public static double MeaningSize { get; private set; }
         public static double SentenceSize { get; private set; }
@@ -48,6 +50,7 @@ namespace ToastFish.Model.Notify
 
             Font = new FontFamily(family);
             WordSize = Math.Round(baseSize * WordRatio);
+            LayeredWordSize = Math.Round(baseSize * LayeredWordRatio);
             PhoneticSize = Math.Round(baseSize * PhoneticRatio);
             MeaningSize = Math.Round(baseSize * MeaningRatio);
             SentenceSize = Math.Round(baseSize * SentenceRatio);
