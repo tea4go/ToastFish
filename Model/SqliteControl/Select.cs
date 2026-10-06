@@ -456,6 +456,36 @@ namespace ToastFish.Model.SqliteControl
             }
             return Result;
         }
+
+        /// <summary>
+        /// 从背过的单词里随机选择Number个。用于随机测试——测试不该考还没背过的词。
+        /// status 为 0 是没背过的新词，背过至少一次后就不再是 0。
+        /// 调用前需先调 SelectWordList() 填充 AllWordList。
+        /// </summary>
+        public List<Word> GetLearnedRandomWords(int Number)
+        {
+            List<Word> Result = new List<Word>();
+            List<Word> WordList = new List<Word>();
+            foreach (var Word in AllWordList)
+            {
+                if (Word.status != 0)
+                    WordList.Add(Word);
+            }
+
+            if (WordList.Count() == 0)
+                return Result;
+            else if (WordList.Count() < Number)
+                Number = WordList.Count();
+
+            Random Rd = new Random();
+            for (int i = 0; i < Number; i++)
+            {
+                int Index = Rd.Next(WordList.Count);//下标
+                Result.Add(WordList[Index]);
+                WordList.RemoveAt(Index);
+            }
+            return Result;
+        }
         #endregion
 
         #region 日语部分
@@ -523,6 +553,36 @@ namespace ToastFish.Model.SqliteControl
             }
             return Result;
         }
+
+        /// <summary>
+        /// 从背过的日语单词里随机选择Number个。用于随机测试——测试不该考还没背过的词。
+        /// status 为 0 是没背过的新词，背过至少一次后就不再是 0。
+        /// </summary>
+        public List<JpWord> GetLearnedRandomJpWords(int Number)
+        {
+            List<JpWord> Result = new List<JpWord>();
+            SelectJpWordList();
+            List<JpWord> WordList = new List<JpWord>();
+            foreach (var JpWord in AllJpWordList)
+            {
+                if (JpWord.status != 0)
+                    WordList.Add(JpWord);
+            }
+
+            if (WordList.Count() == 0)
+                return Result;
+            else if (WordList.Count() < Number)
+                Number = WordList.Count();
+
+            Random Rd = new Random();
+            for (int i = 0; i < Number; i++)
+            {
+                int Index = Rd.Next(WordList.Count);//下标
+                Result.Add(WordList[Index]);
+                WordList.RemoveAt(Index);
+            }
+            return Result;
+        }
         #endregion
 
         #region 五十音部分
@@ -557,6 +617,22 @@ namespace ToastFish.Model.SqliteControl
                 }
                 Result.Add(WordList[Index]);
                 WordList.RemoveAt(Index);
+            }
+            return Result;
+        }
+
+        /// <summary>
+        /// 取进度内（已背过）的五十音，用于随机测试——测试不该考还没背过的音。
+        /// 五十音表不写 status，进度只记在 Count.current，wordRank 从 1 开始。
+        /// </summary>
+        public List<GoinWord> GetLearnedGoinWordList()
+        {
+            int Progress = GetGoinProgress();
+            List<GoinWord> Result = new List<GoinWord>();
+            foreach (var GoinWord in GetGainWordList())
+            {
+                if (GoinWord.wordRank <= Progress)
+                    Result.Add(GoinWord);
             }
             return Result;
         }

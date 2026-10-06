@@ -149,7 +149,7 @@ namespace ToastFish.Model.PushControl
         {
             int Number = (int)Num;
             Select Query = new Select();
-            List<GoinWord> TestList = Query.GetGainWordList();
+            List<GoinWord> TestList = Query.GetLearnedGoinWordList();
             PushGoinWords pushGoinWords = new PushGoinWords();
 
             while (TestList.Count > Number)
@@ -157,6 +157,12 @@ namespace ToastFish.Model.PushControl
                 Random Rd = new Random();
                 int Index = Rd.Next(TestList.Count);
                 TestList.RemoveAt(Index);
+            }
+
+            if (TestList.Count == 0)
+            {
+                pushGoinWords.PushMessage("还没有背过的五十音，先去背一轮再来测试吧！");
+                return;
             }
 
             CreateLog Log = new CreateLog();

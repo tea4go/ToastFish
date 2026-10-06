@@ -623,7 +623,12 @@ namespace ToastFish.Model.PushControl
         {
             Select Query = new Select();
             Query.SelectWordList();
-            List<Word> TestList = Query.GetRandomWords(Number);
+            List<Word> TestList = Query.GetLearnedRandomWords(Number);
+            if (TestList.Count == 0)
+            {
+                PushMessage("还没有背过的单词，先去背一轮再来测试吧！");
+                return;
+            }
 
             CreateLog Log = new CreateLog();
             String LogName = "Log\\" + DateTime.Now.ToString().Replace('/', '-').Replace(' ', '_').Replace(':', '-')

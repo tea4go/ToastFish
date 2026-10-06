@@ -218,7 +218,12 @@ namespace ToastFish.Model.PushControl
             int Number = (int)Num;
             Select Query = new Select();
             PushJpWords pushJpWords = new PushJpWords();
-            List<JpWord> TestList = Query.GetRandomJpWords(Number);
+            List<JpWord> TestList = Query.GetLearnedRandomJpWords(Number);
+            if (TestList.Count == 0)
+            {
+                pushJpWords.PushMessage("还没有背过的单词，先去背一轮再来测试吧！");
+                return;
+            }
 
             CreateLog Log = new CreateLog();
             String LogName = "Log\\" + DateTime.Now.ToString().Replace('/', '-').Replace(' ', '_').Replace(':', '-') + "_随机日语单词.xlsx";
