@@ -157,6 +157,7 @@
     <Compile Include="View\Notify\MessageWindow.cs" />
     <Compile Include="View\Notify\WordCardWindow.cs" />
     <Compile Include="View\Notify\ChoiceWindow.cs" />
+    <Compile Include="View\MenuCheckRenderer.cs" />
     <Compile Include="View\SettingsWindow.xaml.cs">
       <DependentUpon>SettingsWindow.xaml</DependentUpon>
     </Compile>

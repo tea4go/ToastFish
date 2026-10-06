@@ -161,6 +161,8 @@ namespace ToastFish
             // 勾选高亮格默认按 16px 画，而菜单文字会随系统 DPI 放大，放大后勾选列就显得过窄。
             // 取系统菜单的勾选尺寸，让勾选列与系统菜单同宽。设在父菜单上，子菜单会继承。
             Cms.ImageScalingSize = SystemInformation.MenuCheckSize;
+            // 默认渲染器画的勾号又小又偏，换成自绘。设成全局渲染器，子菜单才会一并生效。
+            ToolStripManager.Renderer = new ToastFish.View.MenuCheckRenderer();
 
             Vm.notifyIcon.ContextMenuStrip = Cms;
 
