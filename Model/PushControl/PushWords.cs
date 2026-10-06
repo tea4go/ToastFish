@@ -661,7 +661,7 @@ namespace ToastFish.Model.PushControl
                 {
                     //CopyList.Remove(CurrentWord);
                     string rightAnswer = en2cn ? CurrentWord.tranCN : CurrentWord.headWord;
-                    MessageWindow.ShowMessage("错误 正确答案：" + AnswerDict[QUESTION_CURRENT_RIGHT_ANSWER.ToString()] + '.' + rightAnswer);
+                    MessageWindow.ShowMessage("错误\n正确答案：" + AnswerDict[QUESTION_CURRENT_RIGHT_ANSWER.ToString()] + "\n" + rightAnswer);
                     Thread.Sleep(3000);
                 }
             }
@@ -846,7 +846,7 @@ namespace ToastFish.Model.PushControl
                 else
                 {
                     //CopyList.Remove(CurrentWord);
-                    MessageWindow.ShowMessage("错误 正确答案：" + AnswerDict[QUESTION_CURRENT_RIGHT_ANSWER.ToString()] + '.' + CurrentWord.headWord);
+                    MessageWindow.ShowMessage("错误\n正确答案：" + AnswerDict[QUESTION_CURRENT_RIGHT_ANSWER.ToString()] + "\n" + CurrentWord.headWord);
                     CopyList.RemoveAt(0);
                     CopyList.Add(CurrentWord);
                     Thread.Sleep(5000);
@@ -879,7 +879,7 @@ namespace ToastFish.Model.PushControl
                 else
                 {
                     //RandomList.Remove(CurrentWord);
-                    MessageWindow.ShowMessage("错误, 正确答案：" + AnswerDict[QUESTION_CURRENT_RIGHT_ANSWER.ToString()] + "\n" + CurrentWord.explain);
+                    MessageWindow.ShowMessage("错误\n正确答案：" + AnswerDict[QUESTION_CURRENT_RIGHT_ANSWER.ToString()] + "\n" + CurrentWord.explain);
                     Thread.Sleep(6000);
                     CopyList.RemoveAt(0);
                     CopyList.Add(CurrentWord);

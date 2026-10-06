@@ -137,7 +137,7 @@ namespace ToastFish.Model.PushControl
                 else if (pushGoinWords.QUESTION_CURRENT_STATUS == 0)
                 {
                     //CopyList.Remove(CurrentWord);
-                    MessageWindow.ShowMessage("错误 正确答案：" + pushGoinWords.AnswerDict[pushGoinWords.QUESTION_CURRENT_RIGHT_ANSWER.ToString()] + '.' + RightAnswer);
+                    MessageWindow.ShowMessage("错误\n正确答案：" + pushGoinWords.AnswerDict[pushGoinWords.QUESTION_CURRENT_RIGHT_ANSWER.ToString()] + "\n" + RightAnswer);
                     Thread.Sleep(3000);
                 }
             }
@@ -209,7 +209,7 @@ namespace ToastFish.Model.PushControl
                 else if (pushGoinWords.QUESTION_CURRENT_STATUS == 0)
                 {
                     //CopyList.Remove(CurrentWord);
-                    MessageWindow.ShowMessage("错误 正确答案：" + pushGoinWords.AnswerDict[pushGoinWords.QUESTION_CURRENT_RIGHT_ANSWER.ToString()] + '.' + RightAnswer);
+                    MessageWindow.ShowMessage("错误\n正确答案：" + pushGoinWords.AnswerDict[pushGoinWords.QUESTION_CURRENT_RIGHT_ANSWER.ToString()] + "\n" + RightAnswer);
                     Thread.Sleep(3000);
                 }
             }
