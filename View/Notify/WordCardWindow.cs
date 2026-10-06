@@ -46,18 +46,40 @@ namespace ToastFish.View.Notify
             Action onReplay,
             (string Text, int Result)[] buttons)
         {
-            TextBlock head = AddLine(word, NotifyTheme.WordSize, NotifyTheme.Foreground);
+            var headText = new TextBlock
+            {
+                FontSize = NotifyTheme.WordSize,
+                FontFamily = NotifyTheme.Font,
+                Foreground = NotifyTheme.Foreground,
+                TextWrapping = TextWrapping.Wrap,
+                MaxWidth = 348,
+                VerticalAlignment = VerticalAlignment.Center
+            };
+            headText.Inlines.Add(new Run(word));
             if (!string.IsNullOrEmpty(phonetic))
             {
-                head.Inlines.Add(new Run("  "));
-                head.Inlines.Add(new Run(phonetic)
+                headText.Inlines.Add(new Run("  "));
+                headText.Inlines.Add(new Run(phonetic)
                 {
                     FontSize = NotifyTheme.PhoneticSize,
                     Foreground = NotifyTheme.Muted
                 });
             }
-            if (onReplay != null)
-                head.Inlines.Add(ReplayIcon(onReplay));
+
+            if (onReplay == null)
+            {
+                Root.Children.Add(headText);
+            }
+            else
+            {
+                // 图标 dock 在右侧，卡片多宽就贴到多右，不再跟着音标长度浮动
+                var head = new DockPanel { MaxWidth = 348 };
+                Button replay = ReplayButton(onReplay);
+                DockPanel.SetDock(replay, Dock.Right);
+                head.Children.Add(replay);
+                head.Children.Add(headText);
+                Root.Children.Add(head);
+            }
 
             if (bodyLines != null)
             {
@@ -76,7 +98,7 @@ namespace ToastFish.View.Notify
         }
 
         /// <summary>播放图标。几何图形而非字符，避免用户把字体换成不含 ▶ 的字库后显示成方框。</summary>
-        private static InlineUIContainer ReplayIcon(Action onReplay)
+        private static Button ReplayButton(Action onReplay)
         {
             double size = NotifyTheme.ButtonSize * 1.7;
             var icon = new Path
@@ -93,8 +115,9 @@ namespace ToastFish.View.Notify
                 FontSize = NotifyTheme.ButtonSize,
                 FontFamily = NotifyTheme.Font,
                 Padding = new Thickness(7, 3, 7, 3),
-                // 和左边的音标拉开 10px，否则图标会贴着音标
+                // 单词特别长时保证图标和文字之间仍有 10px
                 Margin = new Thickness(10, 0, 0, 0),
+                VerticalAlignment = VerticalAlignment.Center,
                 Background = NotifyTheme.ButtonBackground,
                 BorderBrush = NotifyTheme.ButtonBorder,
                 BorderThickness = new Thickness(1),
@@ -102,7 +125,7 @@ namespace ToastFish.View.Notify
                 ToolTip = "播放发音"
             };
             button.Click += (s, e) => onReplay();
-            return new InlineUIContainer(button) { BaselineAlignment = BaselineAlignment.Center };
+            return button;
         }
     }
 }
