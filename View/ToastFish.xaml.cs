@@ -272,7 +272,6 @@ namespace ToastFish
             Cms.Items.Add(Begin);
             //Cms.Items.Add(SetNumber);
             //Cms.Items.Add(SetEngType);
-            Cms.Items.Add(ImportWords);
             Cms.Items.Add(SelectBook);
             Cms.Items.Add(SelectJpBook);
             Cms.Items.Add(RandomTest);
@@ -282,36 +281,37 @@ namespace ToastFish
             Cms.Items.Add(Start);
             Cms.Items.Add(ExitMenuItem);
 
-            ((ToolStripDropDownItem)Cms.Items[2]).DropDownItems.Add(CET4_1);
-            ((ToolStripDropDownItem)Cms.Items[2]).DropDownItems.Add(CET4_3);
-            ((ToolStripDropDownItem)Cms.Items[2]).DropDownItems.Add(CET6_1);
-            ((ToolStripDropDownItem)Cms.Items[2]).DropDownItems.Add(CET6_3);
-            ((ToolStripDropDownItem)Cms.Items[2]).DropDownItems.Add(GMAT_3);
-            ((ToolStripDropDownItem)Cms.Items[2]).DropDownItems.Add(GRE_2);
-            ((ToolStripDropDownItem)Cms.Items[2]).DropDownItems.Add(IELTS_3);
-            ((ToolStripDropDownItem)Cms.Items[2]).DropDownItems.Add(TOEFL_2);
-            ((ToolStripDropDownItem)Cms.Items[2]).DropDownItems.Add(SAT_2);
-            ((ToolStripDropDownItem)Cms.Items[2]).DropDownItems.Add(KaoYan_1);
-            ((ToolStripDropDownItem)Cms.Items[2]).DropDownItems.Add(KaoYan_2);
-            ((ToolStripDropDownItem)Cms.Items[2]).DropDownItems.Add(Level4_1);
-            ((ToolStripDropDownItem)Cms.Items[2]).DropDownItems.Add(Level4luan_2);
-            ((ToolStripDropDownItem)Cms.Items[2]).DropDownItems.Add(Level8_1);
-            ((ToolStripDropDownItem)Cms.Items[2]).DropDownItems.Add(Level8luan_2);
-            ((ToolStripDropDownItem)Cms.Items[2]).DropDownItems.Add(VOA_1500);
-            ((ToolStripDropDownItem)Cms.Items[3]).DropDownItems.Add(Goin);
-            ((ToolStripDropDownItem)Cms.Items[3]).DropDownItems.Add(StdJp_Mid);
-            ((ToolStripDropDownItem)Cms.Items[4]).DropDownItems.Add(RandomWord);
-            ((ToolStripDropDownItem)Cms.Items[4]).DropDownItems.Add(RandomGoin);
-            ((ToolStripDropDownItem)Cms.Items[4]).DropDownItems.Add(RandomJpWord);
-            ((ToolStripDropDownItem)Cms.Items[5]).DropDownItems.Add(OpenSettings);
-            ((ToolStripDropDownItem)Cms.Items[5]).DropDownItems.Add(SetAutoPlay);
-            ((ToolStripDropDownItem)Cms.Items[5]).DropDownItems.Add(SetAutoLog);
-            ((ToolStripDropDownItem)Cms.Items[5]).DropDownItems.Add(ResetLearingStatus);
+            SelectBook.DropDownItems.Add(CET4_1);
+            SelectBook.DropDownItems.Add(CET4_3);
+            SelectBook.DropDownItems.Add(CET6_1);
+            SelectBook.DropDownItems.Add(CET6_3);
+            SelectBook.DropDownItems.Add(GMAT_3);
+            SelectBook.DropDownItems.Add(GRE_2);
+            SelectBook.DropDownItems.Add(IELTS_3);
+            SelectBook.DropDownItems.Add(TOEFL_2);
+            SelectBook.DropDownItems.Add(SAT_2);
+            SelectBook.DropDownItems.Add(KaoYan_1);
+            SelectBook.DropDownItems.Add(KaoYan_2);
+            SelectBook.DropDownItems.Add(Level4_1);
+            SelectBook.DropDownItems.Add(Level4luan_2);
+            SelectBook.DropDownItems.Add(Level8_1);
+            SelectBook.DropDownItems.Add(Level8luan_2);
+            SelectBook.DropDownItems.Add(VOA_1500);
+            SelectJpBook.DropDownItems.Add(Goin);
+            SelectJpBook.DropDownItems.Add(StdJp_Mid);
+            RandomTest.DropDownItems.Add(RandomWord);
+            RandomTest.DropDownItems.Add(RandomGoin);
+            RandomTest.DropDownItems.Add(RandomJpWord);
+            Settings.DropDownItems.Add(OpenSettings);
+            Settings.DropDownItems.Add(SetAutoPlay);
+            Settings.DropDownItems.Add(SetAutoLog);
+            Settings.DropDownItems.Add(ImportWords);
+            Settings.DropDownItems.Add(ResetLearingStatus);
             
-            ((ToolStripDropDownItem)Cms.Items[6]).DropDownItems.Add(Shortcuts);
-            ((ToolStripDropDownItem)Cms.Items[6]).DropDownItems.Add(Use);
-            ((ToolStripDropDownItem)Cms.Items[6]).DropDownItems.Add(Site);
-            ((ToolStripDropDownItem)Cms.Items[6]).DropDownItems.Add(Pdf);
+            GotoHtml.DropDownItems.Add(Shortcuts);
+            GotoHtml.DropDownItems.Add(Use);
+            GotoHtml.DropDownItems.Add(Site);
+            GotoHtml.DropDownItems.Add(Pdf);
 
             // 同步当前词库必须放在菜单项全部添加完成之后，否则中途一旦卡住，托盘菜单就是空的
             if (Select.TABLE_NAME == "CET4_1")
@@ -497,13 +497,12 @@ namespace ToastFish
             ToolStripMenuItem curitem = sender as ToolStripMenuItem;
             if (curitem != null && curitem.OwnerItem !=null)
             {
-                var Cms = (curitem.OwnerItem as ToolStripMenuItem).Owner as ContextMenuStrip;
                 //int index = (curitem.OwnerItem as ToolStripMenuItem).DropDownItems.IndexOf(item);
-                foreach (var itemi in ((ToolStripDropDownItem)Cms.Items[2]).DropDownItems)
+                foreach (var itemi in SelectBook.DropDownItems)
                 {
                     (itemi as ToolStripMenuItem).Checked = false;
                 }
-                foreach (var itemi in ((ToolStripDropDownItem)Cms.Items[3]).DropDownItems)
+                foreach (var itemi in SelectJpBook.DropDownItems)
                 {
                     (itemi as ToolStripMenuItem).Checked = false;
                 }
