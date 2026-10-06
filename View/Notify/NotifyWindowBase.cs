@@ -7,6 +7,7 @@ using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Threading;
 using ToastFish.Model.Notify;
+using ToastFish.Model.Log;
 
 namespace ToastFish.View.Notify
 {
@@ -95,7 +96,7 @@ namespace ToastFish.View.Notify
             catch (Exception ex)
             {
                 // 显示环节的任何异常都不能拖垮等待中的背诵线程，直接按默认结果放行
-                System.Diagnostics.Debug.WriteLine("通知窗口显示失败：" + ex);
+                Logger.Write("通知窗口显示失败：" + ex);
                 if (Current == this)
                     Current = null;
                 _tcs.TrySetResult(DefaultResult);

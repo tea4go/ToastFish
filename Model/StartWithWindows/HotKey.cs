@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Windows.Input;
 using System.Windows.Interop;
+using ToastFish.Model.Log;
 
 namespace ToastFish.Model.StartWithWindows
 {
@@ -53,7 +53,7 @@ namespace ToastFish.Model.StartWithWindows
 
             _dictHotKeyToCalBackProc.Add(Id, this);
 
-            Debug.WriteLine($"RegisterHotKey return {result}, ID={Id},keyCode={virtualKeyCode}");
+            Logger.Write($"RegisterHotKey return {result}, ID={Id},keyCode={virtualKeyCode}");
             return result;
         }
 

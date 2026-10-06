@@ -66,7 +66,7 @@ namespace ToastFish
         private void OnHotKeyHandler(HotKey hotKey)
         {
             string key = hotKey.Key.ToString();
-            Debug.WriteLine("key pressed:" + key);
+            Logger.Write("key pressed:" + key);
             switch (key) 
             {
                 case "Q":
@@ -150,6 +150,7 @@ namespace ToastFish
         System.Windows.Forms.ToolStripMenuItem GotoHtml = new System.Windows.Forms.ToolStripMenuItem();
         System.Windows.Forms.ToolStripMenuItem Start = new System.Windows.Forms.ToolStripMenuItem();
         System.Windows.Forms.ToolStripMenuItem ExitMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+        System.Windows.Forms.ToolStripMenuItem ShowLog = new System.Windows.Forms.ToolStripMenuItem();
 
         System.Windows.Forms.ToolStripMenuItem SetAutoPlay = new System.Windows.Forms.ToolStripMenuItem();
         System.Windows.Forms.ToolStripMenuItem SetAutoLog = new System.Windows.Forms.ToolStripMenuItem();
@@ -195,6 +196,9 @@ namespace ToastFish
 
             GotoHtml.Text = "使用说明";
             GotoHtml.Click += new EventHandler(HowToUse_Click);
+
+            ShowLog.Text = "显示日志";
+            ShowLog.Click += new EventHandler(ShowLog_Click);
 
             Start.Text = "开机启动";
             Start.Click += new EventHandler(Start_Click);
@@ -274,6 +278,7 @@ namespace ToastFish
             Cms.Items.Add(RandomTest);
             Cms.Items.Add(Settings);
             Cms.Items.Add(GotoHtml);
+            Cms.Items.Add(ShowLog);
             Cms.Items.Add(Start);
             Cms.Items.Add(ExitMenuItem);
 
@@ -703,6 +708,11 @@ namespace ToastFish
         private void Site_Click(object sender, EventArgs e)
         {
             System.Diagnostics.Process.Start("https://lab.magiconch.com/toast-fish/");
+        }
+        private void ShowLog_Click(object sender, EventArgs e)
+        {
+            string log = Path.Combine("Log", "toastfish-" + DateTime.Now.ToString("yyyy-MM-dd") + ".log");
+            System.Diagnostics.Process.Start("cmd.exe", "/k \"\"C:\\GreenSoft\\Alias\\tail_utf8.exe\" -F \"" + log + "\"\"");
         }
         private void OpenPdf_Click(object sender, EventArgs e)
         {

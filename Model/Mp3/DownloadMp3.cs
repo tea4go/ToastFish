@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -8,6 +7,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using ToastFish.Model.Mp3;
+using ToastFish.Model.Log;
 
 namespace ToastFish.Model.Download
 {
@@ -68,7 +68,7 @@ namespace ToastFish.Model.Download
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"HttpDownload() Error Message:{ex.Message}");
+                Logger.Write($"HttpDownload() Error Message:{ex.Message}");
                 return false;
             }
         }

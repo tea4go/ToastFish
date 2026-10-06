@@ -78,8 +78,8 @@ namespace ToastFish.Model.PushControl
                 randwordLst.Add(CopyList[Index]);
                 CopyList.RemoveAt(Index);
             }
-            Debug.WriteLine($"copyList.count={CopyList.Count}");
-            Debug.WriteLine($"WordList.count={WordList.Count}");
+            Logger.Write($"copyList.count={CopyList.Count}");
+            Logger.Write($"WordList.count={WordList.Count}");
             return randwordLst;
         }
 
@@ -93,7 +93,7 @@ namespace ToastFish.Model.PushControl
                 return 1;
             using (HotKeytObservable.Subscribe(events =>
             {
-                Debug.WriteLine("HotKeytObservable.Subscribe:" + events);
+                Logger.Write("HotKeytObservable.Subscribe:" + events);
                 if (window == null)
                     return;
                 switch (events)
@@ -124,7 +124,7 @@ namespace ToastFish.Model.PushControl
                 return 1;
             using (HotKeytObservable.Subscribe(events =>
             {
-                Debug.WriteLine("HotKeytObservable.Subscribe:" + events);
+                Logger.Write("HotKeytObservable.Subscribe:" + events);
                 if (window == null)
                     return;
                 switch (events)
@@ -164,7 +164,7 @@ namespace ToastFish.Model.PushControl
                 return 0;
             using (HotKeytObservable.Subscribe(events =>
             {
-                Debug.WriteLine("HotKeytObservable.Subscribe:" + events);
+                Logger.Write("HotKeytObservable.Subscribe:" + events);
                 if (window == null)
                     return;
                 int Ans = -1;
@@ -240,7 +240,7 @@ namespace ToastFish.Model.PushControl
                 }
                 catch (Exception e)
                 {
-                    Debug.WriteLine(e.Message);
+                    Logger.Write(e.Message);
                     return result;
                 }
                 if (answer == 1)
@@ -296,7 +296,7 @@ namespace ToastFish.Model.PushControl
 
             double Score;
             // New Card First
-            Debug.WriteLine($"开始背单词 @{DateTime.Now}");
+            Logger.Write("开始背单词");
             while (NewCardLst.Count != 0)
             {
                 Card newCardi = NewCardLst[0];
@@ -433,9 +433,9 @@ namespace ToastFish.Model.PushControl
 
             }
 
-            Debug.WriteLine($"更新数据库 @{DateTime.Now}");
+            Logger.Write("更新数据库");
             Query.updateCardDateBase(FinishedCardLst);
-            Debug.WriteLine($"数据库更新完毕 @{DateTime.Now}");
+            Logger.Write("数据库更新完毕");
 
             FinishedCardLst.Sort((b, a) =>
             {
@@ -510,7 +510,7 @@ namespace ToastFish.Model.PushControl
             }
             List<Word> CopyList = pushWords.Clone<Word>(RandomList);
             Word CurrentWord = new Word();
-            Debug.WriteLine($"开始背单词 @{DateTime.Now}");
+            Logger.Write("开始背单词");
             while (CopyList.Count != 0)
             {
                 if (pushWords.WORD_CURRENT_STATUS != 3)
@@ -528,7 +528,7 @@ namespace ToastFish.Model.PushControl
                     }
                     catch (Exception e)
                     {
-                        Debug.WriteLine(e.Message);
+                        Logger.Write(e.Message);
                         return;
                     }
                     if (result == 0)
@@ -592,16 +592,16 @@ namespace ToastFish.Model.PushControl
 
                 }
             }
-            Debug.WriteLine($"背完了！接下来开始测验！@{DateTime.Now}");
+            Logger.Write("背完了！接下来开始测验！");
             pushWords.PushMessage("背完了！接下来开始测验！");
             Thread.Sleep(3000);
 
             /* 背诵结束 */
-            Debug.WriteLine($"开始做题 @{DateTime.Now}");
+            Logger.Write("开始做题");
             Query.SelectWordList();
             pushWords.PushWaitAllQuestions(RandomList, (List<Word>)Query.AllWordList);
 
-            Debug.WriteLine($"结束了！恭喜！ @{DateTime.Now}");
+            Logger.Write("结束了！恭喜！");
 
             pushWords.PushMessage("结束了！恭喜！");
         }
@@ -789,7 +789,7 @@ namespace ToastFish.Model.PushControl
                     result = true;
                 return result;
             });
-            Debug.WriteLine($"开始翻译选择 @{DateTime.Now}");
+            Logger.Write("开始翻译选择");
             while (CopyList.Count != 0)
             {
                 Thread.Sleep(500);
@@ -826,7 +826,7 @@ namespace ToastFish.Model.PushControl
                     result = true;
                 return result;
             });
-            Debug.WriteLine($"开始填空 @{DateTime.Now}");
+            Logger.Write("开始填空");
             while (CopyList.Count != 0)
             {
                 //CurrentWord = GetRandomWord(CopyList);
@@ -867,7 +867,7 @@ namespace ToastFish.Model.PushControl
             }
             catch (Exception e)
             {
-                Debug.WriteLine(e.Message);
+                Logger.Write(e.Message);
             }
             if (rst == 1)
                 isFinished = true;
@@ -907,7 +907,7 @@ namespace ToastFish.Model.PushControl
             }
             catch (Exception e)
             {
-                Debug.WriteLine(e.Message);
+                Logger.Write(e.Message);
             }
             if (rst == 1)
                 isFinshed = true;
