@@ -146,16 +146,8 @@ namespace ToastFish.View.Notify
             foreach ((string text, int result) in buttons)
             {
                 Button button = CreateButton(text, result);
-                // 字符串内容不会折行，长释义会把按钮撑得超出卡片宽度，换成可折行的 TextBlock
-                button.Content = new TextBlock
-                {
-                    Text = text,
-                    TextWrapping = TextWrapping.Wrap,
-                    TextAlignment = TextAlignment.Left,
-                    FontSize = NotifyTheme.ButtonSize,
-                    FontFamily = NotifyTheme.Font
-                };
-                // 按钮默认把内容居中并收缩到文字宽度，撑满后左对齐才落得到按钮左边缘
+                // 选项按行铺满卡片，文字靠左而不是居中
+                ((TextBlock)button.Content).TextAlignment = TextAlignment.Left;
                 button.HorizontalContentAlignment = HorizontalAlignment.Stretch;
                 button.Margin = new Thickness(0, 0, 0, 6);
                 column.Children.Add(button);
@@ -189,18 +181,30 @@ namespace ToastFish.View.Notify
 
         private Button CreateButton(string text, int result)
         {
+            var label = new TextBlock
+            {
+                Text = text,
+                TextWrapping = TextWrapping.Wrap,
+                TextAlignment = TextAlignment.Center,
+                FontSize = NotifyTheme.ButtonSize,
+                FontFamily = NotifyTheme.Font,
+                Foreground = NotifyTheme.ButtonForeground
+            };
             var button = new Button
             {
-                Content = text,
+                Content = label,
                 FontSize = NotifyTheme.ButtonSize,
                 FontFamily = NotifyTheme.Font,
                 Padding = new Thickness(10, 6, 10, 6),
                 Background = NotifyTheme.ButtonBackground,
                 BorderBrush = NotifyTheme.ButtonBorder,
-                Foreground = NotifyTheme.ButtonForeground,
                 Cursor = Cursors.Hand,
                 Template = CreateButtonTemplate()
             };
+            // 文字色直接改 TextBlock：按钮自己的 Foreground 是局部值，模板触发器压不住；
+            // 在模板里给 Border 设 TextElement.Foreground 也传不到里面的 TextBlock（实测无效）
+            button.MouseEnter += (s, e) => label.Foreground = NotifyTheme.ButtonHoverForeground;
+            button.MouseLeave += (s, e) => label.Foreground = NotifyTheme.ButtonForeground;
             button.Click += (s, e) =>
             {
                 SetResult(result);

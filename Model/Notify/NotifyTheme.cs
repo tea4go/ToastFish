@@ -49,6 +49,9 @@ namespace ToastFish.Model.Notify
         public static Brush ButtonHoverBackground { get; private set; }
         public static Brush ButtonHoverBorder { get; private set; }
 
+        /// <summary>鼠标悬停时的按钮文字色，取纯黑/纯白，把与悬停底色的对比度拉到最大。</summary>
+        public static Brush ButtonHoverForeground { get; private set; }
+
         /// <summary>按下时的按钮底色。</summary>
         public static Brush ButtonPressedBackground { get; private set; }
 
@@ -86,9 +89,10 @@ namespace ToastFish.Model.Notify
                 ButtonBackground = Brush("#33383F");
                 ButtonBorder = Brush("#434A53");
                 ButtonForeground = Brush("#EAEEF3");
-                ButtonHoverBackground = Brush("#434A55");
-                ButtonHoverBorder = Brush("#5C6572");
-                ButtonPressedBackground = Brush("#4F5764");
+                ButtonHoverBackground = Brush("#262A30");
+                ButtonHoverBorder = Brush("#7C8794");
+                ButtonHoverForeground = Brush("#FFFFFF");
+                ButtonPressedBackground = Brush("#23272C");
                 Copied = Brush("#5FD08A");
             }
             else
@@ -100,8 +104,9 @@ namespace ToastFish.Model.Notify
                 ButtonBackground = Brush("#E8EAEE");
                 ButtonBorder = Brush("#D6D9DE");
                 ButtonForeground = Brush("#22262C");
-                ButtonHoverBackground = Brush("#D5DAE1");
-                ButtonHoverBorder = Brush("#B9C0CA");
+                ButtonHoverBackground = Brush("#EAECF0");
+                ButtonHoverBorder = Brush("#98A1AD");
+                ButtonHoverForeground = Brush("#000000");
                 ButtonPressedBackground = Brush("#C6CCD5");
                 Copied = Brush("#2E9E5B");
             }
