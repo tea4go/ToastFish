@@ -105,13 +105,18 @@ HintStyle/HintWrap）。这直接导致最初的需求「单词窗口的字体�
 
 ```
 View/Notify/
-  NotifyWindowBase.xaml(.cs)   通用外壳（基类）
-  WordCardWindow.xaml(.cs)     单词卡片   ← 继承
-  ChoiceWindow.xaml(.cs)       选择题     ← 继承
-  MessageWindow.xaml(.cs)      提示消息   ← 继承
+  NotifyWindowBase.cs   通用外壳（基类）
+  WordCardWindow.cs     单词卡片   ← 继承
+  ChoiceWindow.cs       选择题     ← 继承
+  MessageWindow.cs      提示消息   ← 继承
 View/SettingsWindow.xaml(.cs)  设置窗口（独立，不继承——普通居中对话框，需要抢焦点）
 Model/Notify/NotifyTheme.cs    字体/主题配置的读取与应用
 ```
+
+四个 Notify 窗口**不用 XAML**：内容完全由代码根据传入的文本动态生成——基类用代码搭出
+「圆角边框 + `StackPanel`」外壳，子类往 `Root` 里加内容。这样避开 WPF 的 XAML 继承
+（子类 XAML 的根元素必须指向基类类型，会丢掉基类的视觉树）带来的额外复杂度。
+设置窗口是常规对话框，仍用 XAML。
 
 `ToastFish.csproj` 是旧式工程（显式 `<Compile Include>` / `<Page Include>`），新增的
 `.cs` / `.xaml` 必须逐个登记进去，否则不会被编译。

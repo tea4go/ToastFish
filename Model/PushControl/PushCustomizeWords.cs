@@ -1,4 +1,4 @@
-﻿using Microsoft.Toolkit.Uwp.Notifications;
+﻿using ToastFish.View.Notify;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,22 +13,13 @@ namespace ToastFish.Model.PushControl
     {
         public static void PushOneWord(CustomizeWord CurrentWord)
         {
-            
-            new ToastContentBuilder()
-            .AddText(CurrentWord.firstLine + '\n' + CurrentWord.secondLine)
-            .AddText(CurrentWord.thirdLine + '\n' + CurrentWord.fourthLine)
-
-            .AddButton(new ToastButton()
-                .SetContent("记住了！")
-                .AddArgument("action", "succeed")
-                .SetBackgroundActivation())
-
-            .AddButton(new ToastButton()
-                .SetContent("暂时跳过..")
-                .AddArgument("action", "fail")
-                .SetBackgroundActivation())
-
-            .Show();
+            WordCardWindow.ShowCard(
+                CurrentWord.firstLine,
+                null,
+                new[] { CurrentWord.secondLine, CurrentWord.thirdLine, CurrentWord.fourthLine },
+                null,
+                ("记住了！", 0),
+                ("暂时跳过..", 1));
         }
         public static new void Recitation(Object Words)
         {

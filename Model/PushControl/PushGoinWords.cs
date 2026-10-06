@@ -4,7 +4,7 @@ using System.IO;
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Threading.Tasks;
-using Microsoft.Toolkit.Uwp.Notifications;
+using ToastFish.View.Notify;
 using ToastFish.Model.SqliteControl;
 using ToastFish.Model.Mp3;
 using System.Threading;
@@ -19,65 +19,18 @@ namespace ToastFish.Model.PushControl
 
         public Task<int> ProcessToastNotificationOrderGoin()
         {
-            var Tcs = new TaskCompletionSource<int>();
-
-            ToastNotificationManagerCompat.OnActivated += toastArgs =>
-            {
-                ToastArguments Args = ToastArguments.Parse(toastArgs.Argument);
-                string Status = "";
-                try
-                {
-                    Status = Args["action"];
-                }
-                catch
-                {
-                }
-                if (Status == "succeed")
-                {
-                    Tcs.TrySetResult(0);
-                }
-                else if (Status == "fail")
-                {
-                    Tcs.TrySetResult(1);
-                }
-                else if (Status == "voice")
-                {
-                    Tcs.TrySetResult(2);
-                }
-                else
-                {
-                    Tcs.TrySetResult(1);
-                }
-            };
-            return Tcs.Task;
+            NotifyWindowBase window = NotifyWindowBase.Current;
+            if (window == null)
+                return Task.FromResult(1);
+            return window.WaitAsync();
         }
 
-        public Task<int> ProcessToastNotificationGoinQuestion()
+        public async Task<int> ProcessToastNotificationGoinQuestion()
         {
-            var Tcs = new TaskCompletionSource<int>();
-
-            ToastNotificationManagerCompat.OnActivated += toastArgs =>
-            {
-                ToastArguments Args = ToastArguments.Parse(toastArgs.Argument);
-                string Status = "";
-                try
-                {
-                    Status = Args["action"];
-                }
-                catch
-                {
-                    Tcs.TrySetResult(-1);
-                }
-                if (Status == QUESTION_CURRENT_RIGHT_ANSWER.ToString())
-                {
-                    Tcs.TrySetResult(1);
-                }
-                else
-                {
-                    Tcs.TrySetResult(0);
-                }
-            };
-            return Tcs.Task;
+            NotifyWindowBase window = NotifyWindowBase.Current;
+            if (window == null)
+                return 0;
+            return await window.WaitAsync();
         }
 
         public static void OrderGoin(Object Words)
@@ -141,7 +94,6 @@ namespace ToastFish.Model.PushControl
 
             while (TestList.Count != 0)
             {
-                ToastNotificationManagerCompat.History.Clear();
                 Thread.Sleep(500);
                 CurrentWord = pushGoinWords.GetRandomGoinWord(TestList);
                 List<GoinWord> FakeWordList = Query.GetTwoGoinRandomWords(CurrentWord);
@@ -185,13 +137,10 @@ namespace ToastFish.Model.PushControl
                 else if (pushGoinWords.QUESTION_CURRENT_STATUS == 0)
                 {
                     //CopyList.Remove(CurrentWord);
-                    new ToastContentBuilder()
-                    .AddText("错误 正确答案：" + pushGoinWords.AnswerDict[pushGoinWords.QUESTION_CURRENT_RIGHT_ANSWER.ToString()] + '.' + RightAnswer)
-                    .Show();
+                    MessageWindow.ShowMessage("错误 正确答案：" + pushGoinWords.AnswerDict[pushGoinWords.QUESTION_CURRENT_RIGHT_ANSWER.ToString()] + '.' + RightAnswer);
                     Thread.Sleep(3000);
                 }
             }
-            ToastNotificationManagerCompat.History.Clear();
             pushGoinWords.PushMessage("结束了！恭喜！");
         }
 
@@ -216,7 +165,6 @@ namespace ToastFish.Model.PushControl
             GoinWord CurrentWord = new GoinWord();
             while (TestList.Count != 0)
             {
-                ToastNotificationManagerCompat.History.Clear();
                 Thread.Sleep(500);
                 CurrentWord = pushGoinWords.GetRandomGoinWord(TestList);
                 List<GoinWord> FakeWordList = Query.GetTwoGoinRandomWords(CurrentWord);
@@ -261,36 +209,22 @@ namespace ToastFish.Model.PushControl
                 else if (pushGoinWords.QUESTION_CURRENT_STATUS == 0)
                 {
                     //CopyList.Remove(CurrentWord);
-                    new ToastContentBuilder()
-                    .AddText("错误 正确答案：" + pushGoinWords.AnswerDict[pushGoinWords.QUESTION_CURRENT_RIGHT_ANSWER.ToString()] + '.' + RightAnswer)
-                    .Show();
+                    MessageWindow.ShowMessage("错误 正确答案：" + pushGoinWords.AnswerDict[pushGoinWords.QUESTION_CURRENT_RIGHT_ANSWER.ToString()] + '.' + RightAnswer);
                     Thread.Sleep(3000);
                 }
             }
-            ToastNotificationManagerCompat.History.Clear();
             pushGoinWords.PushMessage("结束了！恭喜！");
         }
 
         public void PushGoinWord(GoinWord CurrentWord)
         {
-            ToastNotificationManagerCompat.History.Clear();
-            string OneLine = "平假名：" + CurrentWord.hiragana + " 片假名：" + CurrentWord.katakana;
-            string TwoLine = "罗马音：" + CurrentWord.romaji;
-
-            new ToastContentBuilder()
-            .AddText(OneLine)
-            .AddText(TwoLine)
-
-            .AddButton(new ToastButton()
-                .SetContent("记住了！")
-                .AddArgument("action", "succeed")
-                .SetBackgroundActivation())
-
-            .AddButton(new ToastButton()
-                .SetContent("发音")
-                .AddArgument("action", "voice")
-                .SetBackgroundActivation())
-            .Show();
+            WordCardWindow.ShowCard(
+                "平假名：" + CurrentWord.hiragana + " 片假名：" + CurrentWord.katakana,
+                null,
+                new[] { "罗马音：" + CurrentWord.romaji },
+                null,
+                ("记住了！", 0),
+                ("发音", 2));
         }
 
         public void PushOneGoinWordQuestion_1(GoinWord CurrentWord, GoinWord B, GoinWord C)
@@ -302,70 +236,18 @@ namespace ToastFish.Model.PushControl
             int AnswerIndex = Rd.Next(3);
             QUESTION_CURRENT_RIGHT_ANSWER = AnswerIndex;
 
-            if (AnswerIndex == 0)
-            {
-                new ToastContentBuilder()
-               .AddText("选择平假名\n" + Question)
+            string[] options = AnswerIndex == 0
+                ? new[] { A, B.hiragana, C.hiragana }
+                : AnswerIndex == 1
+                    ? new[] { B.hiragana, A, C.hiragana }
+                    : new[] { C.hiragana, B.hiragana, A };
 
-               .AddButton(new ToastButton()
-                   .SetContent("A." + A)
-                   .AddArgument("action", "0")
-                   .SetBackgroundActivation())
-
-               .AddButton(new ToastButton()
-                   .SetContent("B." + B.hiragana)
-                   .AddArgument("action", "1")
-                   .SetBackgroundActivation())
-
-               .AddButton(new ToastButton()
-                   .SetContent("C." + C.hiragana)
-                   .AddArgument("action", "2")
-                   .SetBackgroundActivation())
-
-               .Show();
-            }
-            else if (AnswerIndex == 1)
-            {
-                new ToastContentBuilder()
-                .AddText("选择平假名\n" + Question)
-
-               .AddButton(new ToastButton()
-                   .SetContent("A." + B.hiragana)
-                   .AddArgument("action", "0")
-                   .SetBackgroundActivation())
-
-               .AddButton(new ToastButton()
-                   .SetContent("B." + A)
-                   .AddArgument("action", "1")
-                   .SetBackgroundActivation())
-
-               .AddButton(new ToastButton()
-                   .SetContent("C." + C.hiragana)
-                   .AddArgument("action", "2")
-                   .SetBackgroundActivation())
-               .Show();
-            }
-            else if (AnswerIndex == 2)
-            {
-                new ToastContentBuilder()
-                .AddText("选择平假名\n" + Question)
-
-               .AddButton(new ToastButton()
-                   .SetContent("A." + C.hiragana)
-                   .AddArgument("action", "0")
-                   .SetBackgroundActivation())
-
-               .AddButton(new ToastButton()
-                   .SetContent("B." + B.hiragana)
-                   .AddArgument("action", "1")
-                   .SetBackgroundActivation())
-
-               .AddButton(new ToastButton()
-                   .SetContent("C." + A)
-                   .AddArgument("action", "2")
-                   .SetBackgroundActivation())
-               .Show();
-            }
+            ChoiceWindow.ShowChoice(
+                "选择平假名",
+                Question,
+                ("A." + options[0], 0),
+                ("B." + options[1], 1),
+                ("C." + options[2], 2));
         }
 
         public void PushOneGoinWordQuestion_2(GoinWord CurrentWord, GoinWord B, GoinWord C)
@@ -377,70 +259,18 @@ namespace ToastFish.Model.PushControl
             int AnswerIndex = Rd.Next(3);
             QUESTION_CURRENT_RIGHT_ANSWER = AnswerIndex;
 
-            if (AnswerIndex == 0)
-            {
-                new ToastContentBuilder()
-               .AddText("选择片假名\n" + Question)
+            string[] options = AnswerIndex == 0
+                ? new[] { A, B.katakana, C.katakana }
+                : AnswerIndex == 1
+                    ? new[] { B.katakana, A, C.katakana }
+                    : new[] { C.katakana, B.katakana, A };
 
-               .AddButton(new ToastButton()
-                   .SetContent("A." + A)
-                   .AddArgument("action", "0")
-                   .SetBackgroundActivation())
-
-               .AddButton(new ToastButton()
-                   .SetContent("B." + B.katakana)
-                   .AddArgument("action", "1")
-                   .SetBackgroundActivation())
-
-               .AddButton(new ToastButton()
-                   .SetContent("C." + C.katakana)
-                   .AddArgument("action", "2")
-                   .SetBackgroundActivation())
-
-               .Show();
-            }
-            else if (AnswerIndex == 1)
-            {
-                new ToastContentBuilder()
-                .AddText("选择片假名\n" + Question)
-
-               .AddButton(new ToastButton()
-                   .SetContent("A." + B.katakana)
-                   .AddArgument("action", "0")
-                   .SetBackgroundActivation())
-
-               .AddButton(new ToastButton()
-                   .SetContent("B." + A)
-                   .AddArgument("action", "1")
-                   .SetBackgroundActivation())
-
-               .AddButton(new ToastButton()
-                   .SetContent("C." + C.katakana)
-                   .AddArgument("action", "2")
-                   .SetBackgroundActivation())
-               .Show();
-            }
-            else if (AnswerIndex == 2)
-            {
-                new ToastContentBuilder()
-                .AddText("选择片假名\n" + Question)
-
-               .AddButton(new ToastButton()
-                   .SetContent("A." + C.katakana)
-                   .AddArgument("action", "0")
-                   .SetBackgroundActivation())
-
-               .AddButton(new ToastButton()
-                   .SetContent("B." + B.katakana)
-                   .AddArgument("action", "1")
-                   .SetBackgroundActivation())
-
-               .AddButton(new ToastButton()
-                   .SetContent("C." + A)
-                   .AddArgument("action", "2")
-                   .SetBackgroundActivation())
-               .Show();
-            }
+            ChoiceWindow.ShowChoice(
+                "选择片假名",
+                Question,
+                ("A." + options[0], 0),
+                ("B." + options[1], 1),
+                ("C." + options[2], 2));
         }
 
         public void PushOneGoinWordQuestion_3(GoinWord CurrentWord, GoinWord B, GoinWord C)
@@ -452,70 +282,18 @@ namespace ToastFish.Model.PushControl
             int AnswerIndex = Rd.Next(3);
             QUESTION_CURRENT_RIGHT_ANSWER = AnswerIndex;
 
-            if (AnswerIndex == 0)
-            {
-                new ToastContentBuilder()
-               .AddText("选择片假名\n" + Question)
+            string[] options = AnswerIndex == 0
+                ? new[] { A, B.katakana, C.katakana }
+                : AnswerIndex == 1
+                    ? new[] { B.katakana, A, C.katakana }
+                    : new[] { C.katakana, B.katakana, A };
 
-               .AddButton(new ToastButton()
-                   .SetContent("A." + A)
-                   .AddArgument("action", "0")
-                   .SetBackgroundActivation())
-
-               .AddButton(new ToastButton()
-                   .SetContent("B." + B.katakana)
-                   .AddArgument("action", "1")
-                   .SetBackgroundActivation())
-
-               .AddButton(new ToastButton()
-                   .SetContent("C." + C.katakana)
-                   .AddArgument("action", "2")
-                   .SetBackgroundActivation())
-
-               .Show();
-            }
-            else if (AnswerIndex == 1)
-            {
-                new ToastContentBuilder()
-                .AddText("选择片假名\n" + Question)
-
-               .AddButton(new ToastButton()
-                   .SetContent("A." + B.katakana)
-                   .AddArgument("action", "0")
-                   .SetBackgroundActivation())
-
-               .AddButton(new ToastButton()
-                   .SetContent("B." + A)
-                   .AddArgument("action", "1")
-                   .SetBackgroundActivation())
-
-               .AddButton(new ToastButton()
-                   .SetContent("C." + C.katakana)
-                   .AddArgument("action", "2")
-                   .SetBackgroundActivation())
-               .Show();
-            }
-            else if (AnswerIndex == 2)
-            {
-                new ToastContentBuilder()
-                .AddText("选择片假名\n" + Question)
-
-               .AddButton(new ToastButton()
-                   .SetContent("A." + C.katakana)
-                   .AddArgument("action", "0")
-                   .SetBackgroundActivation())
-
-               .AddButton(new ToastButton()
-                   .SetContent("B." + B.katakana)
-                   .AddArgument("action", "1")
-                   .SetBackgroundActivation())
-
-               .AddButton(new ToastButton()
-                   .SetContent("C." + A)
-                   .AddArgument("action", "2")
-                   .SetBackgroundActivation())
-               .Show();
-            }
+            ChoiceWindow.ShowChoice(
+                "选择片假名",
+                Question,
+                ("A." + options[0], 0),
+                ("B." + options[1], 1),
+                ("C." + options[2], 2));
         }
 
         public GoinWord GetRandomGoinWord(List<GoinWord> WordList)

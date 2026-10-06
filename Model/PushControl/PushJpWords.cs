@@ -4,7 +4,7 @@ using ToastFish.Model.SqliteControl;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Microsoft.Toolkit.Uwp.Notifications;
+using ToastFish.View.Notify;
 using System.Speech.Synthesis;
 using System.Threading;
 using ToastFish.Model.Log;
@@ -34,30 +34,18 @@ namespace ToastFish.Model.PushControl
 
         public void PushOneWord(JpWord CurrentWord)
         {
-            ToastNotificationManagerCompat.History.Clear();
-            string OneLine = CurrentWord.headWord + "  (" + CurrentWord.hiragana + ")";
+            string phonetic = CurrentWord.hiragana;
             if (CurrentWord.Phone != -1)
-                OneLine += "  重音：" + CurrentWord.Phone.ToString();
-            OneLine += "\n" + CurrentWord.tranCN;
-            new ToastContentBuilder()
-            .AddText(OneLine)
-            .AddText(CurrentWord.pos)
+                phonetic += "  重音：" + CurrentWord.Phone;
 
-            .AddButton(new ToastButton()
-                .SetContent("记住了！")
-                .AddArgument("action", "succeed")
-                .SetBackgroundActivation())
-
-            .AddButton(new ToastButton()
-                .SetContent("暂时跳过..")
-                .AddArgument("action", "fail")
-                .SetBackgroundActivation())
-
-            .AddButton(new ToastButton()
-                .SetContent("发音")
-                .AddArgument("action", "voice")
-                .SetBackgroundActivation())
-            .Show();
+            WordCardWindow.ShowCard(
+                CurrentWord.headWord,
+                phonetic,
+                new[] { CurrentWord.tranCN, CurrentWord.pos },
+                null,
+                ("记住了！", 0),
+                ("暂时跳过..", 1),
+                ("发音", 2));
         }
 
         public void PushOneTransQuestion(JpWord CurrentWord, string B, string C)
@@ -69,70 +57,18 @@ namespace ToastFish.Model.PushControl
             int AnswerIndex = Rd.Next(3);
             QUESTION_CURRENT_RIGHT_ANSWER = AnswerIndex;
 
-            if (AnswerIndex == 0)
-            {
-                new ToastContentBuilder()
-               .AddText("翻译\n" + Question)
+            string[] options = AnswerIndex == 0
+                ? new[] { A, B, C }
+                : AnswerIndex == 1
+                    ? new[] { B, A, C }
+                    : new[] { C, B, A };
 
-               .AddButton(new ToastButton()
-                   .SetContent("A." + A)
-                   .AddArgument("action", "0")
-                   .SetBackgroundActivation())
-
-               .AddButton(new ToastButton()
-                   .SetContent("B." + B)
-                   .AddArgument("action", "1")
-                   .SetBackgroundActivation())
-
-               .AddButton(new ToastButton()
-                   .SetContent("C." + C)
-                   .AddArgument("action", "2")
-                   .SetBackgroundActivation())
-
-               .Show();
-            }
-            else if (AnswerIndex == 1)
-            {
-                new ToastContentBuilder()
-                .AddText("翻译\n" + Question)
-
-               .AddButton(new ToastButton()
-                   .SetContent("A." + B)
-                   .AddArgument("action", "0")
-                   .SetBackgroundActivation())
-
-               .AddButton(new ToastButton()
-                   .SetContent("B." + A)
-                   .AddArgument("action", "1")
-                   .SetBackgroundActivation())
-
-               .AddButton(new ToastButton()
-                   .SetContent("C." + C)
-                   .AddArgument("action", "2")
-                   .SetBackgroundActivation())
-               .Show();
-            }
-            else if (AnswerIndex == 2)
-            {
-                new ToastContentBuilder()
-                .AddText("翻译\n" + Question)
-
-               .AddButton(new ToastButton()
-                   .SetContent("A." + C)
-                   .AddArgument("action", "0")
-                   .SetBackgroundActivation())
-
-               .AddButton(new ToastButton()
-                   .SetContent("B." + B)
-                   .AddArgument("action", "1")
-                   .SetBackgroundActivation())
-
-               .AddButton(new ToastButton()
-                   .SetContent("C." + A)
-                   .AddArgument("action", "2")
-                   .SetBackgroundActivation())
-               .Show();
-            }
+            ChoiceWindow.ShowChoice(
+                "翻译",
+                Question,
+                ("A." + options[0], 0),
+                ("B." + options[1], 1),
+                ("C." + options[2], 2));
         }
 
         public static new void Recitation(Object Words)
@@ -221,7 +157,6 @@ namespace ToastFish.Model.PushControl
 
             while (RandomList.Count != 0)
             {
-                ToastNotificationManagerCompat.History.Clear();
                 Thread.Sleep(500);
                 CurrentWord = pushJpWords.GetRandomWord(RandomList);
                 List<JpWord> FakeWordList = Query.GetRandomJpWords(2);
@@ -248,14 +183,11 @@ namespace ToastFish.Model.PushControl
                 else if (pushJpWords.QUESTION_CURRENT_STATUS == 0)
                 {
                     //CopyList.Remove(CurrentWord);
-                    new ToastContentBuilder()
-                    .AddText("错误 正确答案：" + pushJpWords.AnswerDict[pushJpWords.QUESTION_CURRENT_RIGHT_ANSWER.ToString()] + '.' + CurrentWord.headWord)
-                    .Show();
+                    MessageWindow.ShowMessage("错误 正确答案：" + pushJpWords.AnswerDict[pushJpWords.QUESTION_CURRENT_RIGHT_ANSWER.ToString()] + '.' + CurrentWord.headWord);
                     Thread.Sleep(3000);
                 }
             }
 
-            ToastNotificationManagerCompat.History.Clear();
             pushJpWords.PushMessage("结束了！恭喜！");
         }
 
@@ -274,7 +206,6 @@ namespace ToastFish.Model.PushControl
 
             while (TestList.Count != 0)
             {
-                ToastNotificationManagerCompat.History.Clear();
                 Thread.Sleep(500);
                 CurrentWord = pushJpWords.GetRandomWord(TestList);
                 List<JpWord> FakeWordList = Query.GetRandomJpWords(2);
@@ -301,13 +232,10 @@ namespace ToastFish.Model.PushControl
                 else if (pushJpWords.QUESTION_CURRENT_STATUS == 0)
                 {
                     //CopyList.Remove(CurrentWord);
-                    new ToastContentBuilder()
-                    .AddText("错误 正确答案：" + pushJpWords.AnswerDict[pushJpWords.QUESTION_CURRENT_RIGHT_ANSWER.ToString()] + '.' + CurrentWord.headWord)
-                    .Show();
+                    MessageWindow.ShowMessage("错误 正确答案：" + pushJpWords.AnswerDict[pushJpWords.QUESTION_CURRENT_RIGHT_ANSWER.ToString()] + '.' + CurrentWord.headWord);
                     Thread.Sleep(3000);
                 }
             }
-            ToastNotificationManagerCompat.History.Clear();
             pushJpWords.PushMessage("结束了！恭喜！");
         }
     }

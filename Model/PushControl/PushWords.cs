@@ -4,7 +4,7 @@ using System.IO;
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Threading.Tasks;
-using Microsoft.Toolkit.Uwp.Notifications;
+using ToastFish.View.Notify;
 using ToastFish.Model.SqliteControl;
 using System.Threading;
 using System.Speech.Synthesis;
@@ -41,28 +41,12 @@ namespace ToastFish.Model.PushControl
     {
         // 当前推送单词的状态
         public int WORD_CURRENT_STATUS = 0;  // 背单词时候的状态
-        public string WORD_NUMBER_STRING = "";  // 设置的单词数量
         public int QUESTION_CURRENT_RIGHT_ANSWER = -1;  // 当前问题的答案
         public int QUESTION_CURRENT_STATUS = 0;  // 问题的回答状态
         public Dictionary<string, string> AnswerDict = new Dictionary<string, string> {
             {"0","A"},{"1","B"},{"2","C"},{"3","D"}
         };
         public static MyHotObservable HotKeytObservable = new MyHotObservable();
-
-        /// <summary>
-        /// 判断字符串是否为数字
-        /// </summary>
-        public bool IsNumber(string str)
-        {
-            char[] ch = new char[str.Length];
-            ch = str.ToCharArray();
-            for (int i = 0; i < ch.Length; i++)
-            {
-                if (ch[i] < 48 || ch[i] > 57)
-                    return false;
-            }
-            return true;
-        }
 
         /// <summary>
         /// 从List中获取一个随机单词
@@ -104,21 +88,24 @@ namespace ToastFish.Model.PushControl
         /// </summary>
         public async Task<int> ProcessToastNotificationRecitation()//CancellationToken cancellationToken
         {
-            var Tcs = new TaskCompletionSource<int>();
-
+            NotifyWindowBase window = NotifyWindowBase.Current;
+            if (window == null)
+                return 1;
             using (HotKeytObservable.Subscribe(events =>
             {
                 Debug.WriteLine("HotKeytObservable.Subscribe:" + events);
+                if (window == null)
+                    return;
                 switch (events)
                 {
                     case "1": // succeed
-                        Tcs.TrySetResult(0);
+                        window.SetResult(0);
                         break;
                     case "2"://fail
-                        Tcs.TrySetResult(1);
+                        window.SetResult(1);
                         break;
                     case "3"://voice
-                        Tcs.TrySetResult(2);
+                        window.SetResult(2);
                         break;
                     default:
                         break;
@@ -126,62 +113,36 @@ namespace ToastFish.Model.PushControl
 
             }))
             {
-                ToastNotificationManagerCompat.OnActivated += toastArgs =>
-                {
-                    ToastArguments Args = ToastArguments.Parse(toastArgs.Argument);
-                    string Status = "";
-                    try
-                    {
-                        Status = Args["action"];
-                    }
-                    catch
-                    {
-                    }
-                    // Debug.WriteLine("Debuging....");
-                    if (Status == "succeed")
-                    {
-                        Tcs.TrySetResult(0);
-                    }
-                    else if (Status == "fail")
-                    {
-                        Tcs.TrySetResult(1);
-                    }
-                    else if (Status == "voice")
-                    {
-                        Tcs.TrySetResult(2);
-                    }
-                    else
-                    {
-                        Tcs.TrySetResult(1);
-                    }
-                };
-                return await Tcs.Task;
+                return await window.WaitAsync();
             }
         }
 
         public async Task<int> ProcessToastNotificationRecitationSM2()//CancellationToken cancellationToken
         {
-            var Tcs = new TaskCompletionSource<int>();
-
+            NotifyWindowBase window = NotifyWindowBase.Current;
+            if (window == null)
+                return 1;
             using (HotKeytObservable.Subscribe(events =>
             {
                 Debug.WriteLine("HotKeytObservable.Subscribe:" + events);
+                if (window == null)
+                    return;
                 switch (events)
                 {
                     case "1": //again
-                        Tcs.TrySetResult(1);
+                        window.SetResult(1);
                         break;
                     case "2"://hard
-                        Tcs.TrySetResult(2);
+                        window.SetResult(2);
                         break;
                     case "3"://good
-                        Tcs.TrySetResult(3);
+                        window.SetResult(3);
                         break;
                     case "4"://easy
-                        Tcs.TrySetResult(4);
+                        window.SetResult(4);
                         break;
                     case "S"://voice
-                        Tcs.TrySetResult(0);
+                        window.SetResult(0);
                         break;
                     default:
                         break;
@@ -189,44 +150,7 @@ namespace ToastFish.Model.PushControl
 
             }))
             {
-                ToastNotificationManagerCompat.OnActivated += toastArgs =>
-                {
-                    ToastArguments Args = ToastArguments.Parse(toastArgs.Argument);
-                    string Status = "";
-                    try
-                    {
-                        Status = Args["action"];
-                    }
-                    catch
-                    {
-                    }
-                    //Debug.WriteLine("Debuging....");
-                    if (Status == "easy")
-                    {
-                        Tcs.TrySetResult(4);
-                    }
-                    else if (Status == "good")
-                    {
-                        Tcs.TrySetResult(3);
-                    }
-                    else if (Status == "hard")
-                    {
-                        Tcs.TrySetResult(2);
-                    }
-                    else if (Status == "again")
-                    {
-                        Tcs.TrySetResult(1);
-                    }
-                    else if (Status == "voice")
-                    {
-                        Tcs.TrySetResult(0);
-                    }
-                    else
-                    {
-                        Tcs.TrySetResult(0);
-                    }
-                };
-                return await Tcs.Task;
+                return await window.WaitAsync();
             }
         }
 
@@ -235,11 +159,14 @@ namespace ToastFish.Model.PushControl
         /// </summary>
         public async Task<int> ProcessToastNotificationQuestion()
         {
-            var Tcs = new TaskCompletionSource<int>();
-
+            NotifyWindowBase window = NotifyWindowBase.Current;
+            if (window == null)
+                return 0;
             using (HotKeytObservable.Subscribe(events =>
             {
                 Debug.WriteLine("HotKeytObservable.Subscribe:" + events);
+                if (window == null)
+                    return;
                 int Ans = -1;
                 switch (events)
                 {
@@ -260,148 +187,16 @@ namespace ToastFish.Model.PushControl
                 }
                 if (Ans == QUESTION_CURRENT_RIGHT_ANSWER)
                 {
-                    Tcs.TrySetResult(1);
+                    window.SetResult(1);
                 }
                 else
                 {
-                    Tcs.TrySetResult(0);
+                    window.SetResult(0);
                 }
 
             }))
             {
-                ToastNotificationManagerCompat.OnActivated += toastArgs =>
-                {
-                    ToastArguments Args = ToastArguments.Parse(toastArgs.Argument);
-                    string Status = "";
-                    try
-                    {
-                        Status = Args["action"];
-                    }
-                    catch
-                    {
-                        Tcs.TrySetResult(-1);
-                    }
-                    if (Status == QUESTION_CURRENT_RIGHT_ANSWER.ToString())
-                    {
-                        Tcs.TrySetResult(1);
-                    }
-                    else
-                    {
-                        Tcs.TrySetResult(0);
-                    }
-                };
-                return await Tcs.Task;
-            }
-        }
-
-        /// <summary>
-        /// 设置单词数量的Task
-        /// </summary>
-        public Task<int> ProcessToastNotificationSetNumber()
-        {
-            var Tcs = new TaskCompletionSource<int>();
-
-            ToastNotificationManagerCompat.OnActivated += toastArgs =>
-            {
-                ToastArguments Args = ToastArguments.Parse(toastArgs.Argument);
-                string Status = "";
-                try
-                {
-                    Status = Args["action"];
-                }
-                catch
-                {
-                    Tcs.TrySetResult(0);
-                }
-                if (Status == "yes")
-                {
-                    WORD_NUMBER_STRING = (string)toastArgs.UserInput["number"];
-                    Tcs.TrySetResult(1);
-                }
-                else
-                {
-                    Tcs.TrySetResult(0);
-                }
-            };
-            return Tcs.Task;
-        }
-
-        /// <summary>
-        /// 设置单词数量
-        /// </summary>
-        public void SetWordNumber()
-        {
-            new ToastContentBuilder()
-            .AddText("这次要背多少个？")
-            .AddToastInput(new ToastSelectionBox("number")
-            {
-                DefaultSelectionBoxItemId = Select.WORD_NUMBER.ToString(),
-                Items =
-                {
-                    new ToastSelectionBoxItem("5", "5"),
-                    new ToastSelectionBoxItem("10", "10"),
-                    new ToastSelectionBoxItem("15", "15"),
-                    new ToastSelectionBoxItem("20", "20")
-                }
-            })
-            .AddButton(new ToastButton()
-                .SetContent("确定")
-                .AddArgument("action", "yes")
-                .SetBackgroundActivation())
-            .Show();
-            var task = this.ProcessToastNotificationSetNumber();
-            if (task.Result == 1)
-            {
-                if (IsNumber(WORD_NUMBER_STRING))
-                {
-                    Select.WORD_NUMBER = int.Parse(WORD_NUMBER_STRING);
-                    Select Temp = new Select();
-                    Temp.UpdateNumber(Select.WORD_NUMBER);
-                    PushMessage("已设置单词数量为：" + WORD_NUMBER_STRING);
-                }
-            }
-        }
-
-        public void SetEngType()
-        {
-            new ToastContentBuilder()
-            .AddText("请选择发音类型？")
-            .AddToastInput(new ToastSelectionBox("number")
-            {
-                DefaultSelectionBoxItemId = Select.ENG_TYPE.ToString(),
-                Items =
-                {
-                    new ToastSelectionBoxItem("1", "美国"),
-                    new ToastSelectionBoxItem("2", "英国")
-                }
-            })
-            .AddButton(new ToastButton()
-                .SetContent("确定")
-                .AddArgument("action", "yes")
-                .SetBackgroundActivation())
-            .Show();
-            var task = this.ProcessToastNotificationSetNumber();
-            if (task.Result == 1)
-            {
-                if (IsNumber(WORD_NUMBER_STRING))
-                {
-                    Select.ENG_TYPE = int.Parse(WORD_NUMBER_STRING);
-                    string rst;
-                    switch (Select.ENG_TYPE)
-                    {
-                        case 1:
-                            rst = "美国";
-                            break;
-                        default:
-                            rst = "英国";
-                            break;
-
-                    }
-                    PushMessage("已设置英语类型为：" + rst);
-                    Select Temp = new Select();
-                    Temp.UpdateGlobalConfig();
-                    //Select.UpdateGlobalConfig();
-                }
+                return await window.WaitAsync();
             }
         }
 
@@ -808,7 +603,6 @@ namespace ToastFish.Model.PushControl
 
             Debug.WriteLine($"结束了！恭喜！ @{DateTime.Now}");
 
-            ToastNotificationManagerCompat.History.Clear();
             pushWords.PushMessage("结束了！恭喜！");
         }
 
@@ -827,7 +621,6 @@ namespace ToastFish.Model.PushControl
 
             while (TestList.Count != 0)
             {
-                ToastNotificationManagerCompat.History.Clear();
                 Thread.Sleep(500);
                 CurrentWord = GetRandomWord(TestList);
                 List<Word> FakeWordList = Query.GetRandomWords(2);
@@ -854,35 +647,19 @@ namespace ToastFish.Model.PushControl
                 else if (QUESTION_CURRENT_STATUS == 0)
                 {
                     //CopyList.Remove(CurrentWord);
-                    new ToastContentBuilder()
-                    .AddText("错误 正确答案：" + AnswerDict[QUESTION_CURRENT_RIGHT_ANSWER.ToString()] + '.' + CurrentWord.headWord)
-                    .Show();
+                    MessageWindow.ShowMessage("错误 正确答案：" + AnswerDict[QUESTION_CURRENT_RIGHT_ANSWER.ToString()] + '.' + CurrentWord.headWord);
                     Thread.Sleep(3000);
                 }
             }
-            ToastNotificationManagerCompat.History.Clear();
             PushMessage("结束了！恭喜！");
         }
 
         /// <summary>
         /// 推送一条通知
         /// </summary>
-        public void PushMessage(string Message, string Buttom = "")
+        public void PushMessage(string Message)
         {
-            if (Buttom != "")
-                new ToastContentBuilder()
-                .AddText("Toast Fish")
-                .AddText(Message)
-                .AddButton(new ToastButton()
-                .SetContent(Buttom)
-                .AddArgument("action", "succeed")
-                .SetBackgroundActivation())
-                .Show();
-            else
-                new ToastContentBuilder()
-                .AddText("Toast Fish")
-                .AddText(Message)
-                .Show();
+            MessageWindow.ShowMessage(Message);
         }
 
         /// <summary>
@@ -891,7 +668,6 @@ namespace ToastFish.Model.PushControl
         /// <param name="CurrentWord"></param>
         public void PushOneWord(Word CurrentWord)
         {
-            ToastNotificationManagerCompat.History.Clear();
             string Phoneme;
             switch (Select.ENG_TYPE)
             {
@@ -902,7 +678,6 @@ namespace ToastFish.Model.PushControl
                     Phoneme = CurrentWord.ukPhone;
                     break;
             }
-            string WordPhonePosTran = CurrentWord.headWord + "  (" + Phoneme + ")\n" + CurrentWord.pos + ". " + CurrentWord.tranCN;
             string SentenceTran = "";
             if (CurrentWord.sentence != null && CurrentWord.sentence.Length < 50)
             {
@@ -912,30 +687,18 @@ namespace ToastFish.Model.PushControl
             {
                 SentenceTran = CurrentWord.phrase + '\n' + CurrentWord.phraseCN;
             }
-            new ToastContentBuilder()
-            .AddText(WordPhonePosTran)
-            .AddText(SentenceTran)
-
-            .AddButton(new ToastButton()
-                .SetContent("记住了！")
-                .AddArgument("action", "succeed")
-                .SetBackgroundActivation())
-
-            .AddButton(new ToastButton()
-                .SetContent("暂时跳过..")
-                .AddArgument("action", "fail")
-                .SetBackgroundActivation())
-
-            .AddButton(new ToastButton()
-                .SetContent("发音")
-                .AddArgument("action", "voice")
-                .SetBackgroundActivation())
-            .Show();
+            WordCardWindow.ShowCard(
+                CurrentWord.headWord,
+                Phoneme,
+                new[] { CurrentWord.pos + ". " + CurrentWord.tranCN, SentenceTran },
+                null,
+                ("记住了！", 0),
+                ("暂时跳过..", 1),
+                ("发音", 2));
         }
 
         public void PushOneWordSM2(Word CurrentWord, Cardstatus cardstatus, int numNewCards, int numLearingCards, int numReviewedCards)
         {
-            ToastNotificationManagerCompat.History.Clear();
             string Phoneme;
             switch (Select.ENG_TYPE)
             {
@@ -946,7 +709,6 @@ namespace ToastFish.Model.PushControl
                     Phoneme = CurrentWord.ukPhone;
                     break;
             }
-            string WordPhonePosTran = CurrentWord.headWord + "  (" + Phoneme + ")\n" + CurrentWord.pos + ". " + CurrentWord.tranCN;
             string SentenceTran = "";
             if (CurrentWord.sentence != null && CurrentWord.sentence.Length < 50)
             {
@@ -966,38 +728,15 @@ namespace ToastFish.Model.PushControl
             else
                 HeadTile = "状态：重学-阶段" + ((int)cardstatus - (int)Cardstatus.Step2) + " 新:" + numNewCards + " 背:" + numLearingCards + " 复:" + numReviewedCards;
 
-
-            new ToastContentBuilder()
-            .AddText(WordPhonePosTran)
-            .AddText(SentenceTran)
-            .AddText(HeadTile)
-
-            .AddButton(new ToastButton()
-                .SetContent("没有印象")
-                .AddArgument("action", "again")
-                .SetBackgroundActivation())
-
-            .AddButton(new ToastButton()
-                .SetContent("记忆模糊")
-                .AddArgument("action", "hard")
-                .SetBackgroundActivation())
-
-            .AddButton(new ToastButton()
-                .SetContent("暂时记住")
-                .AddArgument("action", "good")
-                .SetBackgroundActivation())
-
-            .AddButton(new ToastButton()
-                .SetContent("已经牢记")
-                .AddArgument("action", "easy")
-                .SetBackgroundActivation())
-
-            /*  .AddButton(new ToastButton()
-                  .SetContent("发音")
-                  .AddArgument("action", "voice")
-                  .SetBackgroundActivation())*/
-
-            .Show();
+            WordCardWindow.ShowCard(
+                CurrentWord.headWord,
+                Phoneme,
+                new[] { CurrentWord.pos + ". " + CurrentWord.tranCN, SentenceTran },
+                HeadTile,
+                ("没有印象", 1),
+                ("记忆模糊", 2),
+                ("暂时记住", 3),
+                ("已经牢记", 4));
         }
 
         /// <summary>
@@ -1019,7 +758,6 @@ namespace ToastFish.Model.PushControl
             Debug.WriteLine($"开始翻译选择 @{DateTime.Now}");
             while (CopyList.Count != 0)
             {
-                ToastNotificationManagerCompat.History.Clear();
                 Thread.Sleep(500);
                 CurrentWord = CopyList[0];
                 List<Word> rndWords;
@@ -1030,7 +768,6 @@ namespace ToastFish.Model.PushControl
                 {
                     rndWords = GetRandomWordLst(CurrentWord, AllWordList, 2);
                 }
-
                 bool result = PushWaitTransQuestion(CurrentWord, rndWords[0].headWord, rndWords[1].headWord);
                 if (result)
                 {
@@ -1040,9 +777,7 @@ namespace ToastFish.Model.PushControl
                 else
                 {
                     //CopyList.Remove(CurrentWord);
-                    new ToastContentBuilder()
-                    .AddText("错误 正确答案：" + AnswerDict[QUESTION_CURRENT_RIGHT_ANSWER.ToString()] + '.' + CurrentWord.headWord)
-                    .Show();
+                    MessageWindow.ShowMessage("错误 正确答案：" + AnswerDict[QUESTION_CURRENT_RIGHT_ANSWER.ToString()] + '.' + CurrentWord.headWord);
                     CopyList.RemoveAt(0);
                     CopyList.Add(CurrentWord);
                     Thread.Sleep(5000);
@@ -1060,7 +795,6 @@ namespace ToastFish.Model.PushControl
             Debug.WriteLine($"开始填空 @{DateTime.Now}");
             while (CopyList.Count != 0)
             {
-                ToastNotificationManagerCompat.History.Clear();
                 //CurrentWord = GetRandomWord(CopyList);
                 CurrentWord = CopyList[0];
                 QUESTION_CURRENT_RIGHT_ANSWER = int.Parse(CurrentWord.rightIndex) - 1;
@@ -1076,17 +810,12 @@ namespace ToastFish.Model.PushControl
                 else
                 {
                     //RandomList.Remove(CurrentWord);
-                    new ToastContentBuilder()
-                    .AddText("错误, 正确答案：" + AnswerDict[QUESTION_CURRENT_RIGHT_ANSWER.ToString()])
-                    .AddText(CurrentWord.explain)
-                    .Show();
+                    MessageWindow.ShowMessage("错误, 正确答案：" + AnswerDict[QUESTION_CURRENT_RIGHT_ANSWER.ToString()] + "\n" + CurrentWord.explain);
                     Thread.Sleep(6000);
                     CopyList.RemoveAt(0);
                     CopyList.Add(CurrentWord);
                 }
             }
-            ToastNotificationManagerCompat.History.Clear();
-
         }
 
         /// <summary>
@@ -1119,31 +848,13 @@ namespace ToastFish.Model.PushControl
             string C = CurrentWord.choiceIndexThree;
             string D = CurrentWord.choiceIndexFour;
 
-            new ToastContentBuilder()
-            .AddText("选择题")
-            .AddText(Question)
-
-            .AddButton(new ToastButton()
-                .SetContent(A)
-                .AddArgument("action", "0")
-                .SetBackgroundActivation())
-
-            .AddButton(new ToastButton()
-                .SetContent(B)
-                .AddArgument("action", "1")
-                .SetBackgroundActivation())
-
-            .AddButton(new ToastButton()
-                .SetContent(C)
-                .AddArgument("action", "2")
-                .SetBackgroundActivation())
-
-            .AddButton(new ToastButton()
-                .SetContent(D)
-                .AddArgument("action", "3")
-                .SetBackgroundActivation())
-            .Show();
-
+            ChoiceWindow.ShowChoice(
+                "选择题",
+                Question,
+                (A, 0),
+                (B, 1),
+                (C, 2),
+                (D, 3));
         }
 
         /// <summary>
@@ -1178,70 +889,18 @@ namespace ToastFish.Model.PushControl
             int AnswerIndex = Rd.Next(3);
             QUESTION_CURRENT_RIGHT_ANSWER = AnswerIndex;
 
-            if (AnswerIndex == 0)
-            {
-                new ToastContentBuilder()
-               .AddText("翻译\n" + Question)
+            string[] options = AnswerIndex == 0
+                ? new[] { A, B, C }
+                : AnswerIndex == 1
+                    ? new[] { B, A, C }
+                    : new[] { C, B, A };
 
-               .AddButton(new ToastButton()
-                   .SetContent("A." + A)
-                   .AddArgument("action", "0")
-                   .SetBackgroundActivation())
-
-               .AddButton(new ToastButton()
-                   .SetContent("B." + B)
-                   .AddArgument("action", "1")
-                   .SetBackgroundActivation())
-
-               .AddButton(new ToastButton()
-                   .SetContent("C." + C)
-                   .AddArgument("action", "2")
-                   .SetBackgroundActivation())
-
-               .Show();
-            }
-            else if (AnswerIndex == 1)
-            {
-                new ToastContentBuilder()
-                .AddText("翻译\n" + Question)
-
-               .AddButton(new ToastButton()
-                   .SetContent("A." + B)
-                   .AddArgument("action", "0")
-                   .SetBackgroundActivation())
-
-               .AddButton(new ToastButton()
-                   .SetContent("B." + A)
-                   .AddArgument("action", "1")
-                   .SetBackgroundActivation())
-
-               .AddButton(new ToastButton()
-                   .SetContent("C." + C)
-                   .AddArgument("action", "2")
-                   .SetBackgroundActivation())
-               .Show();
-            }
-            else if (AnswerIndex == 2)
-            {
-                new ToastContentBuilder()
-                .AddText("翻译\n" + Question)
-
-               .AddButton(new ToastButton()
-                   .SetContent("A." + C)
-                   .AddArgument("action", "0")
-                   .SetBackgroundActivation())
-
-               .AddButton(new ToastButton()
-                   .SetContent("B." + B)
-                   .AddArgument("action", "1")
-                   .SetBackgroundActivation())
-
-               .AddButton(new ToastButton()
-                   .SetContent("C." + A)
-                   .AddArgument("action", "2")
-                   .SetBackgroundActivation())
-               .Show();
-            }
+            ChoiceWindow.ShowChoice(
+                "翻译",
+                Question,
+                ("A." + options[0], 0),
+                ("B." + options[1], 1),
+                ("C." + options[2], 2));
         }
 
         /// <summary>

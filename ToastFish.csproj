@@ -151,6 +151,14 @@
     <Compile Include="Model\SqliteControl\Select.cs" />
     <Compile Include="Model\StartWithWindows\HotKey.cs" />
     <Compile Include="Model\StartWithWindows\StartWithWindows.cs" />
+    <Compile Include="Model\Notify\NotifyTheme.cs" />
+    <Compile Include="View\Notify\NotifyWindowBase.cs" />
+    <Compile Include="View\Notify\MessageWindow.cs" />
+    <Compile Include="View\Notify\WordCardWindow.cs" />
+    <Compile Include="View\Notify\ChoiceWindow.cs" />
+    <Compile Include="View\SettingsWindow.xaml.cs">
+      <DependentUpon>SettingsWindow.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Resources\IconChika.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -161,6 +169,10 @@
     <Page Include="View\ToastFish.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
+    </Page>
+    <Page Include="View\SettingsWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
     </Page>
     <Compile Include="App.xaml.cs">
       <DependentUpon>App.xaml</DependentUpon>
@@ -219,9 +231,6 @@
     </PackageReference>
     <PackageReference Include="Dapper">
       <Version>2.0.90</Version>
-    </PackageReference>
-    <PackageReference Include="Microsoft.Toolkit.Uwp.Notifications">
-      <Version>7.0.1</Version>
     </PackageReference>
     <PackageReference Include="MP3Sharp">
       <Version>1.0.5</Version>

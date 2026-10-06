@@ -1,5 +1,4 @@
-﻿using Microsoft.Toolkit.Uwp.Notifications;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Windows;
@@ -12,6 +11,7 @@ using ToastFish.Model.Mp3;
 using System.Diagnostics;
 using ToastFish.Model.PushControl;
 using ToastFish.Model.Log;
+using ToastFish.Model.Notify;
 using System.Speech.Synthesis;
 using ToastFish.Model.StartWithWindows;
 using System.IO;
@@ -47,6 +47,7 @@ namespace ToastFish
             SetNotifyIcon();
             this.Visibility = Visibility.Hidden;
             Se.LoadGlobalConfig();
+            NotifyTheme.Load();
             ContextMenu();
             new HotKey(Key.Oem3, KeyModifier.Alt , OnHotKeyHandler);
             new HotKey(Key.D1, KeyModifier.Alt , OnHotKeyHandler);
@@ -139,8 +140,7 @@ namespace ToastFish
 
         System.Windows.Forms.ToolStripMenuItem Begin = new System.Windows.Forms.ToolStripMenuItem();
         System.Windows.Forms.ToolStripMenuItem Settings = new System.Windows.Forms.ToolStripMenuItem();
-        System.Windows.Forms.ToolStripMenuItem SetNumber = new System.Windows.Forms.ToolStripMenuItem();
-        System.Windows.Forms.ToolStripMenuItem SetEngType = new System.Windows.Forms.ToolStripMenuItem();
+        System.Windows.Forms.ToolStripMenuItem OpenSettings = new System.Windows.Forms.ToolStripMenuItem();
         System.Windows.Forms.ToolStripMenuItem ImportWords = new System.Windows.Forms.ToolStripMenuItem();
         System.Windows.Forms.ToolStripMenuItem SelectBook = new System.Windows.Forms.ToolStripMenuItem();
         System.Windows.Forms.ToolStripMenuItem SelectJpBook = new System.Windows.Forms.ToolStripMenuItem();
@@ -165,11 +165,8 @@ namespace ToastFish
             Settings.Text = "参数设置";
 
 
-            SetNumber.Text = "单词个数";
-            SetNumber.Click += new EventHandler(SetNumber_Click);
-
-            SetEngType.Text = "英标类型";
-            SetEngType.Click += new EventHandler(SetEngType_Click);
+            OpenSettings.Text = "设置…";
+            OpenSettings.Click += new EventHandler(OpenSettings_Click);
 
             SetAutoPlay.Text="自动播放";
             SetAutoPlay.Click += new EventHandler(AutoPlay_Click);
@@ -297,8 +294,7 @@ namespace ToastFish
             ((ToolStripDropDownItem)Cms.Items[4]).DropDownItems.Add(RandomWord);
             ((ToolStripDropDownItem)Cms.Items[4]).DropDownItems.Add(RandomGoin);
             ((ToolStripDropDownItem)Cms.Items[4]).DropDownItems.Add(RandomJpWord);
-            ((ToolStripDropDownItem)Cms.Items[5]).DropDownItems.Add(SetNumber);
-            ((ToolStripDropDownItem)Cms.Items[5]).DropDownItems.Add(SetEngType);
+            ((ToolStripDropDownItem)Cms.Items[5]).DropDownItems.Add(OpenSettings);
             ((ToolStripDropDownItem)Cms.Items[5]).DropDownItems.Add(SetAutoPlay);
             ((ToolStripDropDownItem)Cms.Items[5]).DropDownItems.Add(SetAutoLog);
             ((ToolStripDropDownItem)Cms.Items[5]).DropDownItems.Add(ResetLearingStatus);
@@ -388,16 +384,9 @@ namespace ToastFish
             }
         }
 
-        private void SetNumber_Click(object sender, EventArgs e)
+        private void OpenSettings_Click(object sender, EventArgs e)
         {
-            Thread thread = new Thread(new ThreadStart(pushWords.SetWordNumber));
-            thread.Start();
-        }
-
-        private void SetEngType_Click(object sender, EventArgs e)
-        {
-            Thread thread = new Thread(new ThreadStart(pushWords.SetEngType));
-            thread.Start();
+            new ToastFish.View.SettingsWindow().ShowDialog();
         }
 
 
@@ -713,7 +702,6 @@ namespace ToastFish
         }
         private void ExitApp_Click(object sender, EventArgs e)
         {
-            ToastNotificationManagerCompat.History.Clear();
             Environment.Exit(0);
         }
 

@@ -20,6 +20,9 @@ namespace ToastFish.Model.SqliteControl
         public static int ENG_TYPE = 2;  // 英语类型1：美语，2：英语
         public static int AUTO_PLAY = 1;  // 英语自动发音
         public static int AUTO_LOG  = 1;  // 英语自动发音
+        public static string FONT_FAMILY = "Microsoft YaHei UI";  // 卡片字体家族
+        public static int FONT_SIZE = 15;  // 卡片基准字号，范围 12-28
+        public static int THEME = 0;  // 0=跟随系统 1=浅色 2=深色
         public SQLiteConnection DataBase;
         public IEnumerable<Word> AllWordList;
         public IEnumerable<JpWord> AllJpWordList;
@@ -135,6 +138,21 @@ namespace ToastFish.Model.SqliteControl
                 Update.CommandText = $"ALTER TABLE Global ADD COLUMN autoLog INTEGER NOT NULL DEFAULT {AUTO_LOG}";
                 Update.ExecuteNonQuery();
             }
+            if (HeadTileList.Contains("fontFamily") == false)
+            {
+                Update.CommandText = $"ALTER TABLE Global ADD COLUMN fontFamily TEXT NOT NULL DEFAULT '{FONT_FAMILY}'";
+                Update.ExecuteNonQuery();
+            }
+            if (HeadTileList.Contains("fontSize") == false)
+            {
+                Update.CommandText = $"ALTER TABLE Global ADD COLUMN fontSize INTEGER NOT NULL DEFAULT {FONT_SIZE}";
+                Update.ExecuteNonQuery();
+            }
+            if (HeadTileList.Contains("theme") == false)
+            {
+                Update.CommandText = $"ALTER TABLE Global ADD COLUMN theme INTEGER NOT NULL DEFAULT {THEME}";
+                Update.ExecuteNonQuery();
+            }
             Global Temp = new Global();
             var GlobalVariable = DataBase.Query<Global>("select * from Global", Temp).ToArray();
             WORD_NUMBER = int.Parse(GlobalVariable[0].currentWordNumber);
@@ -142,6 +160,9 @@ namespace ToastFish.Model.SqliteControl
             AUTO_PLAY = GlobalVariable[0].autoPlay;
             ENG_TYPE = GlobalVariable[0].EngType;
             AUTO_LOG = GlobalVariable[0].autoLog;
+            FONT_FAMILY = GlobalVariable[0].fontFamily;
+            FONT_SIZE = GlobalVariable[0].fontSize;
+            THEME = GlobalVariable[0].theme;
         }
 
         public void UpdateGlobalConfig()
@@ -151,7 +172,10 @@ namespace ToastFish.Model.SqliteControl
                 $", currentBookName = '{TABLE_NAME}'" +
                 $", autoPlay = '{AUTO_PLAY}'" +
                 $", EngType = '{ENG_TYPE}' " +
-                $", autoLog = '{AUTO_LOG}'";
+                $", autoLog = '{AUTO_LOG}'" +
+                $", fontFamily = '{FONT_FAMILY}'" +
+                $", fontSize = '{FONT_SIZE}'" +
+                $", theme = '{THEME}'";
             Update.ExecuteNonQuery();
         }
 
@@ -538,6 +562,9 @@ namespace ToastFish.Model.SqliteControl
         public int autoPlay { get; set; }
         public int EngType { get; set; }
         public int autoLog { get; set; }
+        public string fontFamily { get; set; }
+        public int fontSize { get; set; }
+        public int theme { get; set; }
     }
 
     [Serializable]
