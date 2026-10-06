@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Formatters.Binary;
@@ -695,6 +696,25 @@ namespace ToastFish.Model.PushControl
         }
 
         /// <summary>
+        /// 朗读一个英文句子。有道的音频接口只认词库里的单词，整句请求会返回 500，
+        /// 所以例句只能走系统语音合成。系统默认语音往往是中文，得显式挑一个英文
+        /// 语音，否则会用中文腔调念英文。播放是阻塞的，放到后台线程。
+        /// </summary>
+        private static void PlaySentenceAudio(string sentence)
+        {
+            if (string.IsNullOrWhiteSpace(sentence))
+                return;
+            Task.Run(() =>
+            {
+                SpeechSynthesizer synth = new SpeechSynthesizer();
+                var englishVoices = synth.GetInstalledVoices(new CultureInfo("en-US"));
+                if (englishVoices.Count > 0)
+                    synth.SelectVoice(englishVoices[0].VoiceInfo.Name);
+                synth.SpeakAsync(sentence);
+            });
+        }
+
+        /// <summary>
         /// 推送一个单词
         /// </summary>
         /// <param name="CurrentWord"></param>
@@ -725,6 +745,7 @@ namespace ToastFish.Model.PushControl
                 new[] { CurrentWord.pos + ". " + CurrentWord.tranCN, SentenceTran },
                 null,
                 () => PlayWordAudio(CurrentWord),
+                PlaySentenceAudio,
                 ("记住了！", 0),
                 ("暂时跳过..", 1),
                 ("发音", 2));
@@ -767,6 +788,7 @@ namespace ToastFish.Model.PushControl
                 new[] { CurrentWord.pos + ". " + CurrentWord.tranCN, SentenceTran },
                 HeadTile,
                 () => PlayWordAudio(CurrentWord),
+                PlaySentenceAudio,
                 ("没有印象", 1),
                 ("记忆模糊", 2),
                 ("暂时记住", 3),

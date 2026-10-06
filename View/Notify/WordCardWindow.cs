@@ -43,6 +43,7 @@ namespace ToastFish.View.Notify
         /// 大字分层：单词 / 音标 / 释义整块居中，下面用分隔线隔出例句段，
         /// 按钮排成两列，状态行放在最底部。
         /// 英语卡片专用，日语 / 五十音 / 自定义仍走 ShowCard。
+        /// onSpeakSentence 非 null 时例句行可双击朗读。
         /// </summary>
         public static void ShowLayeredCard(
             string word,
@@ -50,12 +51,13 @@ namespace ToastFish.View.Notify
             string[] bodyLines,
             string statusLine,
             Action onReplay,
+            Action<string> onSpeakSentence,
             params (string Text, int Result)[] buttons)
         {
             OnUi(() =>
             {
                 var window = new WordCardWindow();
-                window.BuildLayered(word, phonetic, bodyLines, statusLine, onReplay, buttons);
+                window.BuildLayered(word, phonetic, bodyLines, statusLine, onReplay, onSpeakSentence, buttons);
                 window.ShowAsCurrent();
             });
         }
@@ -123,6 +125,7 @@ namespace ToastFish.View.Notify
             string[] bodyLines,
             string statusLine,
             Action onReplay,
+            Action<string> onSpeakSentence,
             (string Text, int Result)[] buttons)
         {
             var wordText = new TextBlock
@@ -172,6 +175,7 @@ namespace ToastFish.View.Notify
                 {
                     TextBlock sentence = AddLine(line, NotifyTheme.SentenceSize, NotifyTheme.Foreground, 0, copyable: true);
                     sentence.TextAlignment = TextAlignment.Center;
+                    MakeSpeakable(sentence, onSpeakSentence);
                 }
                 AddSeparator();
             }

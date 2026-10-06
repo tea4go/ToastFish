@@ -210,6 +210,26 @@ namespace ToastFish.View.Notify
             block.MouseLeftButtonUp += (s, e) => CopyText(block, copyText ?? block.Text);
         }
 
+        /// <summary>
+        /// 双击该行朗读它。朗读文本取第一个换行之前的部分——例句行是
+        /// 「外文句子\n中文翻译」两段，只有前一段该读。
+        /// 单击仍由 MakeCopyable 负责复制；双击时第一下会顺带复制一次，无碍。
+        /// </summary>
+        protected static void MakeSpeakable(TextBlock block, Action<string> onSpeak)
+        {
+            if (onSpeak == null)
+                return;
+            block.ToolTip = "单击复制，双击朗读";
+            block.MouseLeftButtonDown += (s, e) =>
+            {
+                if (e.ClickCount != 2)
+                    return;
+                string text = block.Text ?? "";
+                int end = text.IndexOf('\n');
+                onSpeak(end < 0 ? text : text.Substring(0, end));
+            };
+        }
+
         private static void CopyText(TextBlock block, string text)
         {
             if (string.IsNullOrEmpty(text))
