@@ -20,6 +20,9 @@ namespace ToastFish.Model.Notify
         private const double StatusRatio = 0.75;
         private const double ButtonRatio = 0.85;
 
+        /// <summary>鼠标悬停时按钮字号的放大倍数。</summary>
+        private const double HoverScaleRatio = 1.4;
+
         // 卡片内容区宽度同样随字号缩放，否则放大字号后长单词会折行。
         // 基准 15 时正好是历史值 348（348 / 15）。
         private const double ContentWidthRatio = 23.2;
@@ -33,6 +36,9 @@ namespace ToastFish.Model.Notify
         public static double SentenceSize { get; private set; }
         public static double StatusSize { get; private set; }
         public static double ButtonSize { get; private set; }
+
+        /// <summary>鼠标悬停时的按钮字号，比常态大 40%。</summary>
+        public static double ButtonHoverSize { get; private set; }
 
         /// <summary>卡片内容区最大宽度（不含外壳 padding）。随字号缩放。</summary>
         public static double CardWidth { get; private set; }
@@ -76,6 +82,7 @@ namespace ToastFish.Model.Notify
             SentenceSize = Math.Round(baseSize * SentenceRatio);
             StatusSize = Math.Round(baseSize * StatusRatio);
             ButtonSize = Math.Round(baseSize * ButtonRatio);
+            ButtonHoverSize = Math.Round(baseSize * ButtonRatio * HoverScaleRatio);
             CardWidth = Math.Round(baseSize * ContentWidthRatio);
 
             IsDark = Select.THEME == 2 || (Select.THEME == 0 && SystemUsesDarkApps());

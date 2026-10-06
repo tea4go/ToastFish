@@ -146,8 +146,12 @@ namespace ToastFish.View.Notify
             foreach ((string text, int result) in buttons)
             {
                 Button button = CreateButton(text, result);
+                TextBlock label = (TextBlock)button.Content;
                 // 选项按行铺满卡片，文字靠左而不是居中
-                ((TextBlock)button.Content).TextAlignment = TextAlignment.Left;
+                label.TextAlignment = TextAlignment.Left;
+                // 悬停放大只给测试选项：卡片里的两列按钮共享行高，放大一个会把同行的另一个一起撑高
+                button.MouseEnter += (s, e) => label.FontSize = NotifyTheme.ButtonHoverSize;
+                button.MouseLeave += (s, e) => label.FontSize = NotifyTheme.ButtonSize;
                 button.HorizontalContentAlignment = HorizontalAlignment.Stretch;
                 button.Margin = new Thickness(0, 0, 0, 6);
                 column.Children.Add(button);
@@ -201,7 +205,7 @@ namespace ToastFish.View.Notify
                 Cursor = Cursors.Hand,
                 Template = CreateButtonTemplate()
             };
-            // 文字色直接改 TextBlock：按钮自己的 Foreground 是局部值，模板触发器压不住；
+            // 悬停换文字色直接改 TextBlock：按钮自己的 Foreground 是局部值，模板触发器压不住；
             // 在模板里给 Border 设 TextElement.Foreground 也传不到里面的 TextBlock（实测无效）
             button.MouseEnter += (s, e) => label.Foreground = NotifyTheme.ButtonHoverForeground;
             button.MouseLeave += (s, e) => label.Foreground = NotifyTheme.ButtonForeground;
