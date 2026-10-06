@@ -72,7 +72,7 @@ namespace ToastFish.View.Notify
                 FontFamily = NotifyTheme.Font,
                 Foreground = NotifyTheme.Foreground,
                 TextWrapping = TextWrapping.Wrap,
-                MaxWidth = 348,
+                MaxWidth = NotifyTheme.CardWidth,
                 VerticalAlignment = VerticalAlignment.Center
             };
             headText.Inlines.Add(new Run(word));
@@ -93,7 +93,7 @@ namespace ToastFish.View.Notify
             else
             {
                 // 图标 dock 在右侧，卡片多宽就贴到多右，不再跟着音标长度浮动
-                var head = new DockPanel { MaxWidth = 348 };
+                var head = new DockPanel { MaxWidth = NotifyTheme.CardWidth };
                 Button replay = ReplayButton(onReplay);
                 DockPanel.SetDock(replay, Dock.Right);
                 head.Children.Add(replay);
@@ -133,7 +133,7 @@ namespace ToastFish.View.Notify
                 Foreground = NotifyTheme.Foreground,
                 TextWrapping = TextWrapping.Wrap,
                 TextAlignment = TextAlignment.Center,
-                MaxWidth = 348,
+                MaxWidth = NotifyTheme.CardWidth,
                 VerticalAlignment = VerticalAlignment.Center
             };
             wordText.Inlines.Add(new Run(word));
@@ -145,7 +145,7 @@ namespace ToastFish.View.Notify
             else
             {
                 // 图标仍贴卡片右侧，单词在剩下的空间里居中
-                var head = new DockPanel { MaxWidth = 348 };
+                var head = new DockPanel { MaxWidth = NotifyTheme.CardWidth };
                 Button replay = ReplayButton(onReplay);
                 DockPanel.SetDock(replay, Dock.Right);
                 head.Children.Add(replay);

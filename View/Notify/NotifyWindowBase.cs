@@ -186,7 +186,7 @@ namespace ToastFish.View.Notify
                 FontFamily = NotifyTheme.Font,
                 Foreground = foreground,
                 TextWrapping = TextWrapping.Wrap,
-                MaxWidth = 348,
+                MaxWidth = NotifyTheme.CardWidth,
                 Margin = new Thickness(0, topMargin, 0, 0)
             };
             Root.Children.Add(block);

@@ -20,6 +20,10 @@ namespace ToastFish.Model.Notify
         private const double StatusRatio = 0.75;
         private const double ButtonRatio = 0.85;
 
+        // 卡片内容区宽度同样随字号缩放，否则放大字号后长单词会折行。
+        // 基准 15 时正好是历史值 348（348 / 15）。
+        private const double ContentWidthRatio = 23.2;
+
         public static bool IsDark { get; private set; }
         public static FontFamily Font { get; private set; }
         public static double WordSize { get; private set; }
@@ -29,6 +33,9 @@ namespace ToastFish.Model.Notify
         public static double SentenceSize { get; private set; }
         public static double StatusSize { get; private set; }
         public static double ButtonSize { get; private set; }
+
+        /// <summary>卡片内容区最大宽度（不含外壳 padding）。随字号缩放。</summary>
+        public static double CardWidth { get; private set; }
 
         public static Brush Background { get; private set; }
         public static Brush Foreground { get; private set; }
@@ -56,6 +63,7 @@ namespace ToastFish.Model.Notify
             SentenceSize = Math.Round(baseSize * SentenceRatio);
             StatusSize = Math.Round(baseSize * StatusRatio);
             ButtonSize = Math.Round(baseSize * ButtonRatio);
+            CardWidth = Math.Round(baseSize * ContentWidthRatio);
 
             IsDark = Select.THEME == 2 || (Select.THEME == 0 && SystemUsesDarkApps());
 
