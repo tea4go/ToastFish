@@ -151,10 +151,12 @@ namespace ToastFish.View.Notify
                 {
                     Text = text,
                     TextWrapping = TextWrapping.Wrap,
-                    TextAlignment = TextAlignment.Center,
+                    TextAlignment = TextAlignment.Left,
                     FontSize = NotifyTheme.ButtonSize,
                     FontFamily = NotifyTheme.Font
                 };
+                // 按钮默认把内容居中并收缩到文字宽度，撑满后左对齐才落得到按钮左边缘
+                button.HorizontalContentAlignment = HorizontalAlignment.Stretch;
                 button.Margin = new Thickness(0, 0, 0, 6);
                 column.Children.Add(button);
             }
