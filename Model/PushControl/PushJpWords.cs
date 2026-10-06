@@ -32,6 +32,25 @@ namespace ToastFish.Model.PushControl
             return "";
         }
 
+        /// <summary>
+        /// 播放日语发音。播放是阻塞的，放到后台线程，否则会卡住 UI 线程上的卡片窗口。
+        /// </summary>
+        private void PlayJpWordAudio(JpWord CurrentWord)
+        {
+            Task.Run(() =>
+            {
+                SpeechSynthesizer synth = new SpeechSynthesizer();
+                try
+                {
+                    synth.SelectVoice(GetJapaneseVoiceName());
+                }
+                catch
+                {
+                }
+                synth.SpeakAsync(CurrentWord.hiragana);
+            });
+        }
+
         public void PushOneWord(JpWord CurrentWord)
         {
             string phonetic = CurrentWord.hiragana;
@@ -43,6 +62,7 @@ namespace ToastFish.Model.PushControl
                 phonetic,
                 new[] { CurrentWord.tranCN, CurrentWord.pos },
                 null,
+                () => PlayJpWordAudio(CurrentWord),
                 ("记住了！", 0),
                 ("暂时跳过..", 1),
                 ("发音", 2));

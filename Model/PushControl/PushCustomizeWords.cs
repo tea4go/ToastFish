@@ -18,6 +18,7 @@ namespace ToastFish.Model.PushControl
                 null,
                 new[] { CurrentWord.secondLine, CurrentWord.thirdLine, CurrentWord.fourthLine },
                 null,
+                null,  // 自定义词库没有音频来源，不显示播放图标
                 ("记住了！", 0),
                 ("暂时跳过..", 1));
         }

@@ -1,3 +1,10 @@
+using System;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Documents;
+using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Shapes;
 using ToastFish.Model.Notify;
 
 namespace ToastFish.View.Notify
@@ -12,17 +19,21 @@ namespace ToastFish.View.Notify
         {
         }
 
+        /// <summary>
+        /// onReplay 非 null 时，单词行右侧会出现播放图标，点击只重播发音，不关窗、不回传结果。
+        /// </summary>
         public static void ShowCard(
             string word,
             string phonetic,
             string[] bodyLines,
             string statusLine,
+            Action onReplay,
             params (string Text, int Result)[] buttons)
         {
             OnUi(() =>
             {
                 var window = new WordCardWindow();
-                window.Build(word, phonetic, bodyLines, statusLine, buttons);
+                window.Build(word, phonetic, bodyLines, statusLine, onReplay, buttons);
                 window.ShowAsCurrent();
             });
         }
@@ -32,22 +43,21 @@ namespace ToastFish.View.Notify
             string phonetic,
             string[] bodyLines,
             string statusLine,
+            Action onReplay,
             (string Text, int Result)[] buttons)
         {
+            TextBlock head = AddLine(word, NotifyTheme.WordSize, NotifyTheme.Foreground);
             if (!string.IsNullOrEmpty(phonetic))
             {
-                var head = AddLine(word, NotifyTheme.WordSize, NotifyTheme.Foreground);
-                head.Inlines.Add(new System.Windows.Documents.Run("  "));
-                head.Inlines.Add(new System.Windows.Documents.Run(phonetic)
+                head.Inlines.Add(new Run("  "));
+                head.Inlines.Add(new Run(phonetic)
                 {
                     FontSize = NotifyTheme.PhoneticSize,
                     Foreground = NotifyTheme.Muted
                 });
             }
-            else
-            {
-                AddLine(word, NotifyTheme.WordSize, NotifyTheme.Foreground);
-            }
+            if (onReplay != null)
+                head.Inlines.Add(ReplayIcon(onReplay));
 
             if (bodyLines != null)
             {
@@ -63,6 +73,34 @@ namespace ToastFish.View.Notify
                 AddLine(statusLine, NotifyTheme.StatusSize, NotifyTheme.Muted, 8);
 
             SetButtons(buttons);
+        }
+
+        /// <summary>播放图标。几何图形而非字符，避免用户把字体换成不含 ▶ 的字库后显示成方框。</summary>
+        private static InlineUIContainer ReplayIcon(Action onReplay)
+        {
+            double size = NotifyTheme.ButtonSize * 0.85;
+            var icon = new Path
+            {
+                Data = Geometry.Parse("M 0,0 L 8,5 L 0,10 Z"),
+                Fill = NotifyTheme.ButtonForeground,
+                Stretch = Stretch.Uniform,
+                Width = size * 0.8,
+                Height = size
+            };
+            var button = new Button
+            {
+                Content = icon,
+                FontSize = NotifyTheme.ButtonSize,
+                FontFamily = NotifyTheme.Font,
+                Padding = new Thickness(7, 3, 7, 3),
+                Background = NotifyTheme.ButtonBackground,
+                BorderBrush = NotifyTheme.ButtonBorder,
+                BorderThickness = new Thickness(1),
+                Cursor = Cursors.Hand,
+                ToolTip = "播放发音"
+            };
+            button.Click += (s, e) => onReplay();
+            return new InlineUIContainer(button) { BaselineAlignment = BaselineAlignment.Center };
         }
     }
 }

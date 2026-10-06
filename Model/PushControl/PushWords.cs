@@ -663,6 +663,38 @@ namespace ToastFish.Model.PushControl
         }
 
         /// <summary>
+        /// 播放单词发音：优先有道音频，失败回退系统语音。播放是阻塞的，放到后台线程，
+        /// 否则会卡住 UI 线程上的卡片窗口。
+        /// </summary>
+        private static void PlayWordAudio(Word CurrentWord)
+        {
+            string word_save_name, word_pron;
+            switch (Select.ENG_TYPE)
+            {
+                case 1:
+                    word_save_name = CurrentWord.headWord + "_us";
+                    word_pron = CurrentWord.headWord + "&type=1";
+                    break;
+                default:
+                    word_save_name = CurrentWord.headWord + "_uk";
+                    word_pron = CurrentWord.headWord + "&type=2";
+                    break;
+            }
+            List<string> words = new List<string>();
+            words.Add(word_save_name);
+            words.Add(word_pron);
+            Task.Run(() =>
+            {
+                bool isOK = Download.DownloadMp3.PlayMp3(words);
+                if (isOK == false)
+                {
+                    SpeechSynthesizer synth = new SpeechSynthesizer();
+                    synth.SpeakAsync(CurrentWord.headWord);
+                }
+            });
+        }
+
+        /// <summary>
         /// 推送一个单词
         /// </summary>
         /// <param name="CurrentWord"></param>
@@ -692,6 +724,7 @@ namespace ToastFish.Model.PushControl
                 Phoneme,
                 new[] { CurrentWord.pos + ". " + CurrentWord.tranCN, SentenceTran },
                 null,
+                () => PlayWordAudio(CurrentWord),
                 ("记住了！", 0),
                 ("暂时跳过..", 1),
                 ("发音", 2));
@@ -733,6 +766,7 @@ namespace ToastFish.Model.PushControl
                 Phoneme,
                 new[] { CurrentWord.pos + ". " + CurrentWord.tranCN, SentenceTran },
                 HeadTile,
+                () => PlayWordAudio(CurrentWord),
                 ("没有印象", 1),
                 ("记忆模糊", 2),
                 ("暂时记住", 3),

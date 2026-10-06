@@ -216,6 +216,20 @@ namespace ToastFish.Model.PushControl
             pushGoinWords.PushMessage("结束了！恭喜！");
         }
 
+        /// <summary>
+        /// 播放五十音发音（本地 mp3）。播放是阻塞的，放到后台线程，
+        /// 否则会卡住 UI 线程上的卡片窗口。
+        /// </summary>
+        private static void PlayGoinWordAudio(GoinWord CurrentWord)
+        {
+            Task.Run(() =>
+            {
+                MUSIC temp = new MUSIC();
+                temp.FileName = ".\\Resources\\Goin\\" + CurrentWord.romaji + ".mp3";
+                temp.play();
+            });
+        }
+
         public void PushGoinWord(GoinWord CurrentWord)
         {
             WordCardWindow.ShowCard(
@@ -223,6 +237,7 @@ namespace ToastFish.Model.PushControl
                 null,
                 new[] { "罗马音：" + CurrentWord.romaji },
                 null,
+                () => PlayGoinWordAudio(CurrentWord),
                 ("记住了！", 0),
                 ("发音", 2));
         }
