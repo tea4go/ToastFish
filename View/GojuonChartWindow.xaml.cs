@@ -14,8 +14,8 @@ namespace ToastFish.View
 {
     /// <summary>
     /// 日语五十音图：46 个清音按传统「行 × 段」铺成 5×10 网格（外加 ん 一行），
-    /// 每个格子里叠着平假名 / 片假名 / 罗马音三行。
-    /// 底部两个开关分别控制片假名、罗马音那一行的显隐，默认都开。
+    /// 每个格子里并排着平假名 / 片假名 / 罗马音。
+    /// 底部两个开关分别控制片假名、罗马音那一段的显隐，默认都开。
     /// 单击假名标记选中，双击播放发音。
     /// </summary>
     public partial class GojuonChartWindow : Window
@@ -89,12 +89,12 @@ namespace ToastFish.View
             NotifyTheme.Apply(this);
 
             // 窗口与内边距先按比例铺开，再夹到屏幕工作区内：
-            // 格内叠三行后，基准 15 时内容高约 830px，窗口得给到 940 才一屏放下；
+            // 三段并排后格子变宽变矮，基准 15 时内容高约 500px、宽约 490px；
             // 字号继续调大时窗口会被工作区收住，放不下的内容由 ScrollViewer 兜底。
             Rect work = SystemParameters.WorkArea;
-            Width = Math.Min(S(460), work.Width * 0.92);
-            Height = Math.Min(S(940), work.Height * 0.92);
-            MinWidth = Math.Min(S(400), Width);
+            Width = Math.Min(S(520), work.Width * 0.92);
+            Height = Math.Min(S(680), work.Height * 0.92);
+            MinWidth = Math.Min(S(460), Width);
             MinHeight = Math.Min(S(420), Height);
 
             RootGrid.Margin = new Thickness(S(16));
@@ -114,10 +114,10 @@ namespace ToastFish.View
                 .ToDictionary(w => w.romaji);
 
             // 6 列（行名 + 5 段）× 12 行（段名 + 11 行）。列宽固定，空位才占得住格子，
-            // 各行的方块才会对齐。行高交给 Auto：开关一拨，格子自然跟着变矮。
+            // 各行的方块才会对齐。行高交给 Auto：三段并排后格子只占一行文字的高度。
             ChartHost.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(S(RowLabelWidth)) });
             for (int c = 0; c < ColumnNames.Length; c++)
-                ChartHost.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(S(58)) });
+                ChartHost.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(S(80)) });
 
             ChartHost.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
             for (int r = 0; r < KanaGrid.Length; r++)
@@ -173,9 +173,9 @@ namespace ToastFish.View
         }
 
         /// <summary>
-        /// 一个方块里叠三行：平假名（大）、片假名、罗马音。
-        /// 后两行各自记进列表，底部开关一拨就整体显隐。
-        /// 不给方块写死高度 —— 关掉某一行后它自己塌下去，行高 Auto 会跟着收。
+        /// 一个方块里并排一行：平假名（大）、片假名、罗马音。
+        /// 后两者各自记进列表，底部开关一拨就整体显隐。
+        /// 方块宽度写死 —— 藏掉某一段后留白，格子不会跟着伸缩，各行才对得齐。
         /// </summary>
         private Border CreateTile(GoinWord word)
         {
@@ -185,7 +185,7 @@ namespace ToastFish.View
                 FontFamily = NotifyTheme.Font,
                 FontSize = S(20),
                 Foreground = NotifyTheme.Foreground,
-                HorizontalAlignment = HorizontalAlignment.Center
+                VerticalAlignment = VerticalAlignment.Center
             };
             var katakana = new TextBlock
             {
@@ -193,8 +193,8 @@ namespace ToastFish.View
                 FontFamily = NotifyTheme.Font,
                 FontSize = S(12),
                 Foreground = NotifyTheme.Muted,
-                HorizontalAlignment = HorizontalAlignment.Center,
-                Margin = new Thickness(0, S(1), 0, 0)
+                VerticalAlignment = VerticalAlignment.Center,
+                Margin = new Thickness(S(5), 0, 0, 0)
             };
             var romaji = new TextBlock
             {
@@ -202,21 +202,27 @@ namespace ToastFish.View
                 FontFamily = NotifyTheme.Font,
                 FontSize = S(10),
                 Foreground = NotifyTheme.Muted,
-                HorizontalAlignment = HorizontalAlignment.Center
+                VerticalAlignment = VerticalAlignment.Center,
+                Margin = new Thickness(S(5), 0, 0, 0)
             };
             _katakanaLabels.Add(katakana);
             _romajiLabels.Add(romaji);
 
-            var stack = new StackPanel { VerticalAlignment = VerticalAlignment.Center };
+            var stack = new StackPanel
+            {
+                Orientation = Orientation.Horizontal,
+                HorizontalAlignment = HorizontalAlignment.Center,
+                VerticalAlignment = VerticalAlignment.Center
+            };
             stack.Children.Add(hiragana);
             stack.Children.Add(katakana);
             stack.Children.Add(romaji);
 
             var tile = new Border
             {
-                Width = S(52),
-                Padding = new Thickness(0, S(5), 0, S(5)),
-                Margin = new Thickness(0, 0, S(6), S(2)),
+                Width = S(74),
+                Padding = new Thickness(S(2), S(6), S(2), S(6)),
+                Margin = new Thickness(0, 0, S(6), S(4)),
                 CornerRadius = new CornerRadius(S(6)),
                 BorderThickness = new Thickness(1),
                 BorderBrush = NotifyTheme.Border,
