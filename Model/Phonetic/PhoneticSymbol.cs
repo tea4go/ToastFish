@@ -34,4 +34,30 @@ namespace ToastFish.Model.Phonetic
             Examples = new List<PhoneticExample>(examples);
         }
     }
+
+    /// <summary>音标的一个子组，如「前元音」。表里排成「组名 + 一行方块」。</summary>
+    public class PhoneticGroup
+    {
+        public string Title { get; private set; }
+        public List<PhoneticSymbol> Symbols { get; private set; }
+
+        public PhoneticGroup(string title, List<PhoneticSymbol> symbols)
+        {
+            Title = title;
+            Symbols = symbols;
+        }
+    }
+
+    /// <summary>音标的一节，如「单元音」，下含若干子组。表里排成一行小节标题 + 若干子组。</summary>
+    public class PhoneticSection
+    {
+        public string Title { get; private set; }
+        public List<PhoneticGroup> Groups { get; private set; }
+
+        public PhoneticSection(string title, List<PhoneticGroup> groups)
+        {
+            Title = title;
+            Groups = groups;
+        }
+    }
 }

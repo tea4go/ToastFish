@@ -28,6 +28,12 @@ namespace ToastFish.View
         // 整窗口随基准字号等比缩放，基准 15 时比例为 1，视觉与历史值一致。
         private readonly double _scale = NotifyTheme.BaseSize / 15.0;
 
+        /// <summary>子组名那一列的宽度（基准字号下），要放得下最长的「开合双元音」。</summary>
+        private const double GroupLabelWidth = 62;
+
+        /// <summary>子组行的左缩进（基准字号下）。</summary>
+        private const double GroupIndent = 10;
+
         private double S(double value)
         {
             return value * _scale;
@@ -76,23 +82,67 @@ namespace ToastFish.View
 
         private void BuildChart()
         {
-            AddGroup("元音", PhoneticData.Vowels);
-            AddGroup("辅音", PhoneticData.Consonants);
+            AddTopGroup("元音", PhoneticData.Vowels);
+            AddTopGroup("辅音", PhoneticData.Consonants);
         }
 
-        private void AddGroup(string title, List<PhoneticSymbol> symbols)
+        private void AddTopGroup(string title, List<PhoneticSection> sections)
         {
             ChartHost.Children.Add(new TextBlock
             {
                 Text = title,
+                Foreground = NotifyTheme.Foreground,
+                FontSize = S(15),
+                FontWeight = FontWeights.SemiBold,
+                Margin = new Thickness(S(2), S(12), 0, S(4))
+            });
+            foreach (PhoneticSection section in sections)
+                AddSection(section);
+        }
+
+        private void AddSection(PhoneticSection section)
+        {
+            ChartHost.Children.Add(new TextBlock
+            {
+                Text = section.Title,
+                Foreground = NotifyTheme.Muted,
+                FontSize = S(13),
+                Margin = new Thickness(S(12), S(8), 0, S(4))
+            });
+            foreach (PhoneticGroup group in section.Groups)
+                AddGroup(group);
+        }
+
+        /// <summary>
+        /// 一个子组排成一行：左边是固定宽度的组名，右边是这一组的方块。
+        /// 组名用固定宽度而不是 Auto —— Auto 会让各行的方块起始位置参差不齐，
+        /// 对照表看着就散了。宽度按最长的组名（「开合双元音」5 个字）留够；
+        /// 靠右对齐，万一某字体把 5 个字排得更宽，多出来的部分往左边的缩进里溢，
+        /// 不会被裁掉（Grid 默认不裁剪子元素）。
+        /// </summary>
+        private void AddGroup(PhoneticGroup group)
+        {
+            var row = new Grid { Margin = new Thickness(S(GroupIndent), 0, 0, S(6)) };
+            row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(S(GroupLabelWidth)) });
+            row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+
+            var label = new TextBlock
+            {
+                Text = group.Title,
                 Foreground = NotifyTheme.Muted,
                 FontSize = S(12),
-                Margin = new Thickness(S(2), S(10), 0, S(6))
-            });
+                HorizontalAlignment = HorizontalAlignment.Right,
+                VerticalAlignment = VerticalAlignment.Center
+            };
+            Grid.SetColumn(label, 0);
+            row.Children.Add(label);
 
-            var row = new WrapPanel();
-            foreach (PhoneticSymbol symbol in symbols)
-                row.Children.Add(CreateTile(symbol));
+            var tiles = new WrapPanel();
+            foreach (PhoneticSymbol symbol in group.Symbols)
+                tiles.Children.Add(CreateTile(symbol));
+            Grid.SetColumn(tiles, 1);
+            row.Children.Add(tiles);
+
             ChartHost.Children.Add(row);
         }
 
@@ -108,7 +158,10 @@ namespace ToastFish.View
             };
             var tile = new Border
             {
-                Width = S(54),
+                // 宽度 50 而不是 54：一行最多 5 个方块，5 × 56 = 280 是横向预算的大头。
+                // 窗口边框和滚动条约 32px 的开销不随字号缩放，字号调到 12 时窗口只有 576 宽，
+                // 54 的方块会让「后元音」「摩擦音」这些 5 个一行的组折行。
+                Width = S(50),
                 Height = S(46),
                 Margin = new Thickness(0, 0, S(6), S(6)),
                 CornerRadius = new CornerRadius(S(6)),
