@@ -1021,9 +1021,9 @@ namespace ToastFish.Model.PushControl
             ChoiceWindow.ShowChoice(
                 "翻译",
                 question,
-                ("A." + options[0], 0),
-                ("B." + options[1], 1),
-                ("C." + options[2], 2));
+                ("A.  " + options[0], 0),
+                ("B.  " + options[1], 1),
+                ("C.  " + options[2], 2));
         }
 
         /// <summary>

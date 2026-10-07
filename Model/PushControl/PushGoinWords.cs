@@ -293,9 +293,9 @@ namespace ToastFish.Model.PushControl
             ChoiceWindow.ShowChoice(
                 "选择平假名",
                 Question,
-                ("A." + options[0], 0),
-                ("B." + options[1], 1),
-                ("C." + options[2], 2));
+                ("A.  " + options[0], 0),
+                ("B.  " + options[1], 1),
+                ("C.  " + options[2], 2));
         }
 
         public void PushOneGoinWordQuestion_2(GoinWord CurrentWord, GoinWord B, GoinWord C)
@@ -316,9 +316,9 @@ namespace ToastFish.Model.PushControl
             ChoiceWindow.ShowChoice(
                 "选择片假名",
                 Question,
-                ("A." + options[0], 0),
-                ("B." + options[1], 1),
-                ("C." + options[2], 2));
+                ("A.  " + options[0], 0),
+                ("B.  " + options[1], 1),
+                ("C.  " + options[2], 2));
         }
 
         public void PushOneGoinWordQuestion_3(GoinWord CurrentWord, GoinWord B, GoinWord C)
@@ -339,9 +339,9 @@ namespace ToastFish.Model.PushControl
             ChoiceWindow.ShowChoice(
                 "选择片假名",
                 Question,
-                ("A." + options[0], 0),
-                ("B." + options[1], 1),
-                ("C." + options[2], 2));
+                ("A.  " + options[0], 0),
+                ("B.  " + options[1], 1),
+                ("C.  " + options[2], 2));
         }
 
         public GoinWord GetRandomGoinWord(List<GoinWord> WordList)
