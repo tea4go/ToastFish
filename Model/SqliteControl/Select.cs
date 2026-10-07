@@ -627,7 +627,8 @@ namespace ToastFish.Model.SqliteControl
 
         /// <summary>
         /// 取进度内（已背过）的五十音，用于随机测试——测试不该考还没背过的音。
-        /// 五十音表不写 status，进度只记在 Count.current，wordRank 从 1 开始。
+        /// 五十音表不写 status，进度是 Count.current 里的 1 基指针，指向下一个要背的音
+        /// （初始为 1，走完一圈回绕到 1），所以背过的只有 wordRank 严格小于它的那些。
         /// </summary>
         public List<GoinWord> GetLearnedGoinWordList()
         {
@@ -635,7 +636,7 @@ namespace ToastFish.Model.SqliteControl
             List<GoinWord> Result = new List<GoinWord>();
             foreach (var GoinWord in GetGainWordList())
             {
-                if (GoinWord.wordRank <= Progress)
+                if (GoinWord.wordRank < Progress)
                     Result.Add(GoinWord);
             }
             return Result;

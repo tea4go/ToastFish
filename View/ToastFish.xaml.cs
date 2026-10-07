@@ -624,8 +624,19 @@ namespace ToastFish
             //{
             List<int> res = Se.SelectCount();
             string message = "当前词库：" + sender.ToString() + "\n当前进度：" + res[0].ToString() + "/" + res[1].ToString();
-            // 通知平台无响应时 ToastContentBuilder().Show() 会永久阻塞，必须放后台线程，否则会卡死 UI 线程
-            Thread notifyThread = new Thread(() => pushWords.PushMessage(message));
+            // 提示放后台线程弹，别压在菜单事件里。后台线程的未捕获异常会直接终止整个
+            // 进程，所以必须兜住——最坏也只是这条提示丢了
+            Thread notifyThread = new Thread(() =>
+            {
+                try
+                {
+                    pushWords.PushMessage(message);
+                }
+                catch (Exception ex)
+                {
+                    Logger.Write("切换词库提示失败：" + ex);
+                }
+            });
             notifyThread.IsBackground = true;
             notifyThread.Start();
            // }
