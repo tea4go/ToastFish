@@ -28,6 +28,10 @@ namespace ToastFish.Model.Notify
         private const double ContentWidthRatio = 23.2;
 
         public static bool IsDark { get; private set; }
+
+        /// <summary>用户设置的基准字号（12–28）。固定版式的窗口按它等比缩放。</summary>
+        public static int BaseSize { get; private set; }
+
         public static FontFamily Font { get; private set; }
         public static double WordSize { get; private set; }
         public static double LayeredWordSize { get; private set; }
@@ -69,6 +73,7 @@ namespace ToastFish.Model.Notify
             int baseSize = Select.FONT_SIZE;
             if (baseSize < 12 || baseSize > 28)
                 baseSize = 15;
+            BaseSize = baseSize;
 
             string family = Select.FONT_FAMILY;
             if (string.IsNullOrWhiteSpace(family))

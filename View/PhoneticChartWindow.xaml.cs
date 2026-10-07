@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Windows;
@@ -24,6 +25,14 @@ namespace ToastFish.View
         private readonly Dictionary<PhoneticSymbol, Border> _tiles = new Dictionary<PhoneticSymbol, Border>();
         private PhoneticSymbol _selected;
 
+        // 整窗口随基准字号等比缩放，基准 15 时比例为 1，视觉与历史值一致。
+        private readonly double _scale = NotifyTheme.BaseSize / 15.0;
+
+        private double S(double value)
+        {
+            return value * _scale;
+        }
+
         public static void ShowChart()
         {
             if (_open != null)
@@ -40,6 +49,24 @@ namespace ToastFish.View
         {
             InitializeComponent();
             NotifyTheme.Apply(this);
+
+            // 窗口与内边距先按比例铺开，再夹到屏幕工作区内：
+            // 字号调到 28 时窗口高约 1157px，超过 1080p 的工作区，必须收住，
+            // 放不下的内容由左栏的 ScrollViewer 兜底。
+            Rect work = SystemParameters.WorkArea;
+            Width = Math.Min(S(720), work.Width * 0.92);
+            Height = Math.Min(S(620), work.Height * 0.92);
+            MinWidth = Math.Min(S(600), Width);
+            MinHeight = Math.Min(S(420), Height);
+
+            RootGrid.Margin = new Thickness(S(16));
+            Hint.Margin = new Thickness(S(2), 0, 0, S(12));
+            Hint.FontSize = S(13);
+            GapColumn.Width = new GridLength(S(20));
+            ExampleColumn.Width = new GridLength(S(250));
+            ExampleTitle.Margin = new Thickness(S(2), S(8), 0, S(10));
+            ExampleTitle.FontSize = S(12);
+
             Background = NotifyTheme.Background;
             Hint.Foreground = NotifyTheme.Muted;
             ExampleTitle.Foreground = NotifyTheme.Muted;
@@ -59,7 +86,8 @@ namespace ToastFish.View
             {
                 Text = title,
                 Foreground = NotifyTheme.Muted,
-                Margin = new Thickness(2, 10, 0, 6)
+                FontSize = S(12),
+                Margin = new Thickness(S(2), S(10), 0, S(6))
             });
 
             var row = new WrapPanel();
@@ -73,17 +101,17 @@ namespace ToastFish.View
             var label = new TextBlock
             {
                 Text = symbol.Ipa,
-                FontSize = 20,
+                FontSize = S(20),
                 Foreground = NotifyTheme.Foreground,
                 HorizontalAlignment = HorizontalAlignment.Center,
                 VerticalAlignment = VerticalAlignment.Center
             };
             var tile = new Border
             {
-                Width = 54,
-                Height = 46,
-                Margin = new Thickness(0, 0, 6, 6),
-                CornerRadius = new CornerRadius(6),
+                Width = S(54),
+                Height = S(46),
+                Margin = new Thickness(0, 0, S(6), S(6)),
+                CornerRadius = new CornerRadius(S(6)),
                 BorderThickness = new Thickness(1),
                 BorderBrush = NotifyTheme.Border,
                 Background = NotifyTheme.ButtonBackground,
@@ -136,9 +164,9 @@ namespace ToastFish.View
             foreach (PhoneticExample example in symbol.Examples)
             {
                 ExampleHost.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
-                AddCell(row, 0, example.Word, NotifyTheme.Foreground, 15, example);
-                AddCell(row, 1, "/" + example.Phonetic + "/", NotifyTheme.Muted, 13, example);
-                AddCell(row, 2, example.Meaning, NotifyTheme.Foreground, 13, example);
+                AddCell(row, 0, example.Word, NotifyTheme.Foreground, S(15), example);
+                AddCell(row, 1, "/" + example.Phonetic + "/", NotifyTheme.Muted, S(13), example);
+                AddCell(row, 2, example.Meaning, NotifyTheme.Foreground, S(13), example);
                 row++;
             }
         }
@@ -152,7 +180,7 @@ namespace ToastFish.View
                 FontSize = fontSize,
                 // 释义列吃剩余宽度，长释义在这里折行；单词和音标是 Auto 列，量的时候宽度无限，不会折
                 TextWrapping = TextWrapping.Wrap,
-                Margin = new Thickness(0, 0, column == 2 ? 0 : 12, 8),
+                Margin = new Thickness(0, 0, column == 2 ? 0 : S(12), S(8)),
                 VerticalAlignment = VerticalAlignment.Center
             };
             // 整行可点，双击播放单词发音
