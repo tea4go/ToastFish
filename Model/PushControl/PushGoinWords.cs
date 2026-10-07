@@ -266,7 +266,7 @@ namespace ToastFish.Model.PushControl
         public void PushGoinWord(GoinWord CurrentWord)
         {
             WordCardWindow.ShowCard(
-                "平假名：" + CurrentWord.hiragana + " 片假名：" + CurrentWord.katakana,
+                "平假名：" + CurrentWord.hiragana + "\n片假名：" + CurrentWord.katakana,
                 null,
                 new[] { "罗马音：" + CurrentWord.romaji },
                 null,
