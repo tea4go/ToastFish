@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Speech.Synthesis;
@@ -156,6 +157,7 @@ namespace ToastFish.View
             {
                 Text = symbol.Ipa,
                 FontSize = S(20),
+                FontFamily = NotifyTheme.PhoneticFont,
                 Foreground = NotifyTheme.Foreground,
                 HorizontalAlignment = HorizontalAlignment.Center,
                 VerticalAlignment = VerticalAlignment.Center
@@ -208,7 +210,11 @@ namespace ToastFish.View
 
         private void ShowExamples(PhoneticSymbol symbol)
         {
-            ExampleTitle.Text = "/" + symbol.Ipa + "/  例词";
+            // 标题里音标和中文混排：音标单独用 IPA 字体，中文留在界面字体上，
+            // 否则整块设成 Calibri 后中文会落到系统回退字体，跟别处的中文不一样
+            ExampleTitle.Inlines.Clear();
+            ExampleTitle.Inlines.Add(new Run("/" + symbol.Ipa + "/") { FontFamily = NotifyTheme.PhoneticFont });
+            ExampleTitle.Inlines.Add(new Run("  例词"));
             ExampleHost.Children.Clear();
             ExampleHost.RowDefinitions.Clear();
             ExampleHost.ColumnDefinitions.Clear();
@@ -235,6 +241,8 @@ namespace ToastFish.View
                 Text = text,
                 Foreground = foreground,
                 FontSize = fontSize,
+                // 中间那列是音标，用 IPA 字体；单词和释义跟随界面字体
+                FontFamily = column == 1 ? NotifyTheme.PhoneticFont : NotifyTheme.Font,
                 // 释义列吃剩余宽度，长释义在这里折行；单词和音标是 Auto 列，量的时候宽度无限，不会折
                 TextWrapping = TextWrapping.Wrap,
                 Margin = new Thickness(0, 0, column == 2 ? 0 : S(12), S(8)),

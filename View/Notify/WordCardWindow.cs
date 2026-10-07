@@ -214,7 +214,7 @@ namespace ToastFish.View.Notify
             {
                 Text = phonetic,
                 FontSize = NotifyTheme.PhoneticSize,
-                FontFamily = NotifyTheme.Font,
+                FontFamily = NotifyTheme.PhoneticFont,
                 Foreground = NotifyTheme.Muted,
                 TextWrapping = TextWrapping.Wrap,
                 MaxWidth = NotifyTheme.CardWidth

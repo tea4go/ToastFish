@@ -33,6 +33,13 @@ namespace ToastFish.Model.Notify
         public static int BaseSize { get; private set; }
 
         public static FontFamily Font { get; private set; }
+
+        /// <summary>
+        /// 音标（IPA）专用字体。用户设置的中文字体大多缺 IPA 字形，只能靠系统回退拼字，
+        /// 字形与拉丁字母不协调；固定用 Calibri，Windows 自带且本表 44 个音标全覆盖。
+        /// </summary>
+        public static FontFamily PhoneticFont { get; private set; }
+
         public static double WordSize { get; private set; }
         public static double LayeredWordSize { get; private set; }
         public static double PhoneticSize { get; private set; }
@@ -80,6 +87,7 @@ namespace ToastFish.Model.Notify
                 family = "Microsoft YaHei UI";
 
             Font = new FontFamily(family);
+            PhoneticFont = new FontFamily("Calibri");
             WordSize = Math.Round(baseSize * WordRatio);
             LayeredWordSize = Math.Round(baseSize * LayeredWordRatio);
             PhoneticSize = Math.Round(baseSize * PhoneticRatio);
