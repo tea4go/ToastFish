@@ -14,8 +14,9 @@ namespace ToastFish.View
 {
     /// <summary>
     /// 日语五十音图：46 个清音按传统「行 × 段」铺成 5×10 网格（外加 ん 一行），
-    /// 右侧显示选中假名的平假名 / 片假名 / 罗马音对照。
-    /// 单击假名选中，双击播放发音。
+    /// 每个格子里叠着平假名 / 片假名 / 罗马音三行。
+    /// 底部两个开关分别控制片假名、罗马音那一行的显隐，默认都开。
+    /// 单击假名标记选中，双击播放发音。
     /// </summary>
     public partial class GojuonChartWindow : Window
     {
@@ -23,6 +24,8 @@ namespace ToastFish.View
         private static GojuonChartWindow _open;
 
         private readonly Dictionary<GoinWord, Border> _tiles = new Dictionary<GoinWord, Border>();
+        private readonly List<TextBlock> _katakanaLabels = new List<TextBlock>();
+        private readonly List<TextBlock> _romajiLabels = new List<TextBlock>();
         private GoinWord _selected;
 
         // 整窗口随基准字号等比缩放，基准 15 时比例为 1。
@@ -86,28 +89,23 @@ namespace ToastFish.View
             NotifyTheme.Apply(this);
 
             // 窗口与内边距先按比例铺开，再夹到屏幕工作区内：
-            // 字号调到 28 时窗口高约 1232px，超过 1080p 的工作区，必须收住，
-            // 放不下的内容由左栏的 ScrollViewer 兜底。
+            // 格内叠三行后，基准 15 时内容高约 830px，窗口得给到 940 才一屏放下；
+            // 字号继续调大时窗口会被工作区收住，放不下的内容由 ScrollViewer 兜底。
             Rect work = SystemParameters.WorkArea;
-            Width = Math.Min(S(720), work.Width * 0.92);
-            Height = Math.Min(S(660), work.Height * 0.92);
-            MinWidth = Math.Min(S(600), Width);
+            Width = Math.Min(S(460), work.Width * 0.92);
+            Height = Math.Min(S(940), work.Height * 0.92);
+            MinWidth = Math.Min(S(400), Width);
             MinHeight = Math.Min(S(420), Height);
 
             RootGrid.Margin = new Thickness(S(16));
             Hint.Margin = new Thickness(S(2), 0, 0, S(12));
             Hint.FontSize = S(13);
-            GapColumn.Width = new GridLength(S(20));
-            DetailColumn.Width = new GridLength(S(250));
-            DetailTitle.Margin = new Thickness(S(2), S(8), 0, S(10));
-            DetailTitle.FontSize = S(12);
 
             Background = NotifyTheme.Background;
             Hint.Foreground = NotifyTheme.Muted;
-            DetailTitle.Foreground = NotifyTheme.Muted;
-            Hint.Text = "单击假名查看对照，双击播放发音";
-            DetailTitle.Text = "对照";
+            Hint.Text = "单击假名标记选中，双击播放发音";
             BuildGrid();
+            BuildToggles();
         }
 
         private void BuildGrid()
@@ -115,15 +113,15 @@ namespace ToastFish.View
             Dictionary<string, GoinWord> byRomaji = new Select().GetGoinWords()
                 .ToDictionary(w => w.romaji);
 
-            // 6 列（行名 + 5 段）× 12 行（段名 + 11 行）。列宽行高都固定，
-            // 空位才占得住格子，各行的方块才会对齐。
+            // 6 列（行名 + 5 段）× 12 行（段名 + 11 行）。列宽固定，空位才占得住格子，
+            // 各行的方块才会对齐。行高交给 Auto：开关一拨，格子自然跟着变矮。
             ChartHost.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(S(RowLabelWidth)) });
             for (int c = 0; c < ColumnNames.Length; c++)
-                ChartHost.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(S(56)) });
+                ChartHost.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(S(58)) });
 
             ChartHost.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
             for (int r = 0; r < KanaGrid.Length; r++)
-                ChartHost.RowDefinitions.Add(new RowDefinition { Height = new GridLength(S(48)) });
+                ChartHost.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
 
             // 第 0 行：左上角空着，5 个段名居中压在各自的方块列上
             for (int c = 0; c < ColumnNames.Length; c++)
@@ -174,30 +172,58 @@ namespace ToastFish.View
             }
         }
 
+        /// <summary>
+        /// 一个方块里叠三行：平假名（大）、片假名、罗马音。
+        /// 后两行各自记进列表，底部开关一拨就整体显隐。
+        /// 不给方块写死高度 —— 关掉某一行后它自己塌下去，行高 Auto 会跟着收。
+        /// </summary>
         private Border CreateTile(GoinWord word)
         {
-            var label = new TextBlock
+            var hiragana = new TextBlock
             {
                 Text = word.hiragana,
-                // 假名不用 Calibri（它没有假名字形），跟随界面字体
                 FontFamily = NotifyTheme.Font,
-                FontSize = S(22),
+                FontSize = S(20),
                 Foreground = NotifyTheme.Foreground,
-                HorizontalAlignment = HorizontalAlignment.Center,
-                VerticalAlignment = VerticalAlignment.Center
+                HorizontalAlignment = HorizontalAlignment.Center
             };
+            var katakana = new TextBlock
+            {
+                Text = word.katakana,
+                FontFamily = NotifyTheme.Font,
+                FontSize = S(12),
+                Foreground = NotifyTheme.Muted,
+                HorizontalAlignment = HorizontalAlignment.Center,
+                Margin = new Thickness(0, S(1), 0, 0)
+            };
+            var romaji = new TextBlock
+            {
+                Text = word.romaji,
+                FontFamily = NotifyTheme.Font,
+                FontSize = S(10),
+                Foreground = NotifyTheme.Muted,
+                HorizontalAlignment = HorizontalAlignment.Center
+            };
+            _katakanaLabels.Add(katakana);
+            _romajiLabels.Add(romaji);
+
+            var stack = new StackPanel { VerticalAlignment = VerticalAlignment.Center };
+            stack.Children.Add(hiragana);
+            stack.Children.Add(katakana);
+            stack.Children.Add(romaji);
+
             var tile = new Border
             {
-                Width = S(50),
-                Height = S(44),
-                Margin = new Thickness(0, 0, S(6), S(4)),
+                Width = S(52),
+                Padding = new Thickness(0, S(5), 0, S(5)),
+                Margin = new Thickness(0, 0, S(6), S(2)),
                 CornerRadius = new CornerRadius(S(6)),
                 BorderThickness = new Thickness(1),
                 BorderBrush = NotifyTheme.Border,
                 Background = NotifyTheme.ButtonBackground,
                 Cursor = Cursors.Hand,
-                ToolTip = "单击查看对照，双击播放发音",
-                Child = label
+                ToolTip = "单击标记选中，双击播放发音",
+                Child = stack
             };
             // 用 MouseLeftButtonDown 而不是 Button：Button 自带的点击逻辑会和双击抢事件
             tile.MouseLeftButtonDown += (s, e) =>
@@ -211,7 +237,35 @@ namespace ToastFish.View
             return tile;
         }
 
-        /// <summary>选中假名并显示对照。重复选中同一个不取消，双击时的两次点击因此没有副作用。</summary>
+        private void BuildToggles()
+        {
+            ToggleBar.Margin = new Thickness(S(2), S(12), 0, 0);
+            InitToggle(ShowKatakana, "片假名", S(16));
+            InitToggle(ShowRomaji, "罗马音", 0);
+        }
+
+        private void InitToggle(CheckBox box, string text, double leftMargin)
+        {
+            box.Content = text;
+            box.IsChecked = true;
+            box.Foreground = NotifyTheme.Foreground;
+            box.FontSize = S(13);
+            box.Margin = new Thickness(leftMargin, 0, 0, 0);
+            box.Checked += (s, e) => ApplyToggles();
+            box.Unchecked += (s, e) => ApplyToggles();
+        }
+
+        private void ApplyToggles()
+        {
+            Visibility katakana = ShowKatakana.IsChecked == true ? Visibility.Visible : Visibility.Collapsed;
+            Visibility romaji = ShowRomaji.IsChecked == true ? Visibility.Visible : Visibility.Collapsed;
+            foreach (TextBlock block in _katakanaLabels)
+                block.Visibility = katakana;
+            foreach (TextBlock block in _romajiLabels)
+                block.Visibility = romaji;
+        }
+
+        /// <summary>标记选中的假名。重复选中同一个不取消，双击时的两次点击因此没有副作用。</summary>
         private void Select(GoinWord word)
         {
             if (_selected != null)
@@ -225,44 +279,6 @@ namespace ToastFish.View
             Border tile = _tiles[word];
             tile.Background = NotifyTheme.ButtonHoverBackground;
             tile.BorderBrush = NotifyTheme.ButtonHoverBorder;
-
-            ShowDetail(word);
-        }
-
-        private void ShowDetail(GoinWord word)
-        {
-            DetailHost.Children.Clear();
-            DetailHost.RowDefinitions.Clear();
-            DetailHost.ColumnDefinitions.Clear();
-
-            DetailHost.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
-            DetailHost.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
-
-            string[] labels = { "平假名", "片假名", "罗马音" };
-            string[] values = { word.hiragana, word.katakana, word.romaji };
-            for (int i = 0; i < labels.Length; i++)
-            {
-                DetailHost.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
-                AddDetailCell(i, 0, labels[i], NotifyTheme.Muted, S(13));
-                AddDetailCell(i, 1, values[i], NotifyTheme.Foreground, S(16));
-            }
-        }
-
-        private void AddDetailCell(int row, int column, string text, Brush foreground, double fontSize)
-        {
-            var block = new TextBlock
-            {
-                Text = text,
-                Foreground = foreground,
-                FontSize = fontSize,
-                FontFamily = NotifyTheme.Font,
-                TextWrapping = TextWrapping.Wrap,
-                Margin = new Thickness(0, 0, column == 0 ? S(12) : 0, S(8)),
-                VerticalAlignment = VerticalAlignment.Center
-            };
-            Grid.SetRow(block, row);
-            Grid.SetColumn(block, column);
-            DetailHost.Children.Add(block);
         }
 
         /// <summary>播放假名发音（内置 mp3）。播放是阻塞的 MCI 调用，放到后台线程。</summary>
