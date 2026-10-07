@@ -175,6 +175,10 @@ namespace ToastFish.Model.PushControl
             Thread.Sleep(3000);
 
 
+            // 首轮答对题数：答错会被留在队里重考，所以只在第一次答对时计数
+            int Total = RandomList.Count;
+            int Correct = 0;
+            HashSet<JpWord> WrongWords = new HashSet<JpWord>();
             while (RandomList.Count != 0)
             {
                 Thread.Sleep(500);
@@ -197,12 +201,16 @@ namespace ToastFish.Model.PushControl
 
                 if (pushJpWords.QUESTION_CURRENT_STATUS == 1)
                 {
+                    // Add 返回 true 表示这个词之前没答错过，即首轮答对
+                    if (WrongWords.Add(CurrentWord))
+                        Correct++;
                     RandomList.Remove(CurrentWord);
                     Thread.Sleep(500);
                 }
                 else if (pushJpWords.QUESTION_CURRENT_STATUS == 0)
                 {
                     //CopyList.Remove(CurrentWord);
+                    WrongWords.Add(CurrentWord);
                     MessageWindow.ShowMessage("错误\n正确答案：" + pushJpWords.AnswerDict[pushJpWords.QUESTION_CURRENT_RIGHT_ANSWER.ToString()] + "\n" + CurrentWord.headWord);
                     Thread.Sleep(3000);
                 }
@@ -210,7 +218,11 @@ namespace ToastFish.Model.PushControl
 
             pushJpWords.PushMessage("结束了！恭喜！");
             if (ImportFlag == false)
+            {
+                if (Total > 0)
+                    Query.RecordTest(Correct, Total);
                 Query.RecordRecite();
+            }
         }
 
         public static new void UnorderWord(Object Num)

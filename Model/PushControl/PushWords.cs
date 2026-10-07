@@ -452,7 +452,7 @@ namespace ToastFish.Model.PushControl
             if (RandomList.Count > 0)
             {
                 pushWords.PushMessage("背完了！接下来开始测验记忆模糊的单词！");
-                pushWords.PushWaitAllQuestions(RandomList, (List<Word>)Query.AllWordList);
+                pushWords.PushWaitAllQuestions(RandomList, (List<Word>)Query.AllWordList, true);
             }
             pushWords.PushMessage("结束了！恭喜！");
             // SM2 只写 status，不写 Count.current；不重算的话进度会一直停在切库时的旧值
@@ -599,7 +599,7 @@ namespace ToastFish.Model.PushControl
             /* 背诵结束 */
             Logger.Write("开始做题");
             Query.SelectWordList();
-            pushWords.PushWaitAllQuestions(RandomList, (List<Word>)Query.AllWordList);
+            pushWords.PushWaitAllQuestions(RandomList, (List<Word>)Query.AllWordList, ImportFlag == false);
 
             Logger.Write("结束了！恭喜！");
 
@@ -829,10 +829,16 @@ namespace ToastFish.Model.PushControl
 
         /// <summary>
         /// 推送翻译和填空选择题/
+        /// Record 为 true 时把这次测验的首轮正确率记进 Count（导入词表不走这里）。
         /// </summary>
-        public void PushWaitAllQuestions(List<Word> RandomList, List<Word> AllWordList)
+        public void PushWaitAllQuestions(List<Word> RandomList, List<Word> AllWordList, bool Record)
         {
             /* 背诵结束 */
+            // 两段测验覆盖的词不重叠（按 question 有无分开），答错会被放回队尾重考，
+            // 所以只在第一次答对时计数，得到首轮正确题数
+            int Total = RandomList.Count;
+            int Correct = 0;
+            HashSet<Word> WrongWords = new HashSet<Word>();
             //中译英
             List<Word> CopyList = Clone<Word>(RandomList);
             Word CurrentWord;
@@ -859,12 +865,16 @@ namespace ToastFish.Model.PushControl
                 bool result = PushWaitTransQuestion(CurrentWord, rndWords[0].headWord, rndWords[1].headWord);
                 if (result)
                 {
+                    // Add 返回 true 表示这个词之前没答错过，即首轮答对
+                    if (WrongWords.Add(CurrentWord))
+                        Correct++;
                     CopyList.RemoveAt(0);
                     Thread.Sleep(500);
                 }
                 else
                 {
                     //CopyList.Remove(CurrentWord);
+                    WrongWords.Add(CurrentWord);
                     MessageWindow.ShowMessage("错误\n正确答案：" + AnswerDict[QUESTION_CURRENT_RIGHT_ANSWER.ToString()] + "\n" + CurrentWord.headWord);
                     CopyList.RemoveAt(0);
                     CopyList.Add(CurrentWord);
@@ -891,6 +901,9 @@ namespace ToastFish.Model.PushControl
 
                 if (isFinished)
                 {
+                    // Add 返回 true 表示这个词之前没答错过，即首轮答对
+                    if (WrongWords.Add(CurrentWord))
+                        Correct++;
                     CopyList.RemoveAt(0);
                     // CopyList.Remove(CurrentWord);
                     //Thread.Sleep(500);
@@ -898,12 +911,16 @@ namespace ToastFish.Model.PushControl
                 else
                 {
                     //RandomList.Remove(CurrentWord);
+                    WrongWords.Add(CurrentWord);
                     MessageWindow.ShowMessage("错误\n正确答案：" + AnswerDict[QUESTION_CURRENT_RIGHT_ANSWER.ToString()] + "\n" + CurrentWord.explain);
                     Thread.Sleep(6000);
                     CopyList.RemoveAt(0);
                     CopyList.Add(CurrentWord);
                 }
             }
+
+            if (Record && Total > 0)
+                new Select().RecordTest(Correct, Total);
         }
 
         /// <summary>

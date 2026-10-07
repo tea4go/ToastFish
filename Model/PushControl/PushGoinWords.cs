@@ -92,6 +92,10 @@ namespace ToastFish.Model.PushControl
             pushGoinWords.PushMessage("背完了！接下来开始测验！");
             Thread.Sleep(3000);
 
+            // 首轮答对题数：答错会被留在队里重考，所以只在第一次答对时计数
+            int Total = TestList.Count;
+            int Correct = 0;
+            HashSet<GoinWord> WrongWords = new HashSet<GoinWord>();
             while (TestList.Count != 0)
             {
                 Thread.Sleep(500);
@@ -131,17 +135,23 @@ namespace ToastFish.Model.PushControl
 
                 if (pushGoinWords.QUESTION_CURRENT_STATUS == 1)
                 {
+                    // Add 返回 true 表示这个音之前没答错过，即首轮答对
+                    if (WrongWords.Add(CurrentWord))
+                        Correct++;
                     TestList.Remove(CurrentWord);
                     Thread.Sleep(500);
                 }
                 else if (pushGoinWords.QUESTION_CURRENT_STATUS == 0)
                 {
                     //CopyList.Remove(CurrentWord);
+                    WrongWords.Add(CurrentWord);
                     MessageWindow.ShowMessage("错误\n正确答案：" + pushGoinWords.AnswerDict[pushGoinWords.QUESTION_CURRENT_RIGHT_ANSWER.ToString()] + "\n" + RightAnswer);
                     Thread.Sleep(3000);
                 }
             }
             pushGoinWords.PushMessage("结束了！恭喜！");
+            if (Total > 0)
+                Query.RecordTest(Correct, Total);
             Query.RecordRecite();
         }
 
