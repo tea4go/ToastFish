@@ -93,12 +93,13 @@ namespace ToastFish.View
             // 字号继续调大时窗口会被工作区收住，放不下的内容由 ScrollViewer 兜底。
             Rect work = SystemParameters.WorkArea;
             Width = Math.Min(S(520), work.Width * 0.92);
-            Height = Math.Min(S(680), work.Height * 0.92);
+            Height = Math.Min(S(640), work.Height * 0.92);
             MinWidth = Math.Min(S(460), Width);
             MinHeight = Math.Min(S(420), Height);
 
             RootGrid.Margin = new Thickness(S(16));
-            Hint.Margin = new Thickness(S(2), 0, 0, S(12));
+            HeaderBar.Margin = new Thickness(0, 0, 0, S(12));
+            Hint.Margin = new Thickness(S(2), 0, 0, 0);
             Hint.FontSize = S(13);
 
             Background = NotifyTheme.Background;
@@ -245,9 +246,10 @@ namespace ToastFish.View
 
         private void BuildToggles()
         {
-            ToggleBar.Margin = new Thickness(S(2), S(12), 0, 0);
-            InitToggle(ShowKatakana, "片假名", S(16));
-            InitToggle(ShowRomaji, "罗马音", 0);
+            // 开关与提示同占第一行，靠右；左侧留出间距与提示文字分开
+            ToggleBar.Margin = new Thickness(S(16), 0, 0, 0);
+            InitToggle(ShowKatakana, "片假名", 0);
+            InitToggle(ShowRomaji, "罗马音", S(16));
         }
 
         private void InitToggle(CheckBox box, string text, double leftMargin)

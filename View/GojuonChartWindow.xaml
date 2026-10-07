@@ -7,18 +7,27 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
-            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-        <TextBlock x:Name="Hint" Grid.Row="0" TextWrapping="Wrap" />
+        <!-- 第一行：提示靠左，两个开关靠右，同占一行 -->
+        <Grid x:Name="HeaderBar" Grid.Row="0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <TextBlock x:Name="Hint" Grid.Column="0" TextWrapping="Wrap"
+                       VerticalAlignment="Center" />
+
+            <StackPanel x:Name="ToggleBar" Grid.Column="1" Orientation="Horizontal"
+                        VerticalAlignment="Center">
+                <CheckBox x:Name="ShowKatakana" />
+                <CheckBox x:Name="ShowRomaji" />
+            </StackPanel>
+        </Grid>
 
         <ScrollViewer x:Name="ChartScroll" Grid.Row="1" VerticalScrollBarVisibility="Auto">
             <Grid x:Name="ChartHost" HorizontalAlignment="Left" VerticalAlignment="Top" />
         </ScrollViewer>
-
-        <StackPanel x:Name="ToggleBar" Grid.Row="2" Orientation="Horizontal">
-            <CheckBox x:Name="ShowKatakana" />
-            <CheckBox x:Name="ShowRomaji" />
-        </StackPanel>
     </Grid>
 </Window>
