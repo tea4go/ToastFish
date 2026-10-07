@@ -25,12 +25,18 @@ namespace ToastFish.Model.PushControl
             return window.WaitAsync();
         }
 
+        /// <summary>
+        /// 推送问题的Task。返回 1 表示答对，0 表示答错。
+        /// 窗口回传的是选项序号，对错在这里统一判定——判定若留在调用方，
+        /// 除第 2 个选项外都会被判错，选第 3 个选项还会让等待循环空转。
+        /// </summary>
         public async Task<int> ProcessToastNotificationGoinQuestion()
         {
             NotifyWindowBase window = NotifyWindowBase.Current;
             if (window == null)
                 return 0;
-            return await window.WaitAsync();
+            int answer = await window.WaitAsync();
+            return answer == QUESTION_CURRENT_RIGHT_ANSWER ? 1 : 0;
         }
 
         public static void OrderGoin(Object Words)
