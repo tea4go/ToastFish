@@ -36,6 +36,14 @@ namespace ToastFish.View.Notify
         /// <summary>子类置 true 后窗口右上角出现 ✕。在子类构造函数里赋值，ShowAsCurrent 里建按钮。</summary>
         protected bool Closable;
 
+        private const double CloseGlyphWidth = 18;   // 图标 8 + 内边距 5×2
+        private const double CloseGap = 20;
+
+        /// <summary>
+        /// 顶行正文要给右上角 ✕ 让出的右侧空隙。✕ 叠在内容上，不预留的话长文本会钻到按钮底下。
+        /// </summary>
+        protected static readonly Thickness CloseGutter = new Thickness(0, 0, CloseGlyphWidth + CloseGap, 0);
+
         protected readonly StackPanel Root = new StackPanel();
         private readonly Border _shell = new Border();
         private readonly Grid _closeHost = new Grid();

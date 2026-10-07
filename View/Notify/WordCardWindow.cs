@@ -83,8 +83,12 @@ namespace ToastFish.View.Notify
             wordText.Inlines.Add(new Run(word));
             MakeCopyable(wordText, word);
 
+            // 右上角叠着 ✕，顶行得给它让出位置，否则长文本的右端会钻到按钮底下
+            Thickness topMargin = Closable ? CloseGutter : new Thickness(0);
+
             if (string.IsNullOrEmpty(phonetic))
             {
+                wordText.Margin = topMargin;
                 Root.Children.Add(wordText);
             }
             else
@@ -93,7 +97,8 @@ namespace ToastFish.View.Notify
                 var head = new StackPanel
                 {
                     Orientation = Orientation.Horizontal,
-                    MaxWidth = NotifyTheme.CardWidth
+                    MaxWidth = NotifyTheme.CardWidth,
+                    Margin = topMargin
                 };
                 TextBlock phoneticText = PhoneticBlock(phonetic, onReplay);
                 phoneticText.Margin = new Thickness(10, 0, 0, 0);
