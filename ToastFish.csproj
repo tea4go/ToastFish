@@ -162,6 +162,9 @@
     <Compile Include="View\PhoneticChartWindow.xaml.cs">
       <DependentUpon>PhoneticChartWindow.xaml</DependentUpon>
     </Compile>
+    <Compile Include="View\GojuonChartWindow.xaml.cs">
+      <DependentUpon>GojuonChartWindow.xaml</DependentUpon>
+    </Compile>
     <Compile Include="View\MenuCheckRenderer.cs" />
     <Compile Include="View\SettingsWindow.xaml.cs">
       <DependentUpon>SettingsWindow.xaml</DependentUpon>
@@ -182,6 +185,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="View\PhoneticChartWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="View\GojuonChartWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

@@ -605,6 +605,18 @@ namespace ToastFish.Model.SqliteControl
             return AllGoinWordList.ToList();
         }
 
+        /// <summary>
+        /// 五十音图用：固定读 Goin 表。不能用 GetGainWordList()，它查的是 TABLE_NAME
+        /// （用户当前词库），只在当前书正好是五十音时才返回假名。
+        /// 这里也不碰 TABLE_NAME —— 那是全局状态，改了会劫持用户当前词库。
+        /// </summary>
+        public List<GoinWord> GetGoinWords()
+        {
+            GoinWord Temp = new GoinWord();
+            IEnumerable<GoinWord> AllGoinWordList = DataBase.Query<GoinWord>("select * from Goin", Temp);
+            return AllGoinWordList.ToList();
+        }
+
         public int GetGoinProgress()
         {
             BookCount Temp = new BookCount();

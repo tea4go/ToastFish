@@ -1,0 +1,31 @@
+<Window x:Class="ToastFish.View.GojuonChartWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="日语五十音图"
+        WindowStartupLocation="CenterScreen">
+    <Grid x:Name="RootGrid">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <TextBlock x:Name="Hint" Grid.Row="0" TextWrapping="Wrap" />
+
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition x:Name="GapColumn" />
+                <ColumnDefinition x:Name="DetailColumn" />
+            </Grid.ColumnDefinitions>
+
+            <ScrollViewer x:Name="ChartScroll" Grid.Column="0" VerticalScrollBarVisibility="Auto">
+                <Grid x:Name="ChartHost" HorizontalAlignment="Left" VerticalAlignment="Top" />
+            </ScrollViewer>
+
+            <StackPanel Grid.Column="2">
+                <TextBlock x:Name="DetailTitle" TextWrapping="Wrap" />
+                <Grid x:Name="DetailHost" />
+            </StackPanel>
+        </Grid>
+    </Grid>
+</Window>
