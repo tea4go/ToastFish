@@ -153,10 +153,15 @@
     <Compile Include="Model\StartWithWindows\HotKey.cs" />
     <Compile Include="Model\StartWithWindows\StartWithWindows.cs" />
     <Compile Include="Model\Notify\NotifyTheme.cs" />
+    <Compile Include="Model\Phonetic\PhoneticData.cs" />
+    <Compile Include="Model\Phonetic\PhoneticSymbol.cs" />
     <Compile Include="View\Notify\NotifyWindowBase.cs" />
     <Compile Include="View\Notify\MessageWindow.cs" />
     <Compile Include="View\Notify\WordCardWindow.cs" />
     <Compile Include="View\Notify\ChoiceWindow.cs" />
+    <Compile Include="View\PhoneticChartWindow.xaml.cs">
+      <DependentUpon>PhoneticChartWindow.xaml</DependentUpon>
+    </Compile>
     <Compile Include="View\MenuCheckRenderer.cs" />
     <Compile Include="View\SettingsWindow.xaml.cs">
       <DependentUpon>SettingsWindow.xaml</DependentUpon>
@@ -173,6 +178,10 @@
       <SubType>Designer</SubType>
     </Page>
     <Page Include="View\SettingsWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="View\PhoneticChartWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -563,6 +572,9 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="Resources\mute.mp3">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Resources\Phonetic\*.*">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
   </ItemGroup>

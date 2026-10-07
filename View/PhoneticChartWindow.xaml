@@ -1,0 +1,32 @@
+<Window x:Class="ToastFish.View.PhoneticChartWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="英语音标表" Height="620" Width="720"
+        MinHeight="420" MinWidth="600"
+        WindowStartupLocation="CenterScreen">
+    <Grid Margin="16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <TextBlock x:Name="Hint" Grid.Row="0" Margin="2,0,0,12" FontSize="13" TextWrapping="Wrap" />
+
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="20" />
+                <ColumnDefinition Width="250" />
+            </Grid.ColumnDefinitions>
+
+            <ScrollViewer Grid.Column="0" VerticalScrollBarVisibility="Auto">
+                <StackPanel x:Name="ChartHost" />
+            </ScrollViewer>
+
+            <StackPanel Grid.Column="2">
+                <TextBlock x:Name="ExampleTitle" Margin="2,8,0,10" TextWrapping="Wrap" />
+                <Grid x:Name="ExampleHost" />
+            </StackPanel>
+        </Grid>
+    </Grid>
+</Window>

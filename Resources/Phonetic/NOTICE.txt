@@ -1,0 +1,79 @@
+英语音标发音音频
+================
+
+来源
+----
+原始音频取自 https://www.ipachart.com/ 的 mp3 目录，该站点声明其音频来自
+Wikimedia Commons，贡献者包括：
+
+    Peter Isotalo
+    User:Denelson83
+    UCLA Phonetics Lab Archive 2003
+    User:Halibutt
+    User:Pmx
+    User:Octane
+
+这些录音是 free / copyleft 授权的（多数为 CC BY-SA）。本目录下的文件是
+在上述原始音频基础上用 ffmpeg 重新编码、裁剪、拼接得到的衍生物，同样按
+原授权条款提供，并在此保留上述署名。
+
+处理方式
+--------
+- 全部重采样为 44100 Hz / 单声道 / 48 kbps mp3。
+- 单元音：直接转码。
+- 双元音：由两个单元音片段以 60 ms 交叉淡入淡出拼接而成。
+- 辅音：原始片段含两次发音，按第一个内部静音起点 + 80 ms 截断，只保留第一段。
+
+文件映射
+--------
+格式：产物文件名 <- ipachart 原始文件名
+
+单元音
+    i_long.mp3   <- Close_front_unrounded_vowel
+    i_short.mp3  <- Near-close_near-front_unrounded_vowel
+    e_short.mp3  <- Close-mid_front_unrounded_vowel
+    ae.mp3       <- Near-open_front_unrounded_vowel
+    ah.mp3       <- Open_back_unrounded_vowel
+    uh.mp3       <- Open-mid_back_unrounded_vowel
+    aw.mp3       <- Open-mid_back_rounded_vowel
+    o_short.mp3  <- Open_back_rounded_vowel
+    oo.mp3       <- Close_back_rounded_vowel
+    u_short.mp3  <- Near-close_near-back_rounded_vowel
+    er.mp3       <- Open-mid_central_unrounded_vowel
+    schwa.mp3    <- Mid-central_vowel
+
+双元音（A + B 拼接）
+    ay.mp3   <- Close-mid_front_unrounded_vowel + Near-close_near-front_unrounded_vowel
+    eye.mp3  <- Open_front_unrounded_vowel + Near-close_near-front_unrounded_vowel
+    oy.mp3   <- Open-mid_back_rounded_vowel + Near-close_near-front_unrounded_vowel
+    oh.mp3   <- Mid-central_vowel + Near-close_near-back_rounded_vowel
+    ow.mp3   <- Open_front_unrounded_vowel + Near-close_near-back_rounded_vowel
+    ear.mp3  <- Near-close_near-front_unrounded_vowel + Mid-central_vowel
+    air.mp3  <- Close-mid_front_unrounded_vowel + Mid-central_vowel
+    ure.mp3  <- Near-close_near-back_rounded_vowel + Mid-central_vowel
+
+辅音
+    p.mp3   <- Voiceless_bilabial_plosive
+    b.mp3   <- Voiced_bilabial_plosive
+    t.mp3   <- Voiceless_alveolar_plosive
+    d.mp3   <- Voiced_alveolar_plosive
+    k.mp3   <- Voiceless_velar_plosive
+    g.mp3   <- Voiced_velar_plosive
+    f.mp3   <- Voiceless_labiodental_fricative
+    v.mp3   <- Voiced_labiodental_fricative
+    th.mp3  <- Voiceless_dental_fricative
+    dh.mp3  <- Voiced_dental_fricative
+    s.mp3   <- Voiceless_alveolar_fricative
+    z.mp3   <- Voiced_alveolar_fricative
+    sh.mp3  <- Voiceless_postalveolar_fricative
+    zh.mp3  <- Voiced_postalveolar_fricative
+    h.mp3   <- Voiceless_glottal_fricative
+    ch.mp3  <- Voiceless_palato-alveolar_affricate
+    j.mp3   <- Voiced_postalveolar_affricate
+    m.mp3   <- Bilabial_nasal
+    n.mp3   <- Alveolar_nasal
+    ng.mp3  <- Velar_nasal
+    l.mp3   <- Alveolar_lateral_approximant
+    r.mp3   <- Alveolar_approximant
+    y.mp3   <- Palatal_approximant
+    w.mp3   <- Voiced_labio-velar_approximant

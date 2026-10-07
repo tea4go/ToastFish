@@ -154,6 +154,7 @@ namespace ToastFish
         System.Windows.Forms.ToolStripMenuItem ShowLog = new System.Windows.Forms.ToolStripMenuItem();
         System.Windows.Forms.ToolStripMenuItem ResumeTest = new System.Windows.Forms.ToolStripMenuItem();
         System.Windows.Forms.ToolStripMenuItem LibraryStatus = new System.Windows.Forms.ToolStripMenuItem();
+        System.Windows.Forms.ToolStripMenuItem PhoneticChart = new System.Windows.Forms.ToolStripMenuItem();
 
         System.Windows.Forms.ToolStripMenuItem SetAutoPlay = new System.Windows.Forms.ToolStripMenuItem();
         System.Windows.Forms.ToolStripMenuItem SetAutoLog = new System.Windows.Forms.ToolStripMenuItem();
@@ -213,6 +214,9 @@ namespace ToastFish
 
             LibraryStatus.Text = "当前词库状态";
             LibraryStatus.Click += new EventHandler(LibraryStatus_Click);
+
+            PhoneticChart.Text = "英语音标表";
+            PhoneticChart.Click += new EventHandler(PhoneticChart_Click);
 
             Start.Text = "开机启动";
             Start.Click += new EventHandler(Start_Click);
@@ -292,6 +296,7 @@ namespace ToastFish
             Cms.Items.Add(SelectJpBook);
             Cms.Items.Add(RandomTest);
             Cms.Items.Add(LibraryStatus);
+            Cms.Items.Add(PhoneticChart);
             Cms.Items.Add(Settings);
             Cms.Items.Add(GotoHtml);
             Cms.Items.Add(ShowLog);
@@ -679,6 +684,11 @@ namespace ToastFish
         private void ResumeTest_Click(object sender, EventArgs e)
         {
             NotifyWindowBase.Resume();
+        }
+
+        private void PhoneticChart_Click(object sender, EventArgs e)
+        {
+            ToastFish.View.PhoneticChartWindow.ShowChart();
         }
 
         /// <summary>
