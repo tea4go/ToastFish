@@ -728,6 +728,12 @@ namespace ToastFish.Model.PushControl
         }
 
         /// <summary>
+        /// 例句朗读的语速。SAPI 的 Rate 取 -10..10，0 是正常，负数更慢。
+        /// 合成语音默认语速偏快，放慢两档才听得清每个音。
+        /// </summary>
+        private const int SentenceRate = -2;
+
+        /// <summary>
         /// 朗读一个英文句子。有道的音频接口只认词库里的单词，整句请求会返回 500，
         /// 所以例句只能走系统语音合成。系统默认语音往往是中文，得显式挑一个英文
         /// 语音，否则会用中文腔调念英文。播放是阻塞的，放到后台线程。
@@ -739,6 +745,7 @@ namespace ToastFish.Model.PushControl
             Task.Run(() =>
             {
                 SpeechSynthesizer synth = new SpeechSynthesizer();
+                synth.Rate = SentenceRate;
                 var englishVoices = synth.GetInstalledVoices(new CultureInfo("en-US"));
                 if (englishVoices.Count > 0)
                     synth.SelectVoice(englishVoices[0].VoiceInfo.Name);
