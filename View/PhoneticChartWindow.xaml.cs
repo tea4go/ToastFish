@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -76,12 +77,39 @@ namespace ToastFish.View
             ExampleColumn.Width = new GridLength(S(250));
             ExampleTitle.Margin = new Thickness(S(2), S(8), 0, S(10));
             ExampleTitle.FontSize = S(12);
+            ReferenceTitle.Margin = new Thickness(S(2), S(20), 0, S(6));
+            ReferenceTitle.FontSize = S(12);
 
             Background = NotifyTheme.Background;
             Hint.Foreground = NotifyTheme.Muted;
             ExampleTitle.Foreground = NotifyTheme.Muted;
+            ReferenceTitle.Foreground = NotifyTheme.Muted;
             Hint.Text = "单击音标查看例词，双击音标播放发音；双击例词可听单词读音";
+            ReferenceTitle.Text = "参考网站";
             BuildChart();
+            AddReference("新东方音标", "https://www.xdf.cn/zhuanti/bd-phonetic-alphabet-card/index.html");
+            AddReference("英语音标学习", "https://beastyz.github.io/PhoneticsStudy/");
+        }
+
+        /// <summary>
+        /// 参考网站。名称当链接文字，完整网址放 ToolTip，点击交给系统默认浏览器。
+        /// 用 Process.Start 而不是 Hyperlink：Hyperlink 在普通 Window 里不会自己导航，
+        /// 还得挂 RequestNavigate；托盘菜单打开官网也是这么写的。
+        /// </summary>
+        private void AddReference(string name, string url)
+        {
+            var link = new TextBlock
+            {
+                Text = name,
+                Foreground = NotifyTheme.Link,
+                FontSize = S(13),
+                Cursor = Cursors.Hand,
+                ToolTip = url,
+                TextWrapping = TextWrapping.Wrap,
+                Margin = new Thickness(S(2), 0, 0, S(6))
+            };
+            link.MouseLeftButtonUp += (s, e) => Process.Start(url);
+            ReferenceHost.Children.Add(link);
         }
 
         private void BuildChart()

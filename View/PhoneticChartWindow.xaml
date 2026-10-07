@@ -25,6 +25,8 @@
             <StackPanel Grid.Column="2">
                 <TextBlock x:Name="ExampleTitle" TextWrapping="Wrap" />
                 <Grid x:Name="ExampleHost" />
+                <TextBlock x:Name="ReferenceTitle" TextWrapping="Wrap" />
+                <StackPanel x:Name="ReferenceHost" />
             </StackPanel>
         </Grid>
     </Grid>

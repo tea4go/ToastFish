@@ -75,6 +75,9 @@ namespace ToastFish.Model.Notify
         /// <summary>点击复制成功后，该行文字短暂变成的颜色。</summary>
         public static Brush Copied { get; private set; }
 
+        /// <summary>可点击的网址链接色。灰阶界面里没有能表达「可点」的颜色，单独给一个蓝。</summary>
+        public static Brush Link { get; private set; }
+
         public static void Load()
         {
             int baseSize = Select.FONT_SIZE;
@@ -114,6 +117,7 @@ namespace ToastFish.Model.Notify
                 ButtonHoverForeground = Brush("#FFFFFF");
                 ButtonPressedBackground = Brush("#23272C");
                 Copied = Brush("#5FD08A");
+                Link = Brush("#58A6FF");
             }
             else
             {
@@ -129,6 +133,7 @@ namespace ToastFish.Model.Notify
                 ButtonHoverForeground = Brush("#000000");
                 ButtonPressedBackground = Brush("#C6CCD5");
                 Copied = Brush("#2E9E5B");
+                Link = Brush("#1F6FEB");
             }
         }
 
