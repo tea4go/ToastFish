@@ -34,6 +34,9 @@ namespace ToastFish.View
         /// <summary>子组行的左缩进（基准字号下）。</summary>
         private const double GroupIndent = 10;
 
+        /// <summary>组名与方块之间的间距（基准字号下）。</summary>
+        private const double GroupLabelGap = 10;
+
         private double S(double value)
         {
             return value * _scale;
@@ -119,6 +122,7 @@ namespace ToastFish.View
         /// 对照表看着就散了。宽度按最长的组名（「开合双元音」5 个字）留够；
         /// 靠右对齐，万一某字体把 5 个字排得更宽，多出来的部分往左边的缩进里溢，
         /// 不会被裁掉（Grid 默认不裁剪子元素）。
+        /// 方块区自己带左间距：右对齐的组名右边缘正好落在列边界上，不留间距就是零距离。
         /// </summary>
         private void AddGroup(PhoneticGroup group)
         {
@@ -137,7 +141,7 @@ namespace ToastFish.View
             Grid.SetColumn(label, 0);
             row.Children.Add(label);
 
-            var tiles = new WrapPanel();
+            var tiles = new WrapPanel { Margin = new Thickness(S(GroupLabelGap), 0, 0, 0) };
             foreach (PhoneticSymbol symbol in group.Symbols)
                 tiles.Children.Add(CreateTile(symbol));
             Grid.SetColumn(tiles, 1);
