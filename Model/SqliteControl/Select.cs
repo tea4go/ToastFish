@@ -61,6 +61,14 @@ namespace ToastFish.Model.SqliteControl
             SQLiteCommand Update = DataBase.CreateCommand();
             Update.CommandText = cmdtext;
             Update.ExecuteNonQuery();
+
+            // 五十音不写 status，进度在 Count.current 里，得单独清回起点（1 基指针的初始值）
+            if (TABLE_NAME == "Goin")
+            {
+                SQLiteCommand ResetCount = DataBase.CreateCommand();
+                ResetCount.CommandText = "UPDATE Count SET current = 1 WHERE bookName = 'Goin'";
+                ResetCount.ExecuteNonQuery();
+            }
         }
 
         /// <summary>

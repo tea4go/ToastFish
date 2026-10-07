@@ -623,7 +623,7 @@ namespace ToastFish
             // else
             //{
             List<int> res = Se.SelectCount();
-            string message = "当前词库：" + sender.ToString() + "\n当前进度：" + res[0].ToString() + "/" + res[1].ToString();
+            string message = "当前词库：" + sender.ToString() + "\n当前进度：" + LearnedCount(res[0]).ToString() + "/" + res[1].ToString();
             // 提示放后台线程弹，别压在菜单事件里。后台线程的未捕获异常会直接终止整个
             // 进程，所以必须兜住——最坏也只是这条提示丢了
             Thread notifyThread = new Thread(() =>
@@ -700,7 +700,7 @@ namespace ToastFish
                 : Select.TABLE_NAME;
 
             string text = "当前词库：" + name
-                + "\n背诵进度：" + status.current + " / " + status.number
+                + "\n背诵进度：" + LearnedCount(status.current) + " / " + status.number
                 + "\n背诵：" + status.reciteCount + " 次" + RecentTime(status.lastReciteTime);
 
             if (status.testCount == 0)
@@ -720,6 +720,15 @@ namespace ToastFish
         private static string RecentTime(string time)
         {
             return string.IsNullOrEmpty(time) ? "" : "，最近 " + time;
+        }
+
+        /// <summary>
+        /// 换算成给用户看的「已背个数」。其他库的 current 本来就是已背个数，
+        /// 五十音的是「下一个要背的音」的 1 基指针（初始 1），所以要减 1。
+        /// </summary>
+        private static int LearnedCount(int current)
+        {
+            return Select.TABLE_NAME == "Goin" ? current - 1 : current;
         }
 
         private static string Percent(int correct, int total)
