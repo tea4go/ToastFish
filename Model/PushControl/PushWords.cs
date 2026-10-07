@@ -455,6 +455,8 @@ namespace ToastFish.Model.PushControl
                 pushWords.PushWaitAllQuestions(RandomList, (List<Word>)Query.AllWordList);
             }
             pushWords.PushMessage("结束了！恭喜！");
+            // SM2 只写 status，不写 Count.current；不重算的话进度会一直停在切库时的旧值
+            Query.UpdateTableCount();
             Query.RecordRecite();
 
             if (Select.AUTO_LOG != 0)

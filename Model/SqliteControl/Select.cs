@@ -69,6 +69,10 @@ namespace ToastFish.Model.SqliteControl
         /// 
         public void UpdateTableCount()
         {
+            // 五十音表不写 status（OrderGoin 全程不改它），进度是 Count.current 里的递增计数器，
+            // 按 status 重算会把它清成 0，把背过的进度抹掉
+            if (TABLE_NAME == "Goin")
+                return;
             String cmdtext = $"Select status from {TABLE_NAME}";
             SQLiteCommand Update = DataBase.CreateCommand();
             Update.CommandText = cmdtext;

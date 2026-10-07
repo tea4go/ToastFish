@@ -676,6 +676,10 @@ namespace ToastFish
         /// </summary>
         private void LibraryStatus_Click(object sender, EventArgs e)
         {
+            // 进度是切库时算好存进 Count 的缓存值，背诵流程不一定刷新它。
+            // 查看前重算一次，保证显示的是当前真实进度（也顺带修正旧数据）。
+            Se.UpdateTableCount();
+
             BookCount status = Se.SelectStatus();
             if (status == null)
                 return;
