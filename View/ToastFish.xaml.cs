@@ -148,7 +148,6 @@ namespace ToastFish
         System.Windows.Forms.ToolStripMenuItem SelectJpBook = new System.Windows.Forms.ToolStripMenuItem();
         System.Windows.Forms.ToolStripMenuItem RandomTest = new System.Windows.Forms.ToolStripMenuItem();
 
-        System.Windows.Forms.ToolStripMenuItem GotoHtml = new System.Windows.Forms.ToolStripMenuItem();
         System.Windows.Forms.ToolStripMenuItem Start = new System.Windows.Forms.ToolStripMenuItem();
         System.Windows.Forms.ToolStripMenuItem ExitMenuItem = new System.Windows.Forms.ToolStripMenuItem();
         System.Windows.Forms.ToolStripMenuItem ShowLog = new System.Windows.Forms.ToolStripMenuItem();
@@ -203,9 +202,6 @@ namespace ToastFish
             SelectJpBook.Text = "日语词汇";
 
             RandomTest.Text = "随机测试";
-
-            GotoHtml.Text = "使用说明";
-            GotoHtml.Click += new EventHandler(HowToUse_Click);
 
             ShowLog.Text = "显示日志";
             ShowLog.Click += new EventHandler(ShowLog_Click);
@@ -276,12 +272,6 @@ namespace ToastFish
             RandomGoin.Click += new EventHandler(RandomGoinTest_Click);
             ToolStripItem RandomJpWord = new ToolStripMenuItem("随机日语单词测试");
             RandomJpWord.Click += new EventHandler(RandomJpWordTest_Click);
-            ToolStripItem Pdf = new ToolStripMenuItem("Star!!");
-            Pdf.Click += new EventHandler(OpenPdf_Click);
-            ToolStripItem Use = new ToolStripMenuItem("使用说明(必读)");
-            Use.Click += new EventHandler(HowToUse_Click);
-            ToolStripItem Site = new ToolStripMenuItem("官方网站");
-            Site.Click += new EventHandler(Site_Click);
             ToolStripItem Shortcuts = new ToolStripMenuItem("快捷方式");
             Shortcuts.Click += new EventHandler(ShortCuts_Click);
             ToolStripItem ResetLearingStatus = new ToolStripMenuItem("重置进度");
@@ -303,7 +293,6 @@ namespace ToastFish
             Cms.Items.Add(PhoneticChart);
             Cms.Items.Add(GojuonChart);
             Cms.Items.Add(Settings);
-            Cms.Items.Add(GotoHtml);
             Cms.Items.Add(ShowLog);
             Cms.Items.Add(Start);
             Cms.Items.Add(ExitMenuItem);
@@ -340,11 +329,7 @@ namespace ToastFish
             Settings.DropDownItems.Add(SetAutoLog);
             Settings.DropDownItems.Add(ImportWords);
             Settings.DropDownItems.Add(ResetLearingStatus);
-            
-            GotoHtml.DropDownItems.Add(Shortcuts);
-            GotoHtml.DropDownItems.Add(Use);
-            GotoHtml.DropDownItems.Add(Site);
-            GotoHtml.DropDownItems.Add(Pdf);
+            Settings.DropDownItems.Add(Shortcuts);
 
             // 同步当前词库必须放在菜单项全部添加完成之后，否则中途一旦卡住，托盘菜单就是空的
             if (Select.TABLE_NAME == "CET4_1")
@@ -862,22 +847,10 @@ namespace ToastFish
             Se.UpdateGlobalConfig();
         }
 
-        private void HowToUse_Click(object sender, EventArgs e)
-        {
-            System.Diagnostics.Process.Start(".\\Resources\\使用说明.html");
-        }
-        private void Site_Click(object sender, EventArgs e)
-        {
-            System.Diagnostics.Process.Start("https://lab.magiconch.com/toast-fish/");
-        }
         private void ShowLog_Click(object sender, EventArgs e)
         {
             string log = Path.Combine("Log", "toastfish-" + DateTime.Now.ToString("yyyy-MM-dd") + ".log");
             System.Diagnostics.Process.Start("cmd.exe", "/k \"\"C:\\GreenSoft\\Alias\\tail_utf8.exe\" -F \"" + log + "\"\"");
-        }
-        private void OpenPdf_Click(object sender, EventArgs e)
-        {
-            System.Diagnostics.Process.Start(".\\Resources\\Star.pdf");
         }
         private void ExitApp_Click(object sender, EventArgs e)
         {
