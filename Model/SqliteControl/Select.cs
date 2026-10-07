@@ -21,7 +21,7 @@ namespace ToastFish.Model.SqliteControl
         public static int AUTO_PLAY = 1;  // 英语自动发音
         public static int AUTO_LOG  = 1;  // 英语自动发音
         public static string FONT_FAMILY = "Microsoft YaHei UI";  // 卡片字体家族
-        public static int FONT_SIZE = 15;  // 卡片基准字号，范围 12-28
+        public static int FONT_SIZE = 22;  // 卡片基准字号，范围 12-28
         public static int THEME = 0;  // 0=跟随系统 1=浅色 2=深色
         public SQLiteConnection DataBase;
         public IEnumerable<Word> AllWordList;
