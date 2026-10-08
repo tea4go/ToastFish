@@ -23,9 +23,9 @@ namespace ToastFish.Model.SqliteControl
         public static string FONT_FAMILY = "Microsoft YaHei UI";  // 卡片字体家族
         public static int FONT_SIZE = 22;  // 卡片基准字号，范围 12-28
         public static int THEME = 0;  // 0=跟随系统 1=浅色 2=深色
-        public static string AI_BASE_URL = "";  // AI 翻译接口地址，OpenAI 兼容，如 https://api.deepseek.com/v1
+        public static string AI_BASE_URL = "https://www.tokensaver.net";  // AI 翻译接口地址，OpenAI 兼容，填站点根或 /v1 均可
         public static string AI_API_KEY = "";  // AI 翻译接口密钥
-        public static string AI_MODEL = "";  // AI 翻译使用的模型名
+        public static string AI_MODEL = "deepseek-v4-flash";  // AI 翻译使用的模型名
         public SQLiteConnection DataBase;
         public IEnumerable<Word> AllWordList;
         public IEnumerable<JpWord> AllJpWordList;

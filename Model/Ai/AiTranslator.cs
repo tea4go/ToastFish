@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Net;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
@@ -29,6 +30,14 @@ namespace ToastFish.Model.Ai
 
         /// <summary>单次请求的超时时间。翻译是交互操作，等太久不如直接报错重试。</summary>
         private static readonly TimeSpan Timeout = TimeSpan.FromSeconds(30);
+
+        static AiTranslator()
+        {
+            // 本机 .NET Framework 4.7.2 默认只启用 Ssl3/Tls（TLS 1.0），而 OpenAI 兼容网关
+            // 普遍只收 TLS 1.2 及以上，不显式补上会报「未能创建 SSL/TLS 安全通道」。
+            // 只增不减，不影响程序里其它走 https 的下载。
+            ServicePointManager.SecurityProtocol |= SecurityProtocolType.Tls12;
+        }
 
         public static async Task<string> TranslateAsync(string text)
         {
@@ -76,14 +85,25 @@ namespace ToastFish.Model.Ai
         }
 
         /// <summary>
-        /// 接口地址填到 /v1 就够了，这里补上路径。用户直接把完整端点粘进来也认。
+        /// 拼出完整的 chat/completions 地址。接口地址只填站点根（如 https://www.tokensaver.net）
+        /// 时补上 /v1——OpenAI 兼容网关的通行约定；填到 /v1 或直接粘完整端点也都认。
         /// </summary>
         private static string Endpoint()
         {
             string url = Select.AI_BASE_URL.Trim().TrimEnd('/');
-            if (!url.EndsWith("/chat/completions", StringComparison.OrdinalIgnoreCase))
-                url += "/chat/completions";
-            return url;
+            if (url.EndsWith("/chat/completions", StringComparison.OrdinalIgnoreCase))
+                return url;
+            if (HasNoPath(url))
+                url += "/v1";
+            return url + "/chat/completions";
+        }
+
+        /// <summary>「协议://主机」之后没有路径部分。例：https://api.x.com 没有，https://api.x.com/v1 有。</summary>
+        private static bool HasNoPath(string url)
+        {
+            int schemeEnd = url.IndexOf("://", StringComparison.Ordinal);
+            int hostStart = schemeEnd < 0 ? 0 : schemeEnd + 3;
+            return url.IndexOf('/', hostStart) < 0;
         }
 
         /// <summary>从 choices[0].message.content 取译文。</summary>
