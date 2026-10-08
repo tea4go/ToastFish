@@ -38,6 +38,9 @@ namespace ToastFish.Model.Markdown
         /// <summary>H1~H6 相对正文字号的倍数。</summary>
         private static readonly double[] HeadingScale = { 1.7, 1.5, 1.3, 1.15, 1.05, 1.0 };
 
+        /// <summary>表格外框的圆角半径。</summary>
+        private const double TableCornerRadius = 16;
+
         /// <summary>把 Markdown 文本渲染成 FlowDocument。空文本返回一个空文档。</summary>
         public static FlowDocument Render(string markdown, double fontSize)
         {
@@ -280,6 +283,13 @@ namespace ToastFish.Model.Markdown
                     var host = new Border
                     {
                         Background = rowBackground,
+                        // 四个角上的格子单独切圆角，半径取外框内缘（外框 16px 圆角减 1px 边框），
+                        // 底色正好贴住描边内侧。靠外框 Clip 裁的话会连描边一起裁掉，圆角处就断线了
+                        CornerRadius = new CornerRadius(
+                            rowIndex == 0 && cellIndex == 0 ? TableCornerRadius - 1 : 0,
+                            rowIndex == 0 && cellIndex == columnCount - 1 ? TableCornerRadius - 1 : 0,
+                            rowIndex == rows.Count - 1 && cellIndex == columnCount - 1 ? TableCornerRadius - 1 : 0,
+                            rowIndex == rows.Count - 1 && cellIndex == 0 ? TableCornerRadius - 1 : 0),
                         BorderBrush = NotifyTheme.Markdown.TableBorder,
                         // 只画右边和下边：外框交给外层 Border，四边都画会跟它叠成 2px
                         BorderThickness = new Thickness(
@@ -302,17 +312,9 @@ namespace ToastFish.Model.Markdown
                 Background = NotifyTheme.Markdown.TableBackground,
                 BorderBrush = NotifyTheme.Markdown.TableBorder,
                 BorderThickness = new Thickness(1),
-                CornerRadius = new CornerRadius(16),
+                CornerRadius = new CornerRadius(TableCornerRadius),
                 Margin = new Thickness(0, 0, 0, fontSize * 0.5),
                 Child = grid
-            };
-            // Border 的圆角不裁剪子元素，得自己把整块按圆角切掉四角，
-            // 否则格子底色的直角会从圆角外面露出来
-            frame.SizeChanged += (s, e) =>
-            {
-                var border = (Border)s;
-                border.Clip = new RectangleGeometry(
-                    new Rect(0, 0, border.ActualWidth, border.ActualHeight), 16, 16);
             };
             return new BlockUIContainer(frame);
         }
