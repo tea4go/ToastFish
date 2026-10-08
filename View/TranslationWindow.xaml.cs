@@ -1,9 +1,13 @@
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
 using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Shapes;
+using System.Windows.Threading;
 using ToastFish.Model.Ai;
 using ToastFish.Model.Markdown;
 using ToastFish.Model.Notify;
@@ -84,6 +88,19 @@ class SomeClass:
         /// <summary>已经打开的窗口。同一时刻只留一个，重复点菜单只把它提到前面。</summary>
         private static TranslationWindow _open;
 
+        /// <summary>一次翻译的历史：原文用来做标签摘要和回填输入框，译文用来重渲染。</summary>
+        private class TranslationEntry
+        {
+            public string Source;
+            public string Output;
+        }
+
+        /// <summary>本次窗口打开期间的翻译历史，关窗即丢。</summary>
+        private readonly List<TranslationEntry> _history = new List<TranslationEntry>();
+
+        /// <summary>当前选中的历史下标，-1 表示还没有任何历史。</summary>
+        private int _historyIndex = -1;
+
         // 整窗口随基准字号等比缩放，基准 15 时比例为 1。
         private readonly double _scale = NotifyTheme.BaseSize / 15.0;
 
@@ -121,8 +138,10 @@ class SomeClass:
 
             StyleBox(InputBox);
             StyleOutput();
+            StyleHistoryBar();
             InputBox.Text = DefaultInput;
             ShowOutput(DefaultOutput);
+            RebuildTabs();
 
             ActionPanel.Margin = new Thickness(S(10), 0, 0, 0);
             StyleButton(TranslateButton);
@@ -132,8 +151,9 @@ class SomeClass:
             PlayButton.Click += Play_Click;
             ConfigButton.Click += Config_Click;
 
-            // 上半部分只占右侧三个按钮的总高（3×34 + 2×8），要更高就拖分隔线
-            TopRow.Height = new GridLength(S(118));
+            // 上半部分 = 右侧三个按钮的总高（3×34 + 2×8）+ 标签栏一行（8 间距 + 26 高），
+            // 输入框仍与第三个按钮等高，要更高就拖分隔线
+            TopRow.Height = new GridLength(S(118 + 34));
 
             SplitLine.BorderBrush = NotifyTheme.Border;
             // 拖动区做高一点好抓，上下各留 8 让分隔线的间距和原来一致
@@ -198,12 +218,31 @@ class SomeClass:
             button.Template = NotifyWindowBase.CreateButtonTemplate();
         }
 
+        /// <summary>译文区里选中的文本，没选中时为空串。</summary>
+        private string SelectedOutputText()
+        {
+            TextSelection selection = OutputBox.Selection;
+            return selection == null ? "" : selection.Text;
+        }
+
+        /// <summary>两个框里任意一个有选中文本。有选中就按「查词」处理，用单词提示词。</summary>
+        private bool HasSelectedText()
+        {
+            return InputBox.SelectionLength > 0 || !string.IsNullOrEmpty(SelectedOutputText());
+        }
+
         /// <summary>
-        /// 输入框里选中了文本就只取选中部分，否则取整框。翻译和播放共用这条规则。
+        /// 要处理的文本，按优先级取：原文框里选中的 &gt; 译文区里选中的 &gt; 整个原文框。
+        /// 翻译和播放共用这条规则。
         /// </summary>
         private string TextToProcess()
         {
-            return InputBox.SelectionLength > 0 ? InputBox.SelectedText : InputBox.Text;
+            if (InputBox.SelectionLength > 0)
+                return InputBox.SelectedText;
+            string selectedOutput = SelectedOutputText();
+            if (!string.IsNullOrEmpty(selectedOutput))
+                return selectedOutput;
+            return InputBox.Text;
         }
 
         /// <summary>
@@ -212,7 +251,7 @@ class SomeClass:
         /// </summary>
         private async void Translate_Click(object sender, RoutedEventArgs e)
         {
-            bool hasSelection = InputBox.SelectionLength > 0;
+            bool hasSelection = HasSelectedText();
             string text = TextToProcess();
             if (string.IsNullOrWhiteSpace(text))
                 return;
@@ -222,7 +261,10 @@ class SomeClass:
             ShowOutput("翻译中…");
             try
             {
-                ShowOutput(await AiTranslator.TranslateAsync(text, prompt));
+                string result = await AiTranslator.TranslateAsync(text, prompt);
+                ShowOutput(result);
+                // 只有翻成功才记历史，「翻译中…」「翻译失败」都不算
+                PushHistory(text, result);
             }
             catch (Exception ex)
             {
@@ -248,6 +290,205 @@ class SomeClass:
             if (string.IsNullOrWhiteSpace(text))
                 return;
             Task.Run(() => SpeechReader.Create(text).SpeakAsync(text));
+        }
+
+        /// <summary>历史标签栏外观：两端箭头、中间折行的标签区。</summary>
+        private void StyleHistoryBar()
+        {
+            HistoryBar.MinHeight = S(26);
+            HistoryBar.Margin = new Thickness(0, S(8), 0, 0);
+
+            PrevButton.Child = Chevron(false);
+            NextButton.Child = Chevron(true);
+            StyleNav(PrevButton);
+            StyleNav(NextButton);
+            PrevButton.MouseLeftButtonUp += (s, e) => StepHistory(-1);
+            NextButton.MouseLeftButtonUp += (s, e) => StepHistory(1);
+
+            TabsScroll.Background = Brushes.Transparent;
+            TabsScroll.BorderThickness = new Thickness(0);
+            TabsScroll.Padding = new Thickness(S(4), 0, S(4), 0);
+            // 最多折两行（一行 26），再多就竖向滚动，免得把输入框挤没
+            TabsScroll.MaxHeight = S(56);
+        }
+
+        /// <summary>左右箭头图标。用 Path 画 chevron，免得受用户自定义字体影响。</summary>
+        private Path Chevron(bool forward)
+        {
+            return new Path
+            {
+                Data = Geometry.Parse(forward ? "M 0,0 L 4.5,5.5 L 0,11" : "M 4.5,0 L 0,5.5 L 4.5,11"),
+                Stroke = NotifyTheme.Muted,
+                StrokeThickness = 1.4,
+                StrokeLineJoin = PenLineJoin.Round,
+                StrokeStartLineCap = PenLineCap.Round,
+                StrokeEndLineCap = PenLineCap.Round,
+                Width = S(5),
+                Height = S(12),
+                Stretch = Stretch.Uniform
+            };
+        }
+
+        private void StyleNav(Border button)
+        {
+            button.Padding = new Thickness(S(5), 0, S(5), 0);
+            button.Background = Brushes.Transparent;
+            // 撑满整行：标签折行变高时箭头跟着一起变高，和标签区等高
+            button.VerticalAlignment = VerticalAlignment.Stretch;
+        }
+
+        /// <summary>到头时把箭头置灰并停掉点击。</summary>
+        private void UpdateNavButtons()
+        {
+            SetNavEnabled(PrevButton, _historyIndex > 0);
+            SetNavEnabled(NextButton, _historyIndex >= 0 && _historyIndex < _history.Count - 1);
+        }
+
+        private static void SetNavEnabled(Border button, bool enabled)
+        {
+            button.IsEnabled = enabled;
+            button.Opacity = enabled ? 1 : 0.3;
+            button.Cursor = enabled ? Cursors.Hand : Cursors.Arrow;
+        }
+
+        /// <summary>翻译成功：记一条历史并选中它。当前不在末尾时先截断后面的，同浏览器历史。</summary>
+        private void PushHistory(string source, string output)
+        {
+            if (_historyIndex < _history.Count - 1)
+                _history.RemoveRange(_historyIndex + 1, _history.Count - 1 - _historyIndex);
+            _history.Add(new TranslationEntry { Source = source, Output = output });
+            _historyIndex = _history.Count - 1;
+            RebuildTabs();
+        }
+
+        /// <summary>切到第 index 条历史：原文回填输入框，译文重新渲染。</summary>
+        private void SelectHistory(int index)
+        {
+            if (index < 0 || index >= _history.Count || index == _historyIndex)
+                return;
+            _historyIndex = index;
+            InputBox.Text = _history[index].Source;
+            ShowOutput(_history[index].Output);
+            RebuildTabs();
+        }
+
+        /// <summary>在当前历史里前后移动。</summary>
+        private void StepHistory(int delta)
+        {
+            SelectHistory(_historyIndex + delta);
+        }
+
+        /// <summary>删掉一条历史。删的是当前条就顺势显示相邻的一条，删光则保持画面不动。</summary>
+        private void RemoveHistory(int index)
+        {
+            if (index < 0 || index >= _history.Count)
+                return;
+
+            bool removedCurrent = index == _historyIndex;
+            _history.RemoveAt(index);
+            if (_historyIndex > index)
+                _historyIndex--;
+            else if (_historyIndex == index)
+                _historyIndex = Math.Min(_historyIndex, _history.Count - 1);
+            RebuildTabs();
+
+            if (removedCurrent && _historyIndex >= 0)
+            {
+                InputBox.Text = _history[_historyIndex].Source;
+                ShowOutput(_history[_historyIndex].Output);
+            }
+        }
+
+        /// <summary>按当前历史重建标签。条数不多，整体重建比增量维护省事。</summary>
+        private void RebuildTabs()
+        {
+            TabsPanel.Children.Clear();
+            for (int i = 0; i < _history.Count; i++)
+                TabsPanel.Children.Add(CreateTab(i));
+            UpdateNavButtons();
+
+            // 刚加进去的元素还没有布局位置，等布局完再滚进视野
+            if (_historyIndex >= 0 && _historyIndex < TabsPanel.Children.Count)
+            {
+                FrameworkElement target = TabsPanel.Children[_historyIndex] as FrameworkElement;
+                Dispatcher.BeginInvoke(new Action(() => target.BringIntoView()),
+                    DispatcherPriority.Loaded);
+            }
+        }
+
+        /// <summary>一个历史标签：原文摘要 + 右上角删除图标，选中的那个底色不同。</summary>
+        private Border CreateTab(int index)
+        {
+            bool active = index == _historyIndex;
+
+            var label = new TextBlock
+            {
+                Text = TabLabel(_history[index].Source),
+                FontFamily = NotifyTheme.Font,
+                FontSize = S(12),
+                Foreground = active ? NotifyTheme.Foreground : NotifyTheme.Muted,
+                TextTrimming = TextTrimming.CharacterEllipsis,
+                MaxWidth = S(110),
+                // 右边给右上角的 × 让出位置，否则文字会拉伸到图标底下撞在一起
+                Margin = new Thickness(0, 0, S(10), 0),
+                VerticalAlignment = VerticalAlignment.Center
+            };
+
+            var glyph = new Path
+            {
+                Data = Geometry.Parse("M 0,0 L 6,6 M 6,0 L 0,6"),
+                Stroke = NotifyTheme.Muted,
+                StrokeThickness = 1.2,
+                StrokeStartLineCap = PenLineCap.Round,
+                StrokeEndLineCap = PenLineCap.Round,
+                Width = S(6),
+                Height = S(6),
+                Stretch = Stretch.Uniform
+            };
+            var close = new Border
+            {
+                Padding = new Thickness(S(2)),
+                Background = Brushes.Transparent,
+                Cursor = Cursors.Hand,
+                HorizontalAlignment = HorizontalAlignment.Right,
+                VerticalAlignment = VerticalAlignment.Top,
+                ToolTip = "删除这条记录",
+                Child = glyph
+            };
+            close.MouseEnter += (s, e) => glyph.Stroke = NotifyTheme.Foreground;
+            close.MouseLeave += (s, e) => glyph.Stroke = NotifyTheme.Muted;
+            close.MouseLeftButtonUp += (s, e) =>
+            {
+                // 别让事件冒泡到标签上，否则删完又立刻切过去
+                e.Handled = true;
+                RemoveHistory(index);
+            };
+
+            var host = new Grid();
+            host.Children.Add(label);
+            host.Children.Add(close);
+
+            var tab = new Border
+            {
+                Background = active ? NotifyTheme.ButtonBackground : Brushes.Transparent,
+                BorderBrush = NotifyTheme.Border,
+                BorderThickness = new Thickness(1),
+                CornerRadius = new CornerRadius(4),
+                // 右边留一点给 × 的可点区域，文字的让位交给 label 的 Margin
+                Padding = new Thickness(S(7), S(2), S(4), S(2)),
+                Margin = new Thickness(0, 0, S(4), S(4)),
+                Cursor = Cursors.Hand,
+                ToolTip = _history[index].Source,
+                Child = host
+            };
+            tab.MouseLeftButtonUp += (s, e) => SelectHistory(index);
+            return tab;
+        }
+
+        /// <summary>标签上显示的原文摘要：换行压成空格，过长交给 TextTrimming 省略。</summary>
+        private static string TabLabel(string source)
+        {
+            return source.Replace('\r', ' ').Replace('\n', ' ').Trim();
         }
     }
 }

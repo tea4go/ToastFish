@@ -16,10 +16,35 @@
                 <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
 
-            <TextBox x:Name="InputBox" Grid.Column="0"
-                     AcceptsReturn="True" TextWrapping="Wrap"
-                     VerticalScrollBarVisibility="Auto"
-                     VerticalContentAlignment="Top" />
+            <!-- 标签栏放在输入框下方、同一行内部：插成独立行的话，
+                 GridSplitter 的 PreviousAndNext 就变成拖标签栏而不是输入框了 -->
+            <Grid Grid.Column="0">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <TextBox x:Name="InputBox" Grid.Row="0"
+                         AcceptsReturn="True" TextWrapping="Wrap"
+                         VerticalScrollBarVisibility="Auto"
+                         VerticalContentAlignment="Top" />
+
+                <!-- 翻译历史：左右箭头分列两端，中间是折行的标签，箭头高度跟着标签区走 -->
+                <Grid x:Name="HistoryBar" Grid.Row="1">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <Border x:Name="PrevButton" Grid.Column="0" />
+                    <ScrollViewer x:Name="TabsScroll" Grid.Column="1"
+                                  VerticalScrollBarVisibility="Auto"
+                                  HorizontalScrollBarVisibility="Disabled">
+                        <WrapPanel x:Name="TabsPanel" />
+                    </ScrollViewer>
+                    <Border x:Name="NextButton" Grid.Column="2" />
+                </Grid>
+            </Grid>
 
             <StackPanel x:Name="ActionPanel" Grid.Column="1">
                 <Button x:Name="TranslateButton" Content="翻译" />
