@@ -255,6 +255,10 @@ namespace ToastFish.Model.Markdown
             };
             button.MouseEnter += (s, e) => glyph.Stroke = NotifyTheme.Foreground;
             button.MouseLeave += (s, e) => glyph.Stroke = NotifyTheme.Muted;
+            // FlowDocumentScrollViewer 的文本选择逻辑会在 MouseLeftButtonDown 冒泡到这里之后
+            // 捕获鼠标，随后 MouseLeftButtonUp 被它吃掉，按钮永远收不到。先一步把按下标成
+            // 已处理，选择逻辑就不启动，抬起事件才能正常回到按钮上。
+            button.MouseLeftButtonDown += (s, e) => e.Handled = true;
             button.MouseLeftButtonUp += (s, e) =>
             {
                 if (!TryCopy(code))
