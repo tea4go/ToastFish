@@ -43,9 +43,6 @@ namespace ToastFish.Model.Markdown
         /// <summary>H1~H6 相对正文字号的倍数。</summary>
         private static readonly double[] HeadingScale = { 1.7, 1.5, 1.3, 1.15, 1.05, 1.0 };
 
-        /// <summary>表格外框的圆角半径。</summary>
-        private const double TableCornerRadius = 16;
-
         /// <summary>把 Markdown 文本渲染成 FlowDocument。空文本返回一个空文档。</summary>
         public static FlowDocument Render(string markdown, double fontSize)
         {
@@ -324,10 +321,11 @@ namespace ToastFish.Model.Markdown
         }
 
         /// <summary>
-        /// 表格。WPF 的 Table 画不出圆角（Block 没有 CornerRadius），而且它是
-        /// FrameworkContentElement，塞不进 BlockUIContainer 包的那层 Border。
-        /// 所以整表改用 Grid 重排：外层 Border 画圆角外框和底色，单元格各自负责
-        /// 隔行底色与内部网格线，最后把整块按圆角切掉四角。
+        /// 表格。用 WPF 原生的 Table 排，而不是把 Grid 塞进 BlockUIContainer：
+        /// BlockUIContainer 里装的是 UIElement，里面的文字不参与 FlowDocument 的选择
+        /// （选择只覆盖 TextElement），表格内容就既选不中、也复制不了。
+        /// 原生 Table 的单元格是 TextElement，选中和 Ctrl+C 跟正文一样好使。
+        /// 代价是 Block 没有 CornerRadius，外框只能是直角，拿不到圆角卡片那圈效果。
         /// </summary>
         private static WpfBlock Table(MdTable source, double fontSize)
         {
@@ -353,87 +351,84 @@ namespace ToastFish.Model.Markdown
             if (columnCount == 0)
                 return null;
 
-            var grid = new Grid();
-            for (int i = 0; i < columnCount; i++)
-                grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
-            for (int i = 0; i < rows.Count; i++)
-                grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
-
-            for (int rowIndex = 0; rowIndex < rows.Count; rowIndex++)
+            var table = new Table
             {
-                MdTableRow row = rows[rowIndex];
-                // 表头算第 1 行，往下第 2、4、6… 行（1 起数）铺一层浅色底，方便横向读
-                Brush rowBackground = row.IsHeader
-                    ? NotifyTheme.Markdown.TableHeaderBackground
-                    : (rowIndex % 2 == 1 ? NotifyTheme.Markdown.TableEvenRowBackground : null);
-
-                int cellIndex = 0;
-                foreach (MdBlock cellBlock in row)
-                {
-                    var cell = cellBlock as MdTableCell;
-                    if (cell == null)
-                        continue;
-                    var host = new Border
-                    {
-                        Background = rowBackground,
-                        // 四个角上的格子单独切圆角，半径取外框内缘（外框 16px 圆角减 1px 边框），
-                        // 底色正好贴住描边内侧。靠外框 Clip 裁的话会连描边一起裁掉，圆角处就断线了
-                        CornerRadius = new CornerRadius(
-                            rowIndex == 0 && cellIndex == 0 ? TableCornerRadius - 1 : 0,
-                            rowIndex == 0 && cellIndex == columnCount - 1 ? TableCornerRadius - 1 : 0,
-                            rowIndex == rows.Count - 1 && cellIndex == columnCount - 1 ? TableCornerRadius - 1 : 0,
-                            rowIndex == rows.Count - 1 && cellIndex == 0 ? TableCornerRadius - 1 : 0),
-                        BorderBrush = NotifyTheme.Markdown.TableBorder,
-                        // 只画右边和下边：外框交给外层 Border，四边都画会跟它叠成 2px
-                        BorderThickness = new Thickness(
-                            0,
-                            0,
-                            cellIndex < columnCount - 1 ? 1 : 0,
-                            rowIndex < rows.Count - 1 ? 1 : 0),
-                        Padding = new Thickness(fontSize * 0.4, fontSize * 0.15, fontSize * 0.4, fontSize * 0.15),
-                        Child = CellText(cell, fontSize, row.IsHeader)
-                    };
-                    Grid.SetRow(host, rowIndex);
-                    Grid.SetColumn(host, cellIndex);
-                    grid.Children.Add(host);
-                    cellIndex++;
-                }
-            }
-
-            var frame = new Border
-            {
+                // 单元格紧贴，隔行底色连成整条，网格线也由格子自己画
+                CellSpacing = 0,
                 Background = NotifyTheme.Markdown.TableBackground,
                 BorderBrush = NotifyTheme.Markdown.TableBorder,
                 BorderThickness = new Thickness(1),
-                CornerRadius = new CornerRadius(TableCornerRadius),
-                Margin = new Thickness(0, 0, 0, fontSize * 0.5),
-                Child = grid
+                Margin = new Thickness(0, 0, 0, fontSize * 0.5)
             };
-            return new BlockUIContainer(frame);
+            // 各列等宽铺满整行，跟原来 Grid 的 Star 列一个效果
+            for (int i = 0; i < columnCount; i++)
+                table.Columns.Add(new TableColumn { Width = new GridLength(1, GridUnitType.Star) });
+
+            var group = new TableRowGroup();
+            table.RowGroups.Add(group);
+
+            for (int rowIndex = 0; rowIndex < rows.Count; rowIndex++)
+            {
+                MdTableRow sourceRow = rows[rowIndex];
+                // 表头算第 1 行，往下第 2、4、6… 行（1 起数）铺一层浅色底，方便横向读
+                Brush rowBackground = sourceRow.IsHeader
+                    ? NotifyTheme.Markdown.TableHeaderBackground
+                    : (rowIndex % 2 == 1 ? NotifyTheme.Markdown.TableEvenRowBackground : null);
+                bool lastRow = rowIndex == rows.Count - 1;
+
+                var row = new TableRow();
+                int cellIndex = 0;
+                foreach (MdBlock cellBlock in sourceRow)
+                {
+                    if (cellIndex >= columnCount)
+                        break;
+                    var sourceCell = cellBlock as MdTableCell;
+                    TableCell cell = NewCell(rowBackground, fontSize, cellIndex, columnCount, lastRow);
+                    if (sourceCell != null)
+                        CellContent(cell.Blocks, sourceCell, fontSize, sourceRow.IsHeader);
+                    row.Cells.Add(cell);
+                    cellIndex++;
+                }
+                // 行短了补空格子，不然后面的列会整体左移串位
+                while (cellIndex < columnCount)
+                {
+                    row.Cells.Add(NewCell(rowBackground, fontSize, cellIndex, columnCount, lastRow));
+                    cellIndex++;
+                }
+                group.Rows.Add(row);
+            }
+
+            return table;
         }
 
-        /// <summary>把单元格里的块内容塞进 TextBlock。管道表格的格子里正常只有一个段落。</summary>
-        private static TextBlock CellText(MdTableCell cell, double fontSize, bool bold)
+        /// <summary>一个单元格的底色、网格线、内边距。只画右边和下边：外框交给 Table 自己。</summary>
+        private static TableCell NewCell(Brush background, double fontSize,
+            int cellIndex, int columnCount, bool lastRow)
         {
-            var text = new TextBlock
+            return new TableCell
             {
-                FontFamily = NotifyTheme.Font,
-                FontSize = fontSize,
-                // 跟 FlowDocument 一样显式钉住字重，否则跟随系统「消息字体」变成粗体
-                FontWeight = bold ? FontWeights.Bold : FontWeights.Normal,
-                Foreground = NotifyTheme.Markdown.Text,
-                TextWrapping = TextWrapping.Wrap
+                Background = background,
+                BorderBrush = NotifyTheme.Markdown.TableBorder,
+                BorderThickness = new Thickness(
+                    0, 0, cellIndex < columnCount - 1 ? 1 : 0, lastRow ? 0 : 1),
+                Padding = new Thickness(fontSize * 0.4, fontSize * 0.15, fontSize * 0.4, fontSize * 0.15)
             };
+        }
+
+        /// <summary>把单元格里的块内容填进 TableCell。管道表格的格子里正常只有一个段落。</summary>
+        private static void CellContent(BlockCollection target, MdTableCell cell, double fontSize, bool bold)
+        {
             foreach (MdBlock block in cell)
             {
                 var paragraph = block as ParagraphBlock;
                 if (paragraph == null)
                     continue;
-                if (text.Inlines.Count > 0)
-                    text.Inlines.Add(new LineBreak());
-                AddInlines(text.Inlines, paragraph.Inline, fontSize);
+                var rendered = new Paragraph { Margin = new Thickness(0) };
+                if (bold)
+                    rendered.FontWeight = FontWeights.Bold;
+                AddInlines(rendered.Inlines, paragraph.Inline, fontSize);
+                target.Add(rendered);
             }
-            return text;
         }
 
         private static void AddInlines(InlineCollection target, ContainerInline source, double fontSize)
