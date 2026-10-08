@@ -35,8 +35,7 @@ namespace ToastFish
         {"CET4_1", "四级核心词汇"},{"CET4_3", "四级完整词汇"},{"CET6_1", "六级核心词汇"},
         {"CET6_3", "六级完整词汇"},{"GMAT_3", "GMAT词汇"},{"GRE_2", "GRE词汇"},
         {"IELTS_3", "IELTS词汇"},{"TOEFL_2", "TOEFL词汇"},{"SAT_2", "SAT词汇"},
-        {"KaoYan_1", "考研必考词汇"},{"KaoYan_2", "考研完整词汇"},{"Level4_1", "专四真题高频词"},
-        {"Level4luan_2", "专四核心词汇"},{"Level8_1", "专八真题高频词"},{"Level8luan_2", "专八核心词汇"},
+        {"KaoYan_1", "考研必考词汇"},{"KaoYan_2", "考研完整词汇"},
         {"Goin", "顺序五十音"},{"StdJp_Mid", "标准日本语中级词汇"},
         {"VOA_1500", "VOA慢速英语1500词"} };
        // private NotifyIcon _notifyIcon = null;
@@ -250,14 +249,6 @@ namespace ToastFish
             KaoYan_1.Click += new EventHandler(SelectBook_Click);
             ToolStripItem KaoYan_2 = new ToolStripMenuItem("考研完整词汇");
             KaoYan_2.Click += new EventHandler(SelectBook_Click);
-            ToolStripItem Level4_1 = new ToolStripMenuItem("专四真题高频词");
-            Level4_1.Click += new EventHandler(SelectBook_Click);
-            ToolStripItem Level4luan_2 = new ToolStripMenuItem("专四核心词汇");
-            Level4luan_2.Click += new EventHandler(SelectBook_Click);
-            ToolStripItem Level8_1 = new ToolStripMenuItem("专八真题高频词");
-            Level8_1.Click += new EventHandler(SelectBook_Click);
-            ToolStripItem Level8luan_2 = new ToolStripMenuItem("专八核心词汇");
-            Level8luan_2.Click += new EventHandler(SelectBook_Click);
             ToolStripItem VOA_1500 = new ToolStripMenuItem("VOA慢速英语1500词");
             VOA_1500.Click += new EventHandler(SelectBook_Click);
             ToolStripItem Goin = new ToolStripMenuItem("顺序五十音");
@@ -308,10 +299,6 @@ namespace ToastFish
             SelectBook.DropDownItems.Add(SAT_2);
             SelectBook.DropDownItems.Add(KaoYan_1);
             SelectBook.DropDownItems.Add(KaoYan_2);
-            SelectBook.DropDownItems.Add(Level4_1);
-            SelectBook.DropDownItems.Add(Level4luan_2);
-            SelectBook.DropDownItems.Add(Level8_1);
-            SelectBook.DropDownItems.Add(Level8luan_2);
             SelectBook.DropDownItems.Add(VOA_1500);
             SelectJpBook.DropDownItems.Add(Goin);
             SelectJpBook.DropDownItems.Add(StdJp_Mid);
@@ -354,14 +341,6 @@ namespace ToastFish
                 KaoYan_1.PerformClick();
             else if (Select.TABLE_NAME == "KaoYan_2")
                 KaoYan_2.PerformClick();
-            else if (Select.TABLE_NAME == "Level4_1")
-                Level4_1.PerformClick();
-            else if (Select.TABLE_NAME == "Level4luan_2")
-                Level4luan_2.PerformClick();
-            else if (Select.TABLE_NAME == "Level8_1")
-                Level8_1.PerformClick();
-            else if (Select.TABLE_NAME == "Level8luan_2")
-                Level8luan_2.PerformClick();
             else if (Select.TABLE_NAME == "VOA_1500")
                 VOA_1500.PerformClick();
             else if (Select.TABLE_NAME == "Goin")
@@ -579,14 +558,6 @@ namespace ToastFish
                 TempName = "KaoYan_1";
             else if (sender.ToString() == "考研完整词汇")
                 TempName = "KaoYan_2";
-            else if (sender.ToString() == "专四真题高频词")
-                TempName = "Level4_1";
-            else if (sender.ToString() == "专四核心词汇")
-                TempName = "Level4luan_2";
-            else if (sender.ToString() == "专八真题高频词")
-                TempName = "Level8_1";
-            else if (sender.ToString() == "专八核心词汇")
-                TempName = "Level8luan_2";
             else if (sender.ToString() == "VOA慢速英语1500词")
                 TempName = "VOA_1500";
             else if (sender.ToString() == "顺序五十音")
