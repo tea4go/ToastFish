@@ -298,7 +298,7 @@ namespace ToastFish.Model.SqliteControl
         {
 
             if (TABLE_NAME.IndexOf("自定义") != -1)
-                TABLE_NAME = "GRE_2";
+                TABLE_NAME = "CET4_1";
 
             //String cmdtext =$"SELECT name FROM PRAGMA_TABLE_INFO('{TABLE_NAME}')";
             String cmdtext = $"PRAGMA table_info({TABLE_NAME})";

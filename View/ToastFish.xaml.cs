@@ -33,8 +33,8 @@ namespace ToastFish
         Thread thread = new Thread(new ParameterizedThreadStart(PushWords.Recitation));
         Dictionary<string, string> TablelDictionary = new Dictionary<string, string>(){
         {"CET4_1", "四级核心词汇"},{"CET4_3", "四级完整词汇"},{"CET6_1", "六级核心词汇"},
-        {"CET6_3", "六级完整词汇"},{"GMAT_3", "GMAT词汇"},{"GRE_2", "GRE词汇"},
-        {"IELTS_3", "IELTS词汇"},{"TOEFL_2", "TOEFL词汇"},{"SAT_2", "SAT词汇"},
+        {"GMAT_3", "GMAT词汇"},
+        {"IELTS_3", "IELTS词汇"},{"SAT_2", "SAT词汇"},
         {"KaoYan_1", "考研必考词汇"},{"KaoYan_2", "考研完整词汇"},
         {"Goin", "顺序五十音"},{"StdJp_Mid", "标准日本语中级词汇"},
         {"VOA_1500", "VOA慢速英语1500词"} };
@@ -233,16 +233,10 @@ namespace ToastFish
             CET4_3.Click += new EventHandler(SelectBook_Click);
             ToolStripItem CET6_1 = new ToolStripMenuItem("六级核心词汇");
             CET6_1.Click += new EventHandler(SelectBook_Click);
-            ToolStripItem CET6_3 = new ToolStripMenuItem("六级完整词汇");
-            CET6_3.Click += new EventHandler(SelectBook_Click);
             ToolStripItem GMAT_3 = new ToolStripMenuItem("GMAT词汇");
             GMAT_3.Click += new EventHandler(SelectBook_Click);
-            ToolStripItem GRE_2 = new ToolStripMenuItem("GRE词汇");
-            GRE_2.Click += new EventHandler(SelectBook_Click);
             ToolStripItem IELTS_3 = new ToolStripMenuItem("IELTS词汇");
             IELTS_3.Click += new EventHandler(SelectBook_Click);
-            ToolStripItem TOEFL_2 = new ToolStripMenuItem("TOEFL词汇");
-            TOEFL_2.Click += new EventHandler(SelectBook_Click);
             ToolStripItem SAT_2 = new ToolStripMenuItem("SAT词汇");
             SAT_2.Click += new EventHandler(SelectBook_Click);
             ToolStripItem KaoYan_1 = new ToolStripMenuItem("考研必考词汇");
@@ -291,11 +285,8 @@ namespace ToastFish
             SelectBook.DropDownItems.Add(CET4_1);
             SelectBook.DropDownItems.Add(CET4_3);
             SelectBook.DropDownItems.Add(CET6_1);
-            SelectBook.DropDownItems.Add(CET6_3);
             SelectBook.DropDownItems.Add(GMAT_3);
-            SelectBook.DropDownItems.Add(GRE_2);
             SelectBook.DropDownItems.Add(IELTS_3);
-            SelectBook.DropDownItems.Add(TOEFL_2);
             SelectBook.DropDownItems.Add(SAT_2);
             SelectBook.DropDownItems.Add(KaoYan_1);
             SelectBook.DropDownItems.Add(KaoYan_2);
@@ -325,16 +316,10 @@ namespace ToastFish
                 CET4_3.PerformClick();
             else if (Select.TABLE_NAME == "CET6_1")
                 CET6_1.PerformClick();
-            else if (Select.TABLE_NAME == "CET6_3")
-                CET6_3.PerformClick();
             else if (Select.TABLE_NAME == "GMAT_3")
                 GMAT_3.PerformClick();
-            else if (Select.TABLE_NAME == "GRE_2")
-                GRE_2.PerformClick();
             else if (Select.TABLE_NAME == "IELTS_3")
                 IELTS_3.PerformClick();
-            else if (Select.TABLE_NAME == "TOEFL_2")
-                TOEFL_2.PerformClick();
             else if (Select.TABLE_NAME == "SAT_2")
                 SAT_2.PerformClick();
             else if (Select.TABLE_NAME == "KaoYan_1")
@@ -451,7 +436,7 @@ namespace ToastFish
                 if (typeObj == typeWord)
                 {
                     Words.WordList = (List<Word>)lstObj;
-                    Select.TABLE_NAME = "GRE_2";
+                    Select.TABLE_NAME = "CET4_1";
                 }
                 else if (typeObj == typeJpWord)
                 {
@@ -542,16 +527,10 @@ namespace ToastFish
                 TempName = "CET4_3";
             else if (sender.ToString() == "六级核心词汇")
                 TempName = "CET6_1";
-            else if (sender.ToString() == "六级完整词汇")
-                TempName = "CET6_3";
             else if (sender.ToString() == "GMAT词汇")
                 TempName = "GMAT_3";
-            else if (sender.ToString() == "GRE词汇")
-                TempName = "GRE_2";
             else if (sender.ToString() == "IELTS词汇")
                 TempName = "IELTS_3";
-            else if (sender.ToString() == "TOEFL词汇")
-                TempName = "TOEFL_2";
             else if (sender.ToString() == "SAT词汇")
                 TempName = "SAT_2";
             else if (sender.ToString() == "考研必考词汇")
@@ -620,7 +599,7 @@ namespace ToastFish
                 }
             }
             if (Select.TABLE_NAME == "StdJp_Mid" || Select.TABLE_NAME == "Goin")
-                Select.TABLE_NAME = "GRE_2";
+                Select.TABLE_NAME = "CET4_1";
             thread = GuardedThread(new ParameterizedThreadStart(pushWords.UnorderWord));
             thread.Start(Select.WORD_NUMBER);
         }
@@ -637,7 +616,7 @@ namespace ToastFish
                 }
             }
             if (Select.TABLE_NAME == "StdJp_Mid" || Select.TABLE_NAME == "Goin")
-                Select.TABLE_NAME = "GRE_2";
+                Select.TABLE_NAME = "CET4_1";
             thread = GuardedThread(new ParameterizedThreadStart(pushWords.UnorderWordEn2Cn));
             thread.Start(Select.WORD_NUMBER);
         }
