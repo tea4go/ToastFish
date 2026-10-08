@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
@@ -226,53 +227,118 @@ namespace ToastFish.Model.Markdown
             });
         }
 
+        /// <summary>
+        /// 表格。WPF 的 Table 画不出圆角（Block 没有 CornerRadius），而且它是
+        /// FrameworkContentElement，塞不进 BlockUIContainer 包的那层 Border。
+        /// 所以整表改用 Grid 重排：外层 Border 画圆角外框和底色，单元格各自负责
+        /// 隔行底色与内部网格线，最后把整块按圆角切掉四角。
+        /// </summary>
         private static WpfBlock Table(MdTable source, double fontSize)
         {
-            var table = new System.Windows.Documents.Table
-            {
-                CellSpacing = 0,
-                Background = NotifyTheme.Markdown.TableBackground,
-                BorderBrush = NotifyTheme.Markdown.TableBorder,
-                BorderThickness = new Thickness(1),
-                Margin = new Thickness(0, 0, 0, fontSize * 0.5)
-            };
-            var group = new TableRowGroup();
-            int rowIndex = 0;
+            var rows = new List<MdTableRow>();
             foreach (MdBlock rowBlock in source)
             {
                 var row = rowBlock as MdTableRow;
-                if (row == null)
-                    continue;
-                var tableRow = new TableRow();
-                if (row.IsHeader)
+                if (row != null)
+                    rows.Add(row);
+            }
+
+            int columnCount = 0;
+            foreach (MdTableRow row in rows)
+            {
+                int count = 0;
+                foreach (MdBlock cellBlock in row)
                 {
-                    tableRow.FontWeight = FontWeights.Bold;
-                    tableRow.Background = NotifyTheme.Markdown.TableHeaderBackground;
+                    if (cellBlock is MdTableCell)
+                        count++;
                 }
+                columnCount = Math.Max(columnCount, count);
+            }
+            if (columnCount == 0)
+                return null;
+
+            var grid = new Grid();
+            for (int i = 0; i < columnCount; i++)
+                grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+            for (int i = 0; i < rows.Count; i++)
+                grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+
+            for (int rowIndex = 0; rowIndex < rows.Count; rowIndex++)
+            {
+                MdTableRow row = rows[rowIndex];
                 // 表头算第 1 行，往下第 2、4、6… 行（1 起数）铺一层浅色底，方便横向读
-                else if (rowIndex % 2 == 1)
-                {
-                    tableRow.Background = NotifyTheme.Markdown.TableEvenRowBackground;
-                }
+                Brush rowBackground = row.IsHeader
+                    ? NotifyTheme.Markdown.TableHeaderBackground
+                    : (rowIndex % 2 == 1 ? NotifyTheme.Markdown.TableEvenRowBackground : null);
+
+                int cellIndex = 0;
                 foreach (MdBlock cellBlock in row)
                 {
                     var cell = cellBlock as MdTableCell;
                     if (cell == null)
                         continue;
-                    var tableCell = new TableCell
+                    var host = new Border
                     {
+                        Background = rowBackground,
                         BorderBrush = NotifyTheme.Markdown.TableBorder,
-                        BorderThickness = new Thickness(1),
-                        Padding = new Thickness(fontSize * 0.4, fontSize * 0.15, fontSize * 0.4, fontSize * 0.15)
+                        // 只画右边和下边：外框交给外层 Border，四边都画会跟它叠成 2px
+                        BorderThickness = new Thickness(
+                            0,
+                            0,
+                            cellIndex < columnCount - 1 ? 1 : 0,
+                            rowIndex < rows.Count - 1 ? 1 : 0),
+                        Padding = new Thickness(fontSize * 0.4, fontSize * 0.15, fontSize * 0.4, fontSize * 0.15),
+                        Child = CellText(cell, fontSize, row.IsHeader)
                     };
-                    AddBlocks(tableCell.Blocks, cell, fontSize);
-                    tableRow.Cells.Add(tableCell);
+                    Grid.SetRow(host, rowIndex);
+                    Grid.SetColumn(host, cellIndex);
+                    grid.Children.Add(host);
+                    cellIndex++;
                 }
-                group.Rows.Add(tableRow);
-                rowIndex++;
             }
-            table.RowGroups.Add(group);
-            return table;
+
+            var frame = new Border
+            {
+                Background = NotifyTheme.Markdown.TableBackground,
+                BorderBrush = NotifyTheme.Markdown.TableBorder,
+                BorderThickness = new Thickness(1),
+                CornerRadius = new CornerRadius(16),
+                Margin = new Thickness(0, 0, 0, fontSize * 0.5),
+                Child = grid
+            };
+            // Border 的圆角不裁剪子元素，得自己把整块按圆角切掉四角，
+            // 否则格子底色的直角会从圆角外面露出来
+            frame.SizeChanged += (s, e) =>
+            {
+                var border = (Border)s;
+                border.Clip = new RectangleGeometry(
+                    new Rect(0, 0, border.ActualWidth, border.ActualHeight), 16, 16);
+            };
+            return new BlockUIContainer(frame);
+        }
+
+        /// <summary>把单元格里的块内容塞进 TextBlock。管道表格的格子里正常只有一个段落。</summary>
+        private static TextBlock CellText(MdTableCell cell, double fontSize, bool bold)
+        {
+            var text = new TextBlock
+            {
+                FontFamily = NotifyTheme.Font,
+                FontSize = fontSize,
+                // 跟 FlowDocument 一样显式钉住字重，否则跟随系统「消息字体」变成粗体
+                FontWeight = bold ? FontWeights.Bold : FontWeights.Normal,
+                Foreground = NotifyTheme.Markdown.Text,
+                TextWrapping = TextWrapping.Wrap
+            };
+            foreach (MdBlock block in cell)
+            {
+                var paragraph = block as ParagraphBlock;
+                if (paragraph == null)
+                    continue;
+                if (text.Inlines.Count > 0)
+                    text.Inlines.Add(new LineBreak());
+                AddInlines(text.Inlines, paragraph.Inline, fontSize);
+            }
+            return text;
         }
 
         private static void AddInlines(InlineCollection target, ContainerInline source, double fontSize)

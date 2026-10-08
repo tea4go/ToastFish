@@ -173,7 +173,7 @@ namespace ToastFish.Model.Notify
                     TableBackground = Brush("#FFFFFF"),
                     TableBorder = Brush("#C8E1FF"),
                     TableHeaderBackground = Brush("#F1F8FF"),
-                    TableEvenRowBackground = Brush("#0D668099")
+                    TableEvenRowBackground = Brush("#17668099")
                 };
             }
         }
