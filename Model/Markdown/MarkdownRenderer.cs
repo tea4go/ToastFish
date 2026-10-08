@@ -175,18 +175,30 @@ namespace ToastFish.Model.Markdown
             return section;
         }
 
+        /// <summary>
+        /// 代码块。WPF 的 Paragraph 画不出圆角（Block 没有 CornerRadius），
+        /// 只能换成 BlockUIContainer 包一层 Border，再塞个 TextBlock 装代码。
+        /// </summary>
         private static WpfBlock Code(CodeBlock source, double fontSize)
         {
-            return new Paragraph(new Run(CodeText(source)))
+            var text = new TextBlock
             {
+                Text = CodeText(source),
                 FontFamily = MonoFont,
                 FontSize = fontSize * 0.95,
+                Foreground = NotifyTheme.Markdown.Text,
+                TextWrapping = TextWrapping.Wrap
+            };
+            return new BlockUIContainer(new Border
+            {
                 Background = NotifyTheme.Markdown.CodeBackground,
                 BorderBrush = NotifyTheme.Markdown.CodeBorder,
                 BorderThickness = new Thickness(1),
+                CornerRadius = new CornerRadius(16),
                 Padding = new Thickness(fontSize * 0.5),
-                Margin = new Thickness(0, 0, 0, fontSize * 0.5)
-            };
+                Margin = new Thickness(0, 0, 0, fontSize * 0.5),
+                Child = text
+            });
         }
 
         /// <summary>把代码块的多行拼成一段文本。</summary>
