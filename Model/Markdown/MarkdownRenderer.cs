@@ -458,7 +458,7 @@ namespace ToastFish.Model.Markdown
                 {
                     Background = NotifyTheme.Markdown.InlineCodeBackground,
                     CornerRadius = new CornerRadius(4),
-                    Padding = new Thickness(fontSize * 0.28, 0, fontSize * 0.28, 0),
+                    Padding = new Thickness(fontSize * 0.28, fontSize * 0.15, fontSize * 0.28, fontSize * 0.15),
                     Child = new TextBlock
                     {
                         Text = code.Content,
