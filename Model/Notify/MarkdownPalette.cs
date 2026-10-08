@@ -30,6 +30,12 @@ namespace ToastFish.Model.Notify
         public Brush CodeBackground { get; set; }
         public Brush CodeBorder { get; set; }
 
+        /// <summary>行内代码（`code`）的底色。参考图里是米黄小圆角块，跟代码块的灰底区分开。</summary>
+        public Brush InlineCodeBackground { get; set; }
+
+        /// <summary>行内代码的文字色。</summary>
+        public Brush InlineCodeText { get; set; }
+
         public Brush TableBackground { get; set; }
         public Brush TableBorder { get; set; }
         public Brush TableHeaderBackground { get; set; }

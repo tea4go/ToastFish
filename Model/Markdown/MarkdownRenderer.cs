@@ -295,11 +295,23 @@ namespace ToastFish.Model.Markdown
             var code = inline as CodeInline;
             if (code != null)
             {
-                target.Add(new Run(code.Content)
+                // 行内代码做成米黄小圆角块：Run 没有 Padding / CornerRadius，
+                // 只能塞进 InlineUIContainer 里包一层 Border
+                target.Add(new InlineUIContainer(new Border
                 {
-                    FontFamily = MonoFont,
-                    FontSize = fontSize * 0.95,
-                    Background = NotifyTheme.Markdown.CodeBackground
+                    Background = NotifyTheme.Markdown.InlineCodeBackground,
+                    CornerRadius = new CornerRadius(4),
+                    Padding = new Thickness(fontSize * 0.28, 0, fontSize * 0.28, 0),
+                    Child = new TextBlock
+                    {
+                        Text = code.Content,
+                        FontFamily = MonoFont,
+                        FontSize = fontSize * 0.95,
+                        Foreground = NotifyTheme.Markdown.InlineCodeText
+                    }
+                })
+                {
+                    BaselineAlignment = BaselineAlignment.Center
                 });
                 return;
             }
