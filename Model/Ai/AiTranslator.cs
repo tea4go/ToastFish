@@ -2,9 +2,11 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Net;
 using System.Net.Http;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Web.Script.Serialization;
 using ToastFish.Model.Log;
@@ -13,16 +15,22 @@ using ToastFish.Model.SqliteControl;
 namespace ToastFish.Model.Ai
 {
     /// <summary>
-    /// 调用 OpenAI 兼容的 chat/completions 接口做翻译。
+    /// 调用 OpenAI 兼容的 chat/completions 接口做翻译，请求走 stream（SSE）流式返回：
+    /// 每收到一段就回调一次，调用方可以边收边显示，不必等整段译文生成完。
     /// 提示词由调用方给（整句 / 单词两套，存在配置里）；这里只负责发请求、取译文。
     /// 配置缺失或调用失败一律抛异常，由调用方决定怎么提示。
     /// </summary>
     static class AiTranslator
     {
         /// <summary>
-        /// 单次请求的超时时间。上游模型偶发出结果很慢，30 秒会误报超时，放宽到 60 秒。
+        /// 整次请求的总时限。流式响应不能用 HttpClient.Timeout 管：它按「整个请求」计时，
+        /// 到点会把还在正常吐字的流一起掐断，所以那边设成无限，用这个总时限兜底。
         /// </summary>
-        private static readonly TimeSpan Timeout = TimeSpan.FromSeconds(60);
+        private static readonly TimeSpan OverallTimeout = TimeSpan.FromSeconds(120);
+
+        /// <summary>超时后给用户看的话。</summary>
+        private static readonly string TimeoutMessage =
+            "翻译接口 " + (int)OverallTimeout.TotalSeconds + " 秒还没返回完整结果，已中断。";
 
         static AiTranslator()
         {
@@ -32,19 +40,28 @@ namespace ToastFish.Model.Ai
             ServicePointManager.SecurityProtocol |= SecurityProtocolType.Tls12;
         }
 
-        /// <summary>用当前已保存的配置和指定提示词翻译。翻译窗口按有无选中文本挑提示词。</summary>
-        public static Task<string> TranslateAsync(string text, string prompt)
+        /// <summary>
+        /// 用当前已保存的配置和指定提示词翻译。翻译窗口按有无选中文本挑提示词。
+        /// onUpdate 每收到一段新译文就调一次，参数是「目前已收到的全文」，可为 null。
+        /// </summary>
+        public static Task<string> TranslateAsync(string text, string prompt, Action<string> onUpdate)
         {
-            return TranslateAsync(text, Select.AI_BASE_URL, Select.AI_API_KEY, Select.AI_MODEL, prompt);
+            return TranslateAsync(text, Select.AI_BASE_URL, Select.AI_API_KEY, Select.AI_MODEL,
+                prompt, onUpdate);
         }
 
         /// <summary>用指定的配置和整句提示词翻译。设置窗口的「测试」按钮传界面上的当前值，不读已保存的配置。</summary>
         public static Task<string> TranslateAsync(string text, string baseUrl, string apiKey, string model)
         {
-            return TranslateAsync(text, baseUrl, apiKey, model, Select.AI_PROMPT_SENTENCE);
+            return TranslateAsync(text, baseUrl, apiKey, model, Select.AI_PROMPT_SENTENCE, null);
         }
 
-        public static async Task<string> TranslateAsync(string text, string baseUrl, string apiKey, string model, string prompt)
+        /// <summary>
+        /// 发一次翻译，返回完整译文。onUpdate 在 await 的续体里调用，也就是调用方所在的线程
+        /// （界面线程）上，可以直接拿去碰控件。
+        /// </summary>
+        public static async Task<string> TranslateAsync(string text, string baseUrl, string apiKey,
+            string model, string prompt, Action<string> onUpdate)
         {
             if (string.IsNullOrWhiteSpace(baseUrl)
                 || string.IsNullOrWhiteSpace(apiKey)
@@ -60,6 +77,8 @@ namespace ToastFish.Model.Ai
             string requestBody = serializer.Serialize(new Dictionary<string, object>
             {
                 { "model", model },
+                // 要流式返回。网关不认这个参数时会退回一整段 JSON，下面按响应类型分流
+                { "stream", true },
                 { "messages", new object[]
                     {
                         new Dictionary<string, object>
@@ -75,57 +94,186 @@ namespace ToastFish.Model.Ai
             });
 
             var watch = Stopwatch.StartNew();
-            using (var client = new HttpClient { Timeout = Timeout })
+            using (var deadline = new CancellationTokenSource(OverallTimeout))
+            using (var client = new HttpClient { Timeout = Timeout.InfiniteTimeSpan })
             {
                 client.DefaultRequestHeaders.Add("Authorization", "Bearer " + apiKey);
-                var content = new StringContent(requestBody, Encoding.UTF8, "application/json");
 
                 HttpResponseMessage response;
-                string responseBody;
                 try
                 {
-                    response = await client.PostAsync(endpoint, content);
-                    responseBody = await response.Content.ReadAsStringAsync();
+                    response = await client.SendAsync(NewRequest(endpoint, requestBody),
+                        HttpCompletionOption.ResponseHeadersRead, deadline.Token);
                 }
                 catch (Exception ex)
                 {
                     // 网络不通 / 超时 / SSL 握手失败等，请求根本没拿到响应
                     watch.Stop();
+                    if (DeadlineHit(deadline, endpoint, model, watch.ElapsedMilliseconds))
+                        throw new Exception(TimeoutMessage);
                     Logger.Write("翻译请求失败 接口=" + endpoint + " 模型=" + model
                         + " 提示词=" + PromptHead(prompt) + " 原文=" + Head(text, 80)
                         + " 耗时=" + watch.ElapsedMilliseconds + "ms 异常：" + ex);
                     throw;
                 }
-                watch.Stop();
 
-                if (!response.IsSuccessStatusCode)
+                using (response)
+                // 总时限到了就把响应关掉：读流的线程会因此抛异常，不然流断了它永远等不到下一行
+                using (deadline.Token.Register(DisposeQuietly, response))
                 {
-                    Logger.Write("翻译接口报错 接口=" + endpoint + " 状态码=" + (int)response.StatusCode
-                        + " 耗时=" + watch.ElapsedMilliseconds + "ms 响应=" + Shorten(responseBody));
-                    throw new Exception("翻译接口返回 " + (int)response.StatusCode + "："
-                        + Shorten(responseBody));
-                }
+                    if (!response.IsSuccessStatusCode)
+                    {
+                        string body = await response.Content.ReadAsStringAsync();
+                        watch.Stop();
+                        Logger.Write("翻译接口报错 接口=" + endpoint + " 状态码=" + (int)response.StatusCode
+                            + " 耗时=" + watch.ElapsedMilliseconds + "ms 响应=" + Shorten(body));
+                        throw new Exception("翻译接口返回 " + (int)response.StatusCode + "："
+                            + Shorten(body));
+                    }
 
-                string result;
-                try
-                {
-                    result = ExtractTranslation(serializer, responseBody);
-                }
-                catch (Exception ex)
-                {
-                    // 拿到了 2xx，但返回体不是预期的 choices[0].message.content
-                    Logger.Write("翻译响应异常 接口=" + endpoint + " 状态码=" + (int)response.StatusCode
-                        + " 耗时=" + watch.ElapsedMilliseconds + "ms 响应=" + Shorten(responseBody)
-                        + " 异常：" + ex);
-                    throw;
-                }
+                    string result;
+                    try
+                    {
+                        result = IsEventStream(response)
+                            ? await ReadStream(serializer, response, onUpdate)
+                            : ExtractTranslation(serializer,
+                                await response.Content.ReadAsStringAsync());
+                    }
+                    catch (Exception ex)
+                    {
+                        // 拿到了 2xx，但返回体不是预期的形状，或流读到一半断了
+                        watch.Stop();
+                        if (DeadlineHit(deadline, endpoint, model, watch.ElapsedMilliseconds))
+                            throw new Exception(TimeoutMessage);
+                        Logger.Write("翻译响应异常 接口=" + endpoint + " 状态码=" + (int)response.StatusCode
+                            + " 耗时=" + watch.ElapsedMilliseconds + "ms 异常：" + ex);
+                        throw;
+                    }
+                    watch.Stop();
 
-                // 模型实际吐出来的原文也一并记下来：译文区渲染成什么样和模型返回什么可能对不上，
-                // 只记字数排查不了，所以这里不截断、换行也原样保留
-                Logger.Write("翻译成功 接口=" + endpoint + " 原文=" + text.Length + "字 译文="
-                    + result.Length + "字 耗时=" + watch.ElapsedMilliseconds + "ms"
-                    + "\nAI 返回内容：\n" + result);
-                return result;
+                    // 模型实际吐出来的原文也一并记下来：译文区渲染成什么样和模型返回什么可能对不上，
+                    // 只记字数排查不了，所以这里不截断、换行也原样保留
+                    Logger.Write("翻译成功 接口=" + endpoint + " 原文=" + text.Length + "字 译文="
+                        + result.Length + "字 耗时=" + watch.ElapsedMilliseconds + "ms"
+                        + "\nAI 返回内容：\n" + result);
+                    return result;
+                }
+            }
+        }
+
+        /// <summary>
+        /// 用 ResponseHeadersRead 发请求：默认会把整个响应体读完才返回，而流式响应永远等不到
+        /// 「读完」那一刻，所以先只要响应头，正文再一行行读。
+        /// </summary>
+        private static HttpRequestMessage NewRequest(string endpoint, string requestBody)
+        {
+            return new HttpRequestMessage(HttpMethod.Post, endpoint)
+            {
+                Content = new StringContent(requestBody, Encoding.UTF8, "application/json")
+            };
+        }
+
+        /// <summary>
+        /// 一行行读 SSE，把每段的 delta.content 拼起来，每拼上一段就回调一次。
+        /// SSE 的格式是一串「data: {...}」行，空行分隔事件，最后一行是 data: [DONE]。
+        /// </summary>
+        private static async Task<string> ReadStream(JavaScriptSerializer serializer,
+            HttpResponseMessage response, Action<string> onUpdate)
+        {
+            var result = new StringBuilder();
+            using (var stream = await response.Content.ReadAsStreamAsync())
+            using (var reader = new StreamReader(stream, Encoding.UTF8))
+            {
+                while (true)
+                {
+                    string line = await reader.ReadLineAsync();
+                    // 流提前断了：把已收到的交出去，总比整段丢掉强
+                    if (line == null)
+                        break;
+                    if (!line.StartsWith("data:", StringComparison.Ordinal))
+                        continue;                    // 空行、注释行、event: 行都不管
+                    string payload = line.Substring(5).Trim();
+                    if (payload == "[DONE]")
+                        break;
+
+                    string delta = ExtractDelta(serializer, payload);
+                    if (string.IsNullOrEmpty(delta))
+                        continue;                    // 只带 role 或 finish_reason 的块，没有正文
+                    result.Append(delta);
+                    if (onUpdate != null)
+                        onUpdate(result.ToString());
+                }
+            }
+
+            string text = result.ToString().Trim();
+            if (text.Length == 0)
+                throw new Exception("翻译接口没有返回译文。");
+            return text;
+        }
+
+        /// <summary>响应是不是 SSE 流。网关不认 stream 参数时会退回一整段 JSON，那条路走原来的解析。</summary>
+        private static bool IsEventStream(HttpResponseMessage response)
+        {
+            var type = response.Content.Headers.ContentType;
+            return type != null && type.MediaType != null
+                && type.MediaType.IndexOf("event-stream", StringComparison.OrdinalIgnoreCase) >= 0;
+        }
+
+        /// <summary>
+        /// 从一段 SSE 数据里取 choices[0].delta.content。这个块可能只带 role 或 finish_reason，
+        /// 没有正文，那就返回 null，让调用方跳过。
+        /// </summary>
+        private static string ExtractDelta(JavaScriptSerializer serializer, string payload)
+        {
+            Dictionary<string, object> root;
+            try
+            {
+                root = serializer.Deserialize<Dictionary<string, object>>(payload);
+            }
+            catch (Exception)
+            {
+                throw new Exception("翻译接口返回的内容无法解析：" + Shorten(payload));
+            }
+
+            // JavaScriptSerializer 把 JSON 数组反序列化成 ArrayList，不是 object[]，这里只能按 IList 取
+            var choices = root != null && root.ContainsKey("choices")
+                ? root["choices"] as IList
+                : null;
+            if (choices == null || choices.Count == 0)
+                return null;
+
+            var choice = choices[0] as Dictionary<string, object>;
+            var delta = choice != null && choice.ContainsKey("delta")
+                ? choice["delta"] as Dictionary<string, object>
+                : null;
+            return delta != null && delta.ContainsKey("content")
+                ? delta["content"] as string
+                : null;
+        }
+
+        /// <summary>
+        /// 总时限到了没有。到了就记一条超时日志，调用方把 TimeoutMessage 抛给用户。
+        /// 超时是从别处关掉响应引发的，异常本身看不出是超时，只能靠这个标记认。
+        /// </summary>
+        private static bool DeadlineHit(CancellationTokenSource deadline, string endpoint,
+            string model, long milliseconds)
+        {
+            if (!deadline.IsCancellationRequested)
+                return false;
+            Logger.Write("翻译超时 接口=" + endpoint + " 模型=" + model
+                + " 耗时=" + milliseconds + "ms");
+            return true;
+        }
+
+        /// <summary>取消回调里把响应关掉，把卡在读操作上的线程顶出来。这里抛异常没人接，自己咽掉。</summary>
+        private static void DisposeQuietly(object state)
+        {
+            try
+            {
+                ((IDisposable)state).Dispose();
+            }
+            catch (Exception)
+            {
             }
         }
 
@@ -151,7 +299,7 @@ namespace ToastFish.Model.Ai
             return url.IndexOf('/', hostStart) < 0;
         }
 
-        /// <summary>从 choices[0].message.content 取译文。</summary>
+        /// <summary>从 choices[0].message.content 取译文。网关不认 stream 参数时走这条。</summary>
         private static string ExtractTranslation(JavaScriptSerializer serializer, string responseBody)
         {
             // JavaScriptSerializer 把 JSON 数组反序列化成 ArrayList，不是 object[]，这里只能按 IList 取

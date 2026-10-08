@@ -123,6 +123,12 @@ class SomeClass:
         /// <summary>当前选中的历史下标，-1 表示还没有任何历史。</summary>
         private int _historyIndex = -1;
 
+        /// <summary>流式翻译上一次重渲染译文的时刻，用来限流。</summary>
+        private DateTime _lastStreamPaint = DateTime.MinValue;
+
+        /// <summary>流式翻译两次重渲染之间至少隔这么久（毫秒）。每个 token 都重渲染会白白刷屏。</summary>
+        private const int StreamPaintMs = 100;
+
         /// <summary>
         /// 最近一次选中是在哪个框里，true 表示原文框。两个框都留着选中时按它取：
         /// 选中不会因为焦点移走而消失，光按固定优先级取的话，原文框里一个早先选中的
@@ -175,9 +181,6 @@ class SomeClass:
             StyleHistoryBar();
             InputBox.Text = DefaultInput;
             ShowOutput(DefaultOutput);
-            // 译文区得等文档装好之后再置这个开关：换文档会重建内部的 selection，
-            // 之前置的值推不到它身上，「失焦仍高亮」就不生效
-            OutputBox.IsInactiveSelectionHighlightEnabled = true;
             RebuildTabs();
 
             ActionPanel.Margin = new Thickness(S(10), 0, 0, 0);
@@ -235,6 +238,22 @@ class SomeClass:
             }
             document.PagePadding = new Thickness(S(8));
             OutputBox.Document = document;
+            // 换文档会重建内部的 selection，这个开关得在装好文档之后再置一次才推得到它身上，
+            // 少了「失焦后选中仍高亮」就不生效
+            OutputBox.IsInactiveSelectionHighlightEnabled = true;
+        }
+
+        /// <summary>
+        /// 流式翻译每收到一段就调一次，把「目前已收到的全文」重渲染一遍。
+        /// 最后那一次由 Translate_Click 用完整译文补上，所以这里可以放心限流。
+        /// </summary>
+        private void ShowStreaming(string text)
+        {
+            DateTime now = DateTime.UtcNow;
+            if ((now - _lastStreamPaint).TotalMilliseconds < StreamPaintMs)
+                return;
+            _lastStreamPaint = now;
+            ShowOutput(text);
         }
 
         /// <summary>
@@ -292,6 +311,7 @@ class SomeClass:
         /// <summary>
         /// 把输入框里的原文交给 AI 翻译，译文写进下半部分的输出框。
         /// 有选中文本时只翻选中部分，并改用单词提示词（词典式释义），否则翻整框、用整句提示词。
+        /// 译文是流式来的：模型吐一段就显示一段，不必等整段生成完。
         /// </summary>
         private async void Translate_Click(object sender, RoutedEventArgs e)
         {
@@ -305,7 +325,7 @@ class SomeClass:
             ShowOutput("翻译中…");
             try
             {
-                string result = await AiTranslator.TranslateAsync(text, prompt);
+                string result = await AiTranslator.TranslateAsync(text, prompt, ShowStreaming);
                 ShowOutput(result);
                 // 只有翻成功才记历史，「翻译中…」「翻译失败」都不算
                 PushHistory(text, result);
