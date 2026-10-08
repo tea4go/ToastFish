@@ -92,8 +92,10 @@ class SomeClass:
         /// <summary>
         /// 「播放」在本地词库里没查到词条时，占在译文位置的文案。查到了就放词条本身，
         /// 所以这句只在词库没收这个词（或选中的是一整句）时出现。
+        /// 要说清楚是「本地词库没有」而不是「功能没反应」，否则用户只看到译文区没变化，
+        /// 会以为播放坏了；顺带指出下一步该按哪个按钮。
         /// </summary>
-        private const string PlayOnlyHint = "（这条只播放过，还没翻译）";
+        private const string PlayOnlyHint = "（六级完整词汇里没查到，只播放了发音；要看释义请点「翻译」）";
 
         /// <summary>一次翻译的历史。</summary>
         private class TranslationEntry
@@ -349,7 +351,9 @@ class SomeClass:
 
         /// <summary>
         /// 朗读原文，有选中文本时只读选中部分。空内容不发声。播放是阻塞的，放到后台线程。
-        /// 同时去本地词库找词条：查得到就直接显示，省掉一次联网翻译；查不到只发声，译文区不动。
+        /// 同时去本地词库找词条：查得到就直接显示，省掉一次联网翻译。
+        /// 查不到也要在译文区给个交代——只往历史里塞一条标签、译文区一动不动的话，
+        /// 用户点完播放看不到任何反馈，会以为功能坏了。
         /// 播放也记一条历史：查词时经常先听发音再决定要不要翻，不记就找不回来了。
         /// </summary>
         private void Play_Click(object sender, RoutedEventArgs e)
@@ -357,12 +361,22 @@ class SomeClass:
             string text = TextToProcess();
             if (string.IsNullOrWhiteSpace(text))
                 return;
+
             string entry = LocalEntry(text);
+            // 译文区现在摆的就是这条的释义（或译文），说明用户已经看过了，只是想再听一遍
+            bool alreadyShowing = _historyIndex >= 0
+                && _history[_historyIndex].Text == text
+                && _history[_historyIndex].Output != PlayOnlyHint;
+
             // 反复按播放多半只是想多听几遍，已经在当前这条上就别再刷一个一样的标签
             if (_historyIndex < 0 || _history[_historyIndex].Text != text)
                 PushHistory(text, entry ?? PlayOnlyHint);
+
             if (entry != null)
                 ShowOutput(entry);
+            else if (!alreadyShowing)
+                ShowOutput(PlayOnlyHint);
+
             Task.Run(() => SpeechReader.Create(text).SpeakAsync(text));
         }
 
