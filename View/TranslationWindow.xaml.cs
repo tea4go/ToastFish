@@ -18,6 +18,10 @@ namespace ToastFish.View
     /// </summary>
     public partial class TranslationWindow : Window
     {
+        /// <summary>输入框打开时预填的默认文本。</summary>
+        private const string DefaultInput =
+            "Share Engine Windows SDK (documented version 1.0.0.300) for both sending and receiving  files. Personal, non-commercial project.";
+
         /// <summary>已经打开的窗口。同一时刻只留一个，重复点菜单只把它提到前面。</summary>
         private static TranslationWindow _open;
 
@@ -58,6 +62,7 @@ namespace ToastFish.View
 
             StyleBox(InputBox);
             StyleBox(OutputBox);
+            InputBox.Text = DefaultInput;
 
             ActionPanel.Margin = new Thickness(S(10), 0, 0, 0);
             StyleButton(TranslateButton);
