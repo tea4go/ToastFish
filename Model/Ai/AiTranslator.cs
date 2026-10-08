@@ -19,8 +19,10 @@ namespace ToastFish.Model.Ai
     /// </summary>
     static class AiTranslator
     {
-        /// <summary>单次请求的超时时间。翻译是交互操作，等太久不如直接报错重试。</summary>
-        private static readonly TimeSpan Timeout = TimeSpan.FromSeconds(30);
+        /// <summary>
+        /// 单次请求的超时时间。上游模型偶发出结果很慢，30 秒会误报超时，放宽到 60 秒。
+        /// </summary>
+        private static readonly TimeSpan Timeout = TimeSpan.FromSeconds(60);
 
         static AiTranslator()
         {
