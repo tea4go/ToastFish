@@ -154,6 +154,7 @@ namespace ToastFish
         System.Windows.Forms.ToolStripMenuItem LibraryStatus = new System.Windows.Forms.ToolStripMenuItem();
         System.Windows.Forms.ToolStripMenuItem PhoneticChart = new System.Windows.Forms.ToolStripMenuItem();
         System.Windows.Forms.ToolStripMenuItem GojuonChart = new System.Windows.Forms.ToolStripMenuItem();
+        System.Windows.Forms.ToolStripMenuItem Translation = new System.Windows.Forms.ToolStripMenuItem();
 
         System.Windows.Forms.ToolStripMenuItem SetAutoPlay = new System.Windows.Forms.ToolStripMenuItem();
         System.Windows.Forms.ToolStripMenuItem SetAutoLog = new System.Windows.Forms.ToolStripMenuItem();
@@ -217,6 +218,9 @@ namespace ToastFish
             GojuonChart.Text = "日语五十音图";
             GojuonChart.Click += new EventHandler(GojuonChart_Click);
 
+            Translation.Text = "翻译";
+            Translation.Click += new EventHandler(Translation_Click);
+
             Start.Text = "开机启动";
             Start.Click += new EventHandler(Start_Click);
             if (File.Exists(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Startup), "ToastFish.lnk")))
@@ -277,6 +281,7 @@ namespace ToastFish
             Cms.Items.Add(LibraryStatus);
             Cms.Items.Add(PhoneticChart);
             Cms.Items.Add(GojuonChart);
+            Cms.Items.Add(Translation);
             Cms.Items.Add(Settings);
             Cms.Items.Add(ShowLog);
             Cms.Items.Add(Start);
@@ -629,6 +634,11 @@ namespace ToastFish
         private void PhoneticChart_Click(object sender, EventArgs e)
         {
             ToastFish.View.PhoneticChartWindow.ShowChart();
+        }
+
+        private void Translation_Click(object sender, EventArgs e)
+        {
+            ToastFish.View.TranslationWindow.ShowWindow();
         }
 
         private void GojuonChart_Click(object sender, EventArgs e)

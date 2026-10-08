@@ -323,7 +323,7 @@ namespace ToastFish.View.Notify
         /// 几乎看不清，所以自带一套走主题色的模板。悬停/按下的底色只在模板触发器里给，
         /// 光设 Button.Background 压不住默认模板里的触发器。
         /// </summary>
-        private static ControlTemplate CreateButtonTemplate()
+        internal static ControlTemplate CreateButtonTemplate()
         {
             var border = new FrameworkElementFactory(typeof(Border), "border");
             border.SetValue(Border.BackgroundProperty, new TemplateBindingExtension(Control.BackgroundProperty));
