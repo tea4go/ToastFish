@@ -53,13 +53,13 @@
             </StackPanel>
         </Grid>
 
-        <!-- Border 是那条 1px 的视觉线，GridSplitter 透明叠在上面提供拖动区 -->
-        <Grid Grid.Row="1">
-            <Border x:Name="SplitLine" BorderThickness="0,1,0,0" VerticalAlignment="Center" />
-            <GridSplitter x:Name="SplitGrip" HorizontalAlignment="Stretch"
-                          VerticalAlignment="Center" Background="Transparent"
-                          ResizeBehavior="PreviousAndNext" ResizeDirection="Rows" />
-        </Grid>
+        <!-- Border 是那条 1px 的视觉线，GridSplitter 透明叠在上面提供拖动区。
+             两者都直接挂在 RootGrid 第 1 行：GridSplitter 的 PreviousAndNext 认的是
+             它所在 Grid 里紧邻的上下两行，中间再套一层 Grid 就没有可拖的行了 -->
+        <Border x:Name="SplitLine" Grid.Row="1" BorderThickness="0,1,0,0" VerticalAlignment="Center" />
+        <GridSplitter x:Name="SplitGrip" Grid.Row="1" HorizontalAlignment="Stretch"
+                      VerticalAlignment="Center" Background="Transparent"
+                      ResizeBehavior="PreviousAndNext" ResizeDirection="Rows" />
 
         <!-- 译文区：渲染 Markdown 的只读预览，不带默认工具栏 -->
         <FlowDocumentScrollViewer x:Name="OutputBox" Grid.Row="2"
