@@ -2,8 +2,10 @@ using System;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Documents;
 using System.Windows.Input;
 using ToastFish.Model.Ai;
+using ToastFish.Model.Markdown;
 using ToastFish.Model.Notify;
 using ToastFish.Model.Speech;
 using ToastFish.Model.SqliteControl;
@@ -13,8 +15,8 @@ namespace ToastFish.View
 {
     /// <summary>
     /// 翻译窗口：上半部分是原文输入框，右侧竖排「翻译」「播放」「配置」三个按钮；
-    /// 下半部分显示译文，中间的分隔线可拖动调整上下比例。
-    /// 整窗口随基准字号等比缩放，配色跟随明暗主题。
+    /// 下半部分把译文按 Markdown 渲染出来（单词释义那套提示词返回的就是 Markdown），
+    /// 中间的分隔线可拖动调整上下比例。整窗口随基准字号等比缩放，配色跟随明暗主题。
     /// </summary>
     public partial class TranslationWindow : Window
     {
@@ -61,7 +63,7 @@ namespace ToastFish.View
             Background = NotifyTheme.Background;
 
             StyleBox(InputBox);
-            StyleBox(OutputBox);
+            StyleOutput();
             InputBox.Text = DefaultInput;
 
             ActionPanel.Margin = new Thickness(S(10), 0, 0, 0);
@@ -81,7 +83,7 @@ namespace ToastFish.View
             SplitGrip.Margin = new Thickness(0, S(8), 0, S(8));
         }
 
-        /// <summary>输入框与译文框统一外观：主题底色、主题边框、主题字色。</summary>
+        /// <summary>输入框外观：主题底色、主题边框、主题字色。</summary>
         private void StyleBox(TextBox box)
         {
             box.Background = NotifyTheme.ButtonBackground;
@@ -90,6 +92,35 @@ namespace ToastFish.View
             box.FontFamily = NotifyTheme.Font;
             box.FontSize = S(15);
             box.Padding = new Thickness(S(8));
+        }
+
+        /// <summary>译文区外观：跟输入框同底色同边框，内容每次翻译时换成新的 FlowDocument。</summary>
+        private void StyleOutput()
+        {
+            OutputBox.Background = NotifyTheme.ButtonBackground;
+            OutputBox.Foreground = NotifyTheme.Foreground;
+            OutputBox.BorderBrush = NotifyTheme.Border;
+            ShowOutput("");
+        }
+
+        /// <summary>
+        /// 把文本当 Markdown 渲染进译文区。「翻译中…」「翻译失败：…」这类提示也走这里，
+        /// 它们没有 Markdown 标记，渲染出来就是普通段落。
+        /// </summary>
+        private void ShowOutput(string text)
+        {
+            FlowDocument document;
+            try
+            {
+                document = MarkdownRenderer.Render(text, S(15));
+            }
+            catch (Exception)
+            {
+                // 模型输出的 Markdown 千奇百怪，渲染失败就退回原样显示，别让整个窗口崩掉
+                document = new FlowDocument(new Paragraph(new Run(text)));
+            }
+            document.PagePadding = new Thickness(S(8));
+            OutputBox.Document = document;
         }
 
         /// <summary>
@@ -131,15 +162,15 @@ namespace ToastFish.View
 
             string prompt = hasSelection ? Select.AI_PROMPT_WORD : Select.AI_PROMPT_SENTENCE;
             TranslateButton.IsEnabled = false;
-            OutputBox.Text = "翻译中…";
+            ShowOutput("翻译中…");
             try
             {
-                OutputBox.Text = await AiTranslator.TranslateAsync(text, prompt);
+                ShowOutput(await AiTranslator.TranslateAsync(text, prompt));
             }
             catch (Exception ex)
             {
                 // 详细日志由 AiTranslator 统一记录，这里只负责在界面上提示
-                OutputBox.Text = "翻译失败：" + ex.Message;
+                ShowOutput("翻译失败：" + ex.Message);
             }
             finally
             {

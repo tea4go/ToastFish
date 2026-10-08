@@ -36,9 +36,9 @@
                           ResizeBehavior="PreviousAndNext" ResizeDirection="Rows" />
         </Grid>
 
-        <TextBox x:Name="OutputBox" Grid.Row="2"
-                 IsReadOnly="True" AcceptsReturn="True" TextWrapping="Wrap"
-                 VerticalScrollBarVisibility="Auto"
-                 VerticalContentAlignment="Top" />
+        <!-- 译文区：渲染 Markdown 的只读预览，不带默认工具栏 -->
+        <FlowDocumentScrollViewer x:Name="OutputBox" Grid.Row="2"
+                                  IsToolBarVisible="False"
+                                  VerticalScrollBarVisibility="Auto" />
     </Grid>
 </Window>
