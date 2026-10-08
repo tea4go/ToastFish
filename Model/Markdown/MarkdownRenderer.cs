@@ -451,24 +451,19 @@ namespace ToastFish.Model.Markdown
             var code = inline as CodeInline;
             if (code != null)
             {
-                // 行内代码做成米黄小圆角块：Run 没有 Padding / CornerRadius，
-                // 只能塞进 InlineUIContainer 里包一层 Border
-                target.Add(new InlineUIContainer(new Border
+                // 行内代码用 Span 而不是 InlineUIContainer 包一层 Border：后者装的是 UIElement，
+                // 里面的文字不参与 FlowDocument 的选择（选择只覆盖 TextElement），
+                // 行内代码就既选不中也复制不了。代价是 Inline 没有 Padding / CornerRadius，
+                // 底色只能紧贴文字、四个角是直角，拿不到原来那个小圆角块。
+                var span = new Span
                 {
                     Background = NotifyTheme.Markdown.InlineCodeBackground,
-                    CornerRadius = new CornerRadius(4),
-                    Padding = new Thickness(fontSize * 0.28, fontSize * 0.15, fontSize * 0.28, fontSize * 0.15),
-                    Child = new TextBlock
-                    {
-                        Text = code.Content,
-                        FontFamily = MonoFont,
-                        FontSize = fontSize * 0.95,
-                        Foreground = NotifyTheme.Markdown.InlineCodeText
-                    }
-                })
-                {
-                    BaselineAlignment = BaselineAlignment.Center
-                });
+                    Foreground = NotifyTheme.Markdown.InlineCodeText,
+                    FontFamily = MonoFont,
+                    FontSize = fontSize * 0.95
+                };
+                span.Inlines.Add(new Run(code.Content));
+                target.Add(span);
                 return;
             }
 
