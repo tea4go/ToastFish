@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -89,8 +90,8 @@ class SomeClass:
         private static TranslationWindow _open;
 
         /// <summary>
-        /// 「播放」记进历史时占在译文位置的文案。播放没有译文，留一句话，
-        /// 点回这条标签时能看出当时只是听了发音，而不是翻译失败了。
+        /// 「播放」在本地词库里没查到词条时，占在译文位置的文案。查到了就放词条本身，
+        /// 所以这句只在词库没收这个词（或选中的是一整句）时出现。
         /// </summary>
         private const string PlayOnlyHint = "（这条只播放过，还没翻译）";
 
@@ -112,6 +113,12 @@ class SomeClass:
 
         /// <summary>本次窗口打开期间的翻译历史，关窗即丢。</summary>
         private readonly List<TranslationEntry> _history = new List<TranslationEntry>();
+
+        /// <summary>
+        /// 本地词库连接。第一次查词时才建，之后整个窗口复用同一个连接——
+        /// 每次播放都 new 一个会攒下一堆没人关的 SQLite 连接。
+        /// </summary>
+        private Select _dictionary;
 
         /// <summary>当前选中的历史下标，-1 表示还没有任何历史。</summary>
         private int _historyIndex = -1;
@@ -322,17 +329,79 @@ class SomeClass:
 
         /// <summary>
         /// 朗读原文，有选中文本时只读选中部分。空内容不发声。播放是阻塞的，放到后台线程。
-        /// 播放同样记一条历史：查词时经常先听发音再决定要不要翻，不记就找不回来了。
+        /// 同时去本地词库找词条：查得到就直接显示，省掉一次联网翻译；查不到只发声，译文区不动。
+        /// 播放也记一条历史：查词时经常先听发音再决定要不要翻，不记就找不回来了。
         /// </summary>
         private void Play_Click(object sender, RoutedEventArgs e)
         {
             string text = TextToProcess();
             if (string.IsNullOrWhiteSpace(text))
                 return;
+            string entry = LocalEntry(text);
             // 反复按播放多半只是想多听几遍，已经在当前这条上就别再刷一个一样的标签
             if (_historyIndex < 0 || _history[_historyIndex].Text != text)
-                PushHistory(text, PlayOnlyHint);
+                PushHistory(text, entry ?? PlayOnlyHint);
+            if (entry != null)
+                ShowOutput(entry);
             Task.Run(() => SpeechReader.Create(text).SpeakAsync(text));
+        }
+
+        /// <summary>
+        /// 去六级完整词汇里查这个词，查到就返回渲染用的词条 Markdown，查不到返回 null。
+        /// 词库读不出来时也返回 null：查词失败不该妨碍发声，退回「只播放」就是了。
+        /// </summary>
+        private string LocalEntry(string text)
+        {
+            try
+            {
+                if (_dictionary == null)
+                    _dictionary = new Select();
+                Word word = _dictionary.LookupCet6Word(text);
+                return word == null ? null : DictionaryEntry(word);
+            }
+            catch (Exception)
+            {
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// 把词库里的一个词条拼成 Markdown：词形、音标、词性释义、例句、短语。
+        /// 音标按「发音类型」设置取美音或英音，跟背诵卡片保持一致。
+        /// 行尾两个空格是 Markdown 的硬换行，少了的话「译：」会被并到上一行去。
+        /// </summary>
+        private static string DictionaryEntry(Word word)
+        {
+            var entry = new StringBuilder();
+            entry.Append("**").Append(word.headWord).Append("**");
+
+            string phone = Select.ENG_TYPE == 1 ? word.usPhone : word.ukPhone;
+            if (!string.IsNullOrWhiteSpace(phone))
+                entry.Append("  /").Append(phone.Trim()).Append("/");
+
+            if (!string.IsNullOrWhiteSpace(word.tranCN))
+            {
+                entry.Append("\n\n");
+                if (!string.IsNullOrWhiteSpace(word.pos))
+                    entry.Append(word.pos.Trim()).Append(". ");
+                entry.Append(word.tranCN.Trim());
+            }
+
+            if (!string.IsNullOrWhiteSpace(word.sentence))
+            {
+                entry.Append("\n\n例：").Append(word.sentence.Trim());
+                if (!string.IsNullOrWhiteSpace(word.sentenceCN))
+                    entry.Append("  \n译：").Append(word.sentenceCN.Trim());
+            }
+
+            if (!string.IsNullOrWhiteSpace(word.phrase))
+            {
+                entry.Append("\n\n短语：").Append(word.phrase.Trim());
+                if (!string.IsNullOrWhiteSpace(word.phraseCN))
+                    entry.Append("  \n").Append(word.phraseCN.Trim());
+            }
+
+            return entry.ToString();
         }
 
         /// <summary>历史标签栏外观：两端箭头、中间折行的标签区。</summary>

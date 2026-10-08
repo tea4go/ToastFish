@@ -16,6 +16,7 @@ namespace ToastFish.Model.SqliteControl
         }
  
         public static string TABLE_NAME = "VOA_1500";  // 当前书籍名字
+        public const string CET6_WORD_TABLE = "CET6_3";  // 六级完整词汇的表名
         public static int WORD_NUMBER = 10;  // 当前单词数量
         public static int ENG_TYPE = 1;  // 英语类型1：美语，2：英语
         public static int AUTO_PLAY = 1;  // 英语自动发音
@@ -552,6 +553,21 @@ namespace ToastFish.Model.SqliteControl
                 AllWordArray.RemoveAt(Index);
             }
             return Result;
+        }
+
+        /// <summary>
+        /// 按词形在六级完整词汇里查一个单词，不分大小写，查不到返回 null。
+        /// 翻译窗口点播放时先来这里查释义，本地查表比联网翻译快得多。
+        /// 只认整词：词形里不含空格，所以传进来一整句必然查不到。
+        /// </summary>
+        public Word LookupCet6Word(string word)
+        {
+            if (string.IsNullOrWhiteSpace(word))
+                return null;
+            var rows = DataBase.Query<Word>(
+                "select * from " + CET6_WORD_TABLE + " where headWord = @head collate nocase limit 1",
+                new { head = word.Trim() }).ToArray();
+            return rows.Length == 0 ? null : rows[0];
         }
 
         /// <summary>
