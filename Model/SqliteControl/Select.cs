@@ -17,7 +17,7 @@ namespace ToastFish.Model.SqliteControl
  
         public static string TABLE_NAME = "VOA_1500";  // 当前书籍名字
         public static int WORD_NUMBER = 10;  // 当前单词数量
-        public static int ENG_TYPE = 2;  // 英语类型1：美语，2：英语
+        public static int ENG_TYPE = 1;  // 英语类型1：美语，2：英语
         public static int AUTO_PLAY = 1;  // 英语自动发音
         public static int AUTO_LOG  = 1;  // 英语自动发音
         public static string FONT_FAMILY = "Microsoft YaHei UI";  // 卡片字体家族
