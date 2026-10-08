@@ -153,9 +153,14 @@ class SomeClass:
 
             StyleBox(InputBox);
             StyleOutput();
+            // 选中文本后焦点常会挪到「翻译」按钮或另一个框上，系统默认会把选中高亮藏掉
+            InputBox.IsInactiveSelectionHighlightEnabled = true;
             StyleHistoryBar();
             InputBox.Text = DefaultInput;
             ShowOutput(DefaultOutput);
+            // 译文区得等文档装好之后再置这个开关：换文档会重建内部的 selection，
+            // 之前置的值推不到它身上，「失焦仍高亮」就不生效
+            OutputBox.IsInactiveSelectionHighlightEnabled = true;
             RebuildTabs();
 
             ActionPanel.Margin = new Thickness(S(10), 0, 0, 0);
