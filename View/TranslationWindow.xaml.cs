@@ -116,6 +116,13 @@ class SomeClass:
         /// <summary>当前选中的历史下标，-1 表示还没有任何历史。</summary>
         private int _historyIndex = -1;
 
+        /// <summary>
+        /// 最近一次选中是在哪个框里，true 表示原文框。两个框都留着选中时按它取：
+        /// 选中不会因为焦点移走而消失，光按固定优先级取的话，原文框里一个早先选中的
+        /// 单词会一直把译文区里刚选的那段顶掉。
+        /// </summary>
+        private bool _inputPickedLast = true;
+
         // 整窗口随基准字号等比缩放，基准 15 时比例为 1。
         private readonly double _scale = NotifyTheme.BaseSize / 15.0;
 
@@ -155,6 +162,9 @@ class SomeClass:
             StyleOutput();
             // 选中文本后焦点常会挪到「翻译」按钮或另一个框上，系统默认会把选中高亮藏掉
             InputBox.IsInactiveSelectionHighlightEnabled = true;
+            // 在哪个框里选字，标记就挪到哪个框（点进去才能选，所以认键盘焦点足够）
+            InputBox.GotKeyboardFocus += (s, e) => _inputPickedLast = true;
+            OutputBox.GotKeyboardFocus += (s, e) => _inputPickedLast = false;
             StyleHistoryBar();
             InputBox.Text = DefaultInput;
             ShowOutput(DefaultOutput);
@@ -253,14 +263,21 @@ class SomeClass:
 
         /// <summary>
         /// 要处理的文本，按优先级取：原文框里选中的 &gt; 译文区里选中的 &gt; 整个原文框。
+        /// 两个框都留着选中时，取最近一次选中的那个——选中不随失焦消失，
+        /// 固定让原文框优先的话，译文区里刚选的一段永远轮不上。
         /// 翻译和播放共用这条规则。
         /// </summary>
         private string TextToProcess()
         {
-            if (InputBox.SelectionLength > 0)
-                return InputBox.SelectedText;
+            bool inputPicked = InputBox.SelectionLength > 0;
             string selectedOutput = SelectedOutputText();
-            if (!string.IsNullOrEmpty(selectedOutput))
+            bool outputPicked = !string.IsNullOrEmpty(selectedOutput);
+
+            if (inputPicked && outputPicked)
+                return _inputPickedLast ? InputBox.SelectedText : selectedOutput;
+            if (inputPicked)
+                return InputBox.SelectedText;
+            if (outputPicked)
                 return selectedOutput;
             return InputBox.Text;
         }
