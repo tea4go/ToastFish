@@ -33,6 +33,7 @@ namespace ToastFish
         Thread thread = new Thread(new ParameterizedThreadStart(PushWords.Recitation));
         Dictionary<string, string> TablelDictionary = new Dictionary<string, string>(){
         {"CET4_1", "四级核心词汇"},{"CET4_3", "四级完整词汇"},{"CET6_1", "六级核心词汇"},
+        {"CET6_3", "六级完整词汇"},
         {"KaoYan_1", "考研必考词汇"},{"KaoYan_2", "考研完整词汇"},
         {"Goin", "顺序五十音"},{"StdJp_Mid", "标准日本语中级词汇"},
         {"VOA_1500", "VOA慢速英语1500词"} };
@@ -235,6 +236,8 @@ namespace ToastFish
             CET4_3.Click += new EventHandler(SelectBook_Click);
             ToolStripItem CET6_1 = new ToolStripMenuItem("六级核心词汇");
             CET6_1.Click += new EventHandler(SelectBook_Click);
+            ToolStripItem CET6_3 = new ToolStripMenuItem("六级完整词汇");
+            CET6_3.Click += new EventHandler(SelectBook_Click);
             ToolStripItem KaoYan_1 = new ToolStripMenuItem("考研必考词汇");
             KaoYan_1.Click += new EventHandler(SelectBook_Click);
             ToolStripItem KaoYan_2 = new ToolStripMenuItem("考研完整词汇");
@@ -282,6 +285,7 @@ namespace ToastFish
             SelectBook.DropDownItems.Add(CET4_1);
             SelectBook.DropDownItems.Add(CET4_3);
             SelectBook.DropDownItems.Add(CET6_1);
+            SelectBook.DropDownItems.Add(CET6_3);
             SelectBook.DropDownItems.Add(KaoYan_1);
             SelectBook.DropDownItems.Add(KaoYan_2);
             SelectBook.DropDownItems.Add(VOA_1500);
@@ -310,6 +314,8 @@ namespace ToastFish
                 CET4_3.PerformClick();
             else if (Select.TABLE_NAME == "CET6_1")
                 CET6_1.PerformClick();
+            else if (Select.TABLE_NAME == "CET6_3")
+                CET6_3.PerformClick();
             else if (Select.TABLE_NAME == "KaoYan_1")
                 KaoYan_1.PerformClick();
             else if (Select.TABLE_NAME == "KaoYan_2")
@@ -515,6 +521,8 @@ namespace ToastFish
                 TempName = "CET4_3";
             else if (sender.ToString() == "六级核心词汇")
                 TempName = "CET6_1";
+            else if (sender.ToString() == "六级完整词汇")
+                TempName = "CET6_3";
             else if (sender.ToString() == "考研必考词汇")
                 TempName = "KaoYan_1";
             else if (sender.ToString() == "考研完整词汇")
