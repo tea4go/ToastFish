@@ -94,10 +94,19 @@ class SomeClass:
         /// </summary>
         private const string PlayOnlyHint = "（这条只播放过，还没翻译）";
 
-        /// <summary>一次翻译的历史：原文用来做标签摘要和回填输入框，译文用来重渲染。</summary>
+        /// <summary>一次翻译的历史。</summary>
         private class TranslationEntry
         {
-            public string Source;
+            /// <summary>这次处理的文本：选中部分，或没选中时的整个输入框。做标签摘要用。</summary>
+            public string Text;
+
+            /// <summary>
+            /// 记这条时输入框的完整内容。只查了其中一个词时，光记那个词会把上下文丢掉，
+            /// 点回这条历史就再也找不回原来的整段原文了。
+            /// </summary>
+            public string Input;
+
+            /// <summary>译文；只播放过的那条存一句说明。</summary>
             public string Output;
         }
 
@@ -299,7 +308,7 @@ class SomeClass:
             if (string.IsNullOrWhiteSpace(text))
                 return;
             // 反复按播放多半只是想多听几遍，已经在当前这条上就别再刷一个一样的标签
-            if (_historyIndex < 0 || _history[_historyIndex].Source != text)
+            if (_historyIndex < 0 || _history[_historyIndex].Text != text)
                 PushHistory(text, PlayOnlyHint);
             Task.Run(() => SpeechReader.Create(text).SpeakAsync(text));
         }
@@ -364,24 +373,43 @@ class SomeClass:
         }
 
         /// <summary>翻译成功：记一条历史并选中它。当前不在末尾时先截断后面的，同浏览器历史。</summary>
-        private void PushHistory(string source, string output)
+        private void PushHistory(string text, string output)
         {
             if (_historyIndex < _history.Count - 1)
                 _history.RemoveRange(_historyIndex + 1, _history.Count - 1 - _historyIndex);
-            _history.Add(new TranslationEntry { Source = source, Output = output });
+            _history.Add(new TranslationEntry
+            {
+                Text = text,
+                Input = InputBox.Text,
+                Output = output
+            });
             _historyIndex = _history.Count - 1;
             RebuildTabs();
         }
 
-        /// <summary>切到第 index 条历史：原文回填输入框，译文重新渲染。</summary>
+        /// <summary>切到第 index 条历史：输入框恢复成当时的样子，译文重新渲染。</summary>
         private void SelectHistory(int index)
         {
             if (index < 0 || index >= _history.Count || index == _historyIndex)
                 return;
             _historyIndex = index;
-            InputBox.Text = _history[index].Source;
             ShowOutput(_history[index].Output);
+            RestoreInput(_history[index]);
             RebuildTabs();
+        }
+
+        /// <summary>
+        /// 输入框恢复成记这条时的样子：填回完整原文，并把当时处理的那段重新选中。
+        /// 当时翻的是译文区里选中的一段时，那段不在原文里，就只把光标落到末尾。
+        /// </summary>
+        private void RestoreInput(TranslationEntry entry)
+        {
+            InputBox.Text = entry.Input;
+            int at = entry.Text == null ? -1 : entry.Input.IndexOf(entry.Text, StringComparison.Ordinal);
+            if (at >= 0 && entry.Text != entry.Input)
+                InputBox.Select(at, entry.Text.Length);
+            else
+                InputBox.Select(InputBox.Text.Length, 0);
         }
 
         /// <summary>在当前历史里前后移动。</summary>
@@ -406,8 +434,8 @@ class SomeClass:
 
             if (removedCurrent && _historyIndex >= 0)
             {
-                InputBox.Text = _history[_historyIndex].Source;
                 ShowOutput(_history[_historyIndex].Output);
+                RestoreInput(_history[_historyIndex]);
             }
         }
 
@@ -435,7 +463,7 @@ class SomeClass:
 
             var label = new TextBlock
             {
-                Text = TabLabel(_history[index].Source),
+                Text = TabLabel(_history[index].Text),
                 FontFamily = NotifyTheme.Font,
                 FontSize = S(12),
                 Foreground = active ? NotifyTheme.Foreground : NotifyTheme.Muted,
@@ -490,7 +518,7 @@ class SomeClass:
                 Padding = new Thickness(S(7), S(2), S(4), S(2)),
                 Margin = new Thickness(0, 0, S(4), S(4)),
                 Cursor = Cursors.Hand,
-                ToolTip = _history[index].Source,
+                ToolTip = _history[index].Text,
                 Child = host
             };
             tab.MouseLeftButtonUp += (s, e) => SelectHistory(index);
