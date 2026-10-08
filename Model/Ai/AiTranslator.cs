@@ -120,8 +120,11 @@ namespace ToastFish.Model.Ai
                     throw;
                 }
 
+                // 模型实际吐出来的原文也一并记下来：译文区渲染成什么样和模型返回什么可能对不上，
+                // 只记字数排查不了，所以这里不截断、换行也原样保留
                 Logger.Write("翻译成功 接口=" + endpoint + " 原文=" + text.Length + "字 译文="
-                    + result.Length + "字 耗时=" + watch.ElapsedMilliseconds + "ms");
+                    + result.Length + "字 耗时=" + watch.ElapsedMilliseconds + "ms"
+                    + "\nAI 返回内容：\n" + result);
                 return result;
             }
         }
