@@ -1,8 +1,8 @@
 <Window x:Class="ToastFish.View.SettingsWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="ToastFish 设置" Width="480" Height="430"
-        WindowStartupLocation="CenterScreen" ResizeMode="NoResize">
+        Title="ToastFish 设置" Width="480" Height="600" MinWidth="480" MinHeight="430"
+        WindowStartupLocation="CenterScreen" ResizeMode="CanResize">
     <Grid Margin="14">
         <Grid.RowDefinitions>
             <RowDefinition Height="*" />
@@ -118,28 +118,38 @@
             </TabItem>
 
             <TabItem Header="提示词配置">
-                <StackPanel Margin="14">
-                    <StackPanel Orientation="Horizontal" Margin="0,0,0,14">
-                        <TextBlock Text="整句提示词" Width="90" VerticalAlignment="Top"
-                                   Margin="0,4,0,0" />
-                        <TextBox x:Name="AiPromptSentenceBox" Width="321" Height="90"
-                                 AcceptsReturn="True" TextWrapping="Wrap"
-                                 VerticalScrollBarVisibility="Auto"
-                                 VerticalContentAlignment="Top" />
-                    </StackPanel>
+                <!-- 两行 Height="*"：提示词很长，两个框对半分满页签高度，窗口拉大也跟着长 -->
+                <Grid Margin="14">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="90" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
 
-                    <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="单词提示词" Width="90" VerticalAlignment="Top"
-                                   Margin="0,4,0,0" />
-                        <TextBox x:Name="AiPromptWordBox" Width="321" Height="90"
-                                 AcceptsReturn="True" TextWrapping="Wrap"
-                                 VerticalScrollBarVisibility="Auto"
-                                 VerticalContentAlignment="Top" />
-                    </StackPanel>
+                    <TextBlock Grid.Row="0" Grid.Column="0" Text="整句提示词"
+                               VerticalAlignment="Top" Margin="0,4,0,0" />
+                    <TextBox x:Name="AiPromptSentenceBox" Grid.Row="0" Grid.Column="1"
+                             Margin="0,0,0,7"
+                             AcceptsReturn="True" TextWrapping="Wrap"
+                             VerticalScrollBarVisibility="Auto"
+                             VerticalContentAlignment="Top" />
 
-                    <TextBlock Text="翻译窗口没选中文本时用整句提示词，选中了文本时用单词提示词" FontSize="11"
-                               Foreground="Gray" Margin="0,14,0,0" />
-                </StackPanel>
+                    <TextBlock Grid.Row="1" Grid.Column="0" Text="单词提示词"
+                               VerticalAlignment="Top" Margin="0,11,0,0" />
+                    <TextBox x:Name="AiPromptWordBox" Grid.Row="1" Grid.Column="1"
+                             Margin="0,7,0,0"
+                             AcceptsReturn="True" TextWrapping="Wrap"
+                             VerticalScrollBarVisibility="Auto"
+                             VerticalContentAlignment="Top" />
+
+                    <TextBlock Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2"
+                               Text="翻译窗口没选中文本时用整句提示词，选中了文本时用单词提示词"
+                               FontSize="11" Foreground="Gray" Margin="0,14,0,0" />
+                </Grid>
             </TabItem>
 
         </TabControl>
