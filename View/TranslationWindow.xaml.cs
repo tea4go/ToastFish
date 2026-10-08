@@ -88,6 +88,12 @@ class SomeClass:
         /// <summary>已经打开的窗口。同一时刻只留一个，重复点菜单只把它提到前面。</summary>
         private static TranslationWindow _open;
 
+        /// <summary>
+        /// 「播放」记进历史时占在译文位置的文案。播放没有译文，留一句话，
+        /// 点回这条标签时能看出当时只是听了发音，而不是翻译失败了。
+        /// </summary>
+        private const string PlayOnlyHint = "（这条只播放过，还没翻译）";
+
         /// <summary>一次翻译的历史：原文用来做标签摘要和回填输入框，译文用来重渲染。</summary>
         private class TranslationEntry
         {
@@ -283,12 +289,18 @@ class SomeClass:
             new SettingsWindow(SettingsWindow.PlaybackTab) { Owner = this }.ShowDialog();
         }
 
-        /// <summary>朗读原文，有选中文本时只读选中部分。空内容不发声。播放是阻塞的，放到后台线程。</summary>
+        /// <summary>
+        /// 朗读原文，有选中文本时只读选中部分。空内容不发声。播放是阻塞的，放到后台线程。
+        /// 播放同样记一条历史：查词时经常先听发音再决定要不要翻，不记就找不回来了。
+        /// </summary>
         private void Play_Click(object sender, RoutedEventArgs e)
         {
             string text = TextToProcess();
             if (string.IsNullOrWhiteSpace(text))
                 return;
+            // 反复按播放多半只是想多听几遍，已经在当前这条上就别再刷一个一样的标签
+            if (_historyIndex < 0 || _history[_historyIndex].Source != text)
+                PushHistory(text, PlayOnlyHint);
             Task.Run(() => SpeechReader.Create(text).SpeakAsync(text));
         }
 
