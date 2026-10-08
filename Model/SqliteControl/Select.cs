@@ -26,6 +26,9 @@ namespace ToastFish.Model.SqliteControl
         public static string AI_BASE_URL = "https://www.tokensaver.net";  // AI 翻译接口地址，OpenAI 兼容，填站点根或 /v1 均可
         public static string AI_API_KEY = "";  // AI 翻译接口密钥
         public static string AI_MODEL = "deepseek-v4-flash";  // AI 翻译使用的模型名
+        public static string TTS_VOICE_EN = "";  // 英文朗读语音名，空 = 跟随系统默认
+        public static string TTS_VOICE_CN = "";  // 中文朗读语音名，空 = 跟随系统默认
+        public static int TTS_RATE = 0;  // 朗读语速，直接存系统语音的 Rate 值（-10 ~ 10）
         public SQLiteConnection DataBase;
         public IEnumerable<Word> AllWordList;
         public IEnumerable<JpWord> AllJpWordList;
@@ -213,6 +216,21 @@ namespace ToastFish.Model.SqliteControl
                 Update.CommandText = $"ALTER TABLE Global ADD COLUMN aiModel TEXT NOT NULL DEFAULT '{AI_MODEL}'";
                 Update.ExecuteNonQuery();
             }
+            if (HeadTileList.Contains("ttsVoiceEn") == false)
+            {
+                Update.CommandText = $"ALTER TABLE Global ADD COLUMN ttsVoiceEn TEXT NOT NULL DEFAULT '{TTS_VOICE_EN}'";
+                Update.ExecuteNonQuery();
+            }
+            if (HeadTileList.Contains("ttsVoiceCn") == false)
+            {
+                Update.CommandText = $"ALTER TABLE Global ADD COLUMN ttsVoiceCn TEXT NOT NULL DEFAULT '{TTS_VOICE_CN}'";
+                Update.ExecuteNonQuery();
+            }
+            if (HeadTileList.Contains("ttsRate") == false)
+            {
+                Update.CommandText = $"ALTER TABLE Global ADD COLUMN ttsRate INTEGER NOT NULL DEFAULT {TTS_RATE}";
+                Update.ExecuteNonQuery();
+            }
             Global Temp = new Global();
             var GlobalVariable = DataBase.Query<Global>("select * from Global", Temp).ToArray();
             WORD_NUMBER = int.Parse(GlobalVariable[0].currentWordNumber);
@@ -226,6 +244,9 @@ namespace ToastFish.Model.SqliteControl
             AI_BASE_URL = GlobalVariable[0].aiBaseUrl;
             AI_API_KEY = GlobalVariable[0].aiApiKey;
             AI_MODEL = GlobalVariable[0].aiModel;
+            TTS_VOICE_EN = GlobalVariable[0].ttsVoiceEn;
+            TTS_VOICE_CN = GlobalVariable[0].ttsVoiceCn;
+            TTS_RATE = GlobalVariable[0].ttsRate;
             EnsureCountColumns();
         }
 
@@ -242,7 +263,10 @@ namespace ToastFish.Model.SqliteControl
                 $", theme = '{THEME}'" +
                 $", aiBaseUrl = '{Quote(AI_BASE_URL)}'" +
                 $", aiApiKey = '{Quote(AI_API_KEY)}'" +
-                $", aiModel = '{Quote(AI_MODEL)}'";
+                $", aiModel = '{Quote(AI_MODEL)}'" +
+                $", ttsVoiceEn = '{Quote(TTS_VOICE_EN)}'" +
+                $", ttsVoiceCn = '{Quote(TTS_VOICE_CN)}'" +
+                $", ttsRate = '{TTS_RATE}'";
             Update.ExecuteNonQuery();
         }
 
@@ -766,6 +790,9 @@ namespace ToastFish.Model.SqliteControl
         public string aiBaseUrl { get; set; }
         public string aiApiKey { get; set; }
         public string aiModel { get; set; }
+        public string ttsVoiceEn { get; set; }
+        public string ttsVoiceCn { get; set; }
+        public int ttsRate { get; set; }
     }
 
     [Serializable]

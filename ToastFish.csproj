@@ -149,6 +149,7 @@
     <Compile Include="Model\PushControl\PushJpWords.cs" />
     <Compile Include="Model\PushControl\PushWords.cs" />
     <Compile Include="Model\PushControl\WordType.cs" />
+    <Compile Include="Model\Speech\SpeechReader.cs" />
     <Compile Include="Model\SM2plus\Card.cs" />
     <Compile Include="Model\SM2plus\Parameters.cs" />
     <Compile Include="Model\SqliteControl\Select.cs" />

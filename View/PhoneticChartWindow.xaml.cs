@@ -7,11 +7,11 @@ using System.Windows.Controls;
 using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
-using System.Speech.Synthesis;
 using ToastFish.Model.Download;
 using ToastFish.Model.Mp3;
 using ToastFish.Model.Notify;
 using ToastFish.Model.Phonetic;
+using ToastFish.Model.Speech;
 
 namespace ToastFish.View
 {
@@ -313,8 +313,7 @@ namespace ToastFish.View
                 };
                 if (!DownloadMp3.PlayMp3(request))
                 {
-                    SpeechSynthesizer synth = new SpeechSynthesizer();
-                    synth.SpeakAsync(example.Word);
+                    SpeechReader.Create(example.Word).SpeakAsync(example.Word);
                 }
             });
         }

@@ -1,6 +1,4 @@
 using System;
-using System.Globalization;
-using System.Speech.Synthesis;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -8,6 +6,7 @@ using System.Windows.Input;
 using ToastFish.Model.Ai;
 using ToastFish.Model.Log;
 using ToastFish.Model.Notify;
+using ToastFish.Model.Speech;
 using ToastFish.View.Notify;
 
 namespace ToastFish.View
@@ -122,47 +121,13 @@ namespace ToastFish.View
             }
         }
 
-        /// <summary>朗读输入框里的原文。空内容不发声。</summary>
+        /// <summary>朗读输入框里的原文。空内容不发声。播放是阻塞的，放到后台线程。</summary>
         private void Play_Click(object sender, RoutedEventArgs e)
         {
             string text = InputBox.Text;
             if (string.IsNullOrWhiteSpace(text))
                 return;
-            Task.Run(() => Speak(text));
-        }
-
-        /// <summary>
-        /// 朗读一段文本。合成语音默认语速偏快，英文放慢两档更好跟读；
-        /// 系统默认语音往往是中文，用它念英文会带中文腔调，所以英文要显式挑一个英文语音。
-        /// 播放是阻塞的，调用方已经放到后台线程。
-        /// </summary>
-        private static void Speak(string text)
-        {
-            SpeechSynthesizer synth = new SpeechSynthesizer();
-            if (IsMostlyLatin(text))
-            {
-                synth.Rate = -2;
-                var english = synth.GetInstalledVoices(new CultureInfo("en-US"));
-                if (english.Count > 0)
-                    synth.SelectVoice(english[0].VoiceInfo.Name);
-            }
-            synth.SpeakAsync(text);
-        }
-
-        /// <summary>字母里拉丁字母占多数即认为是英文，数字标点不计入。</summary>
-        private static bool IsMostlyLatin(string text)
-        {
-            int latin = 0, other = 0;
-            foreach (char c in text)
-            {
-                if (!char.IsLetter(c))
-                    continue;
-                if (c < 128)
-                    latin++;
-                else
-                    other++;
-            }
-            return latin > other;
+            Task.Run(() => SpeechReader.Create(text).SpeakAsync(text));
         }
     }
 }

@@ -39,11 +39,18 @@ namespace ToastFish.Model.Ai
             ServicePointManager.SecurityProtocol |= SecurityProtocolType.Tls12;
         }
 
-        public static async Task<string> TranslateAsync(string text)
+        /// <summary>用当前已保存的配置翻译。</summary>
+        public static Task<string> TranslateAsync(string text)
         {
-            if (string.IsNullOrWhiteSpace(Select.AI_BASE_URL)
-                || string.IsNullOrWhiteSpace(Select.AI_API_KEY)
-                || string.IsNullOrWhiteSpace(Select.AI_MODEL))
+            return TranslateAsync(text, Select.AI_BASE_URL, Select.AI_API_KEY, Select.AI_MODEL);
+        }
+
+        /// <summary>用指定的配置翻译。设置窗口的「测试」按钮传界面上的当前值，不读已保存的配置。</summary>
+        public static async Task<string> TranslateAsync(string text, string baseUrl, string apiKey, string model)
+        {
+            if (string.IsNullOrWhiteSpace(baseUrl)
+                || string.IsNullOrWhiteSpace(apiKey)
+                || string.IsNullOrWhiteSpace(model))
             {
                 throw new Exception(
                     "翻译功能还没配置好，请在托盘菜单「参数设置」里填写接口地址、API Key 和模型。");
@@ -52,7 +59,7 @@ namespace ToastFish.Model.Ai
             var serializer = new JavaScriptSerializer { MaxJsonLength = int.MaxValue };
             string requestBody = serializer.Serialize(new Dictionary<string, object>
             {
-                { "model", Select.AI_MODEL },
+                { "model", model },
                 { "messages", new object[]
                     {
                         new Dictionary<string, object>
@@ -69,9 +76,9 @@ namespace ToastFish.Model.Ai
 
             using (var client = new HttpClient { Timeout = Timeout })
             {
-                client.DefaultRequestHeaders.Add("Authorization", "Bearer " + Select.AI_API_KEY);
+                client.DefaultRequestHeaders.Add("Authorization", "Bearer " + apiKey);
                 var content = new StringContent(requestBody, Encoding.UTF8, "application/json");
-                HttpResponseMessage response = await client.PostAsync(Endpoint(), content);
+                HttpResponseMessage response = await client.PostAsync(Endpoint(baseUrl), content);
                 string responseBody = await response.Content.ReadAsStringAsync();
 
                 if (!response.IsSuccessStatusCode)
@@ -88,9 +95,9 @@ namespace ToastFish.Model.Ai
         /// 拼出完整的 chat/completions 地址。接口地址只填站点根（如 https://www.tokensaver.net）
         /// 时补上 /v1——OpenAI 兼容网关的通行约定；填到 /v1 或直接粘完整端点也都认。
         /// </summary>
-        private static string Endpoint()
+        private static string Endpoint(string baseUrl)
         {
-            string url = Select.AI_BASE_URL.Trim().TrimEnd('/');
+            string url = baseUrl.Trim().TrimEnd('/');
             if (url.EndsWith("/chat/completions", StringComparison.OrdinalIgnoreCase))
                 return url;
             if (HasNoPath(url))
