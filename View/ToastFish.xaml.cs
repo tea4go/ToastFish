@@ -36,7 +36,7 @@ namespace ToastFish
         {"CET6_3", "六级完整词汇"},
         {"KaoYan_1", "考研必考词汇"},{"KaoYan_2", "考研完整词汇"},
         {"Goin", "顺序五十音"},{"StdJp_Mid", "标准日本语中级词汇"},
-        {"VOA_1500", "VOA慢速英语1500词"} };
+        {"VOA_1500", "VOA慢速英语"} };
        // private NotifyIcon _notifyIcon = null;
        //HotKey _hotKey0, _hotKey1, _hotKey2, _hotKey3, _hotKey4;
         public MainWindow()
@@ -242,7 +242,7 @@ namespace ToastFish
             KaoYan_1.Click += new EventHandler(SelectBook_Click);
             ToolStripItem KaoYan_2 = new ToolStripMenuItem("考研完整词汇");
             KaoYan_2.Click += new EventHandler(SelectBook_Click);
-            ToolStripItem VOA_1500 = new ToolStripMenuItem("VOA慢速英语1500词");
+            ToolStripItem VOA_1500 = new ToolStripMenuItem("VOA慢速英语");
             VOA_1500.Click += new EventHandler(SelectBook_Click);
             ToolStripItem Goin = new ToolStripMenuItem("顺序五十音");
             Goin.Click += new EventHandler(SelectBook_Click);
@@ -527,7 +527,7 @@ namespace ToastFish
                 TempName = "KaoYan_1";
             else if (sender.ToString() == "考研完整词汇")
                 TempName = "KaoYan_2";
-            else if (sender.ToString() == "VOA慢速英语1500词")
+            else if (sender.ToString() == "VOA慢速英语")
                 TempName = "VOA_1500";
             else if (sender.ToString() == "顺序五十音")
                 TempName = "Goin";
