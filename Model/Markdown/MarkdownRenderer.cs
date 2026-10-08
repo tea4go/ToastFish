@@ -44,6 +44,9 @@ namespace ToastFish.Model.Markdown
             {
                 FontFamily = NotifyTheme.Font,
                 FontSize = fontSize,
+                // 必须显式钉成 Normal：WPF 的 FontWeight 默认值跟随系统「消息字体」，
+                // 用户把系统字体设成粗体时整份文档都会变粗，**...** 加粗就完全看不出来了
+                FontWeight = FontWeights.Normal,
                 Foreground = NotifyTheme.Foreground,
                 Background = Brushes.Transparent,
                 PagePadding = new Thickness(0),
