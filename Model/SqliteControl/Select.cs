@@ -29,6 +29,23 @@ namespace ToastFish.Model.SqliteControl
         public static string TTS_VOICE_EN = "";  // 英文朗读语音名，空 = 跟随系统默认
         public static string TTS_VOICE_CN = "";  // 中文朗读语音名，空 = 跟随系统默认
         public static int TTS_RATE = 0;  // 朗读语速，直接存系统语音的 Rate 值（-10 ~ 10）
+        // 整句翻译的提示词。翻译窗口没选中文本、要翻整个输入框时用这套
+        public static string AI_PROMPT_SENTENCE =
+            "你是一个专业翻译引擎。把用户发来的文本翻译成简体中文；" +
+            "如果原文本身是中文，就翻译成地道的英文。\n" +
+            "严格遵守以下要求：\n" +
+            "1. 只输出译文本身，不要输出原文、解释、说明、音标或任何多余内容。\n" +
+            "2. 保留原文的段落划分和换行结构。\n" +
+            "3. 专有名词、代码、公式、网址、数字保持原样。";
+        // 单词翻译的提示词。翻译窗口里选中了文本时用这套
+        public static string AI_PROMPT_WORD =
+            "你是一个词典引擎。用户发来的是一个单词或短语，请给出它的中文释义。\n" +
+            "严格遵守以下要求：\n" +
+            "1. 按词性分组，每个词性占一行，行首写词性缩写（n. / v. / adj. / adv. / prep. 等），" +
+            "同一词性下的多个义项用「；」分隔。\n" +
+            "2. 最后另起一行，先给一个英文例句（行首写「例：」），再给它的中文翻译（行首写「译：」）。\n" +
+            "3. 不要输出音标、不要复述原文、不要输出任何解释性说明。\n" +
+            "4. 如果发来的不是单个词而是一整句，就直接翻译成简体中文，不要套用词典格式。";
         public SQLiteConnection DataBase;
         public IEnumerable<Word> AllWordList;
         public IEnumerable<JpWord> AllJpWordList;
@@ -231,6 +248,16 @@ namespace ToastFish.Model.SqliteControl
                 Update.CommandText = $"ALTER TABLE Global ADD COLUMN ttsRate INTEGER NOT NULL DEFAULT {TTS_RATE}";
                 Update.ExecuteNonQuery();
             }
+            if (HeadTileList.Contains("aiPromptSentence") == false)
+            {
+                Update.CommandText = $"ALTER TABLE Global ADD COLUMN aiPromptSentence TEXT NOT NULL DEFAULT '{Quote(AI_PROMPT_SENTENCE)}'";
+                Update.ExecuteNonQuery();
+            }
+            if (HeadTileList.Contains("aiPromptWord") == false)
+            {
+                Update.CommandText = $"ALTER TABLE Global ADD COLUMN aiPromptWord TEXT NOT NULL DEFAULT '{Quote(AI_PROMPT_WORD)}'";
+                Update.ExecuteNonQuery();
+            }
             Global Temp = new Global();
             var GlobalVariable = DataBase.Query<Global>("select * from Global", Temp).ToArray();
             WORD_NUMBER = int.Parse(GlobalVariable[0].currentWordNumber);
@@ -247,6 +274,8 @@ namespace ToastFish.Model.SqliteControl
             TTS_VOICE_EN = GlobalVariable[0].ttsVoiceEn;
             TTS_VOICE_CN = GlobalVariable[0].ttsVoiceCn;
             TTS_RATE = GlobalVariable[0].ttsRate;
+            AI_PROMPT_SENTENCE = GlobalVariable[0].aiPromptSentence;
+            AI_PROMPT_WORD = GlobalVariable[0].aiPromptWord;
             EnsureCountColumns();
         }
 
@@ -266,7 +295,9 @@ namespace ToastFish.Model.SqliteControl
                 $", aiModel = '{Quote(AI_MODEL)}'" +
                 $", ttsVoiceEn = '{Quote(TTS_VOICE_EN)}'" +
                 $", ttsVoiceCn = '{Quote(TTS_VOICE_CN)}'" +
-                $", ttsRate = '{TTS_RATE}'";
+                $", ttsRate = '{TTS_RATE}'" +
+                $", aiPromptSentence = '{Quote(AI_PROMPT_SENTENCE)}'" +
+                $", aiPromptWord = '{Quote(AI_PROMPT_WORD)}'";
             Update.ExecuteNonQuery();
         }
 
@@ -793,6 +824,8 @@ namespace ToastFish.Model.SqliteControl
         public string ttsVoiceEn { get; set; }
         public string ttsVoiceCn { get; set; }
         public int ttsRate { get; set; }
+        public string aiPromptSentence { get; set; }
+        public string aiPromptWord { get; set; }
     }
 
     [Serializable]

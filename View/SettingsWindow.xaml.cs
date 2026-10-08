@@ -53,6 +53,9 @@ namespace ToastFish.View
             AiBaseUrlBox.Text = Select.AI_BASE_URL;
             AiApiKeyBox.Text = Select.AI_API_KEY;
             AiModelBox.Text = Select.AI_MODEL;
+
+            AiPromptSentenceBox.Text = Select.AI_PROMPT_SENTENCE;
+            AiPromptWordBox.Text = Select.AI_PROMPT_WORD;
         }
 
         private void SelectNumber(int number)
@@ -199,6 +202,8 @@ namespace ToastFish.View
             Select.AI_BASE_URL = AiBaseUrlBox.Text.Trim();
             Select.AI_API_KEY = AiApiKeyBox.Text.Trim();
             Select.AI_MODEL = AiModelBox.Text.Trim();
+            Select.AI_PROMPT_SENTENCE = AiPromptSentenceBox.Text.Trim();
+            Select.AI_PROMPT_WORD = AiPromptWordBox.Text.Trim();
 
             new Select().UpdateGlobalConfig();
 

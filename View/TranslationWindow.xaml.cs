@@ -7,6 +7,7 @@ using ToastFish.Model.Ai;
 using ToastFish.Model.Log;
 using ToastFish.Model.Notify;
 using ToastFish.Model.Speech;
+using ToastFish.Model.SqliteControl;
 using ToastFish.View.Notify;
 
 namespace ToastFish.View
@@ -97,18 +98,31 @@ namespace ToastFish.View
             button.Template = NotifyWindowBase.CreateButtonTemplate();
         }
 
-        /// <summary>把输入框里的原文交给 AI 翻译，译文写进下半部分的输出框。</summary>
+        /// <summary>
+        /// 输入框里选中了文本就只取选中部分，否则取整框。翻译和播放共用这条规则。
+        /// </summary>
+        private string TextToProcess()
+        {
+            return InputBox.SelectionLength > 0 ? InputBox.SelectedText : InputBox.Text;
+        }
+
+        /// <summary>
+        /// 把输入框里的原文交给 AI 翻译，译文写进下半部分的输出框。
+        /// 有选中文本时只翻选中部分，并改用单词提示词（词典式释义），否则翻整框、用整句提示词。
+        /// </summary>
         private async void Translate_Click(object sender, RoutedEventArgs e)
         {
-            string text = InputBox.Text;
+            bool hasSelection = InputBox.SelectionLength > 0;
+            string text = TextToProcess();
             if (string.IsNullOrWhiteSpace(text))
                 return;
 
+            string prompt = hasSelection ? Select.AI_PROMPT_WORD : Select.AI_PROMPT_SENTENCE;
             TranslateButton.IsEnabled = false;
             OutputBox.Text = "翻译中…";
             try
             {
-                OutputBox.Text = await AiTranslator.TranslateAsync(text);
+                OutputBox.Text = await AiTranslator.TranslateAsync(text, prompt);
             }
             catch (Exception ex)
             {
@@ -121,10 +135,10 @@ namespace ToastFish.View
             }
         }
 
-        /// <summary>朗读输入框里的原文。空内容不发声。播放是阻塞的，放到后台线程。</summary>
+        /// <summary>朗读原文，有选中文本时只读选中部分。空内容不发声。播放是阻塞的，放到后台线程。</summary>
         private void Play_Click(object sender, RoutedEventArgs e)
         {
-            string text = InputBox.Text;
+            string text = TextToProcess();
             if (string.IsNullOrWhiteSpace(text))
                 return;
             Task.Run(() => SpeechReader.Create(text).SpeakAsync(text));

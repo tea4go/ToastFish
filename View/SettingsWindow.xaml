@@ -34,7 +34,7 @@
 
                     <StackPanel Orientation="Horizontal" Margin="0,0,0,14">
                         <TextBlock Text="字体" Width="90" VerticalAlignment="Center" />
-                        <ComboBox x:Name="FontBox" Width="240" />
+                        <ComboBox x:Name="FontBox" Width="321" />
                     </StackPanel>
 
                     <StackPanel Orientation="Horizontal">
@@ -58,12 +58,12 @@
 
                     <StackPanel Orientation="Horizontal" Margin="0,0,0,14">
                         <TextBlock Text="英文语音" Width="90" VerticalAlignment="Center" />
-                        <ComboBox x:Name="VoiceEnBox" Width="240" />
+                        <ComboBox x:Name="VoiceEnBox" Width="321" />
                     </StackPanel>
 
                     <StackPanel Orientation="Horizontal" Margin="0,0,0,14">
                         <TextBlock Text="中文语音" Width="90" VerticalAlignment="Center" />
-                        <ComboBox x:Name="VoiceCnBox" Width="240" />
+                        <ComboBox x:Name="VoiceCnBox" Width="321" />
                     </StackPanel>
 
                     <StackPanel Orientation="Horizontal" Margin="0,0,0,14">
@@ -79,7 +79,7 @@
 
                     <StackPanel Orientation="Horizontal">
                         <Button x:Name="TestSpeakButton" Content="测试播放例句"
-                                Width="110" Height="26" Click="TestSpeak_Click" />
+                                Width="110" Height="32" Click="TestSpeak_Click" />
                         <TextBlock x:Name="SpeakTestResult" Margin="10,0,0,0"
                                    VerticalAlignment="Center" Foreground="Gray"
                                    TextTrimming="CharacterEllipsis" />
@@ -91,28 +91,53 @@
                 <StackPanel Margin="14">
                     <StackPanel Orientation="Horizontal" Margin="0,0,0,14">
                         <TextBlock Text="接口地址" Width="90" VerticalAlignment="Center" />
-                        <TextBox x:Name="AiBaseUrlBox" Width="280" />
+                        <TextBox x:Name="AiBaseUrlBox" Width="321" />
                     </StackPanel>
 
                     <StackPanel Orientation="Horizontal" Margin="0,0,0,14">
                         <TextBlock Text="API Key" Width="90" VerticalAlignment="Center" />
-                        <TextBox x:Name="AiApiKeyBox" Width="280" />
+                        <TextBox x:Name="AiApiKeyBox" Width="321" />
                     </StackPanel>
 
                     <StackPanel Orientation="Horizontal" Margin="0,0,0,14">
                         <TextBlock Text="模型" Width="90" VerticalAlignment="Center" />
-                        <TextBox x:Name="AiModelBox" Width="280" />
+                        <TextBox x:Name="AiModelBox" Width="321" />
                     </StackPanel>
 
                     <StackPanel Orientation="Horizontal">
                         <Button x:Name="TestAiButton" Content="测试"
-                                Width="80" Height="26" Click="TestAi_Click" />
+                                Width="80" Height="32" Click="TestAi_Click" />
                         <TextBlock x:Name="AiTestResult" Margin="10,0,0,0"
                                    VerticalAlignment="Center" Foreground="Gray"
                                    TextTrimming="CharacterEllipsis" />
                     </StackPanel>
 
                     <TextBlock Text="接口需兼容 OpenAI 的 /chat/completions" FontSize="11"
+                               Foreground="Gray" Margin="0,14,0,0" />
+                </StackPanel>
+            </TabItem>
+
+            <TabItem Header="提示词配置">
+                <StackPanel Margin="14">
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,14">
+                        <TextBlock Text="整句提示词" Width="90" VerticalAlignment="Top"
+                                   Margin="0,4,0,0" />
+                        <TextBox x:Name="AiPromptSentenceBox" Width="321" Height="90"
+                                 AcceptsReturn="True" TextWrapping="Wrap"
+                                 VerticalScrollBarVisibility="Auto"
+                                 VerticalContentAlignment="Top" />
+                    </StackPanel>
+
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="单词提示词" Width="90" VerticalAlignment="Top"
+                                   Margin="0,4,0,0" />
+                        <TextBox x:Name="AiPromptWordBox" Width="321" Height="90"
+                                 AcceptsReturn="True" TextWrapping="Wrap"
+                                 VerticalScrollBarVisibility="Auto"
+                                 VerticalContentAlignment="Top" />
+                    </StackPanel>
+
+                    <TextBlock Text="翻译窗口没选中文本时用整句提示词，选中了文本时用单词提示词" FontSize="11"
                                Foreground="Gray" Margin="0,14,0,0" />
                 </StackPanel>
             </TabItem>

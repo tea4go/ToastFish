@@ -12,22 +12,11 @@ namespace ToastFish.Model.Ai
 {
     /// <summary>
     /// 调用 OpenAI 兼容的 chat/completions 接口做翻译。
-    /// 只负责发请求、取译文；配置缺失或调用失败一律抛异常，由调用方决定怎么提示。
+    /// 提示词由调用方给（整句 / 单词两套，存在配置里）；这里只负责发请求、取译文。
+    /// 配置缺失或调用失败一律抛异常，由调用方决定怎么提示。
     /// </summary>
     static class AiTranslator
     {
-        /// <summary>
-        /// 系统提示词。方向交给模型判定：中文原文译成英文，其它一律译成简体中文。
-        /// 明确禁止输出原文、解释和注音，否则模型常会把原文或「以下是翻译」一并带出来。
-        /// </summary>
-        private const string SystemPrompt =
-            "你是一个专业翻译引擎。把用户发来的文本翻译成简体中文；" +
-            "如果原文本身是中文，就翻译成地道的英文。\n" +
-            "严格遵守以下要求：\n" +
-            "1. 只输出译文本身，不要输出原文、解释、说明、音标或任何多余内容。\n" +
-            "2. 保留原文的段落划分和换行结构。\n" +
-            "3. 专有名词、代码、公式、网址、数字保持原样。";
-
         /// <summary>单次请求的超时时间。翻译是交互操作，等太久不如直接报错重试。</summary>
         private static readonly TimeSpan Timeout = TimeSpan.FromSeconds(30);
 
@@ -39,14 +28,19 @@ namespace ToastFish.Model.Ai
             ServicePointManager.SecurityProtocol |= SecurityProtocolType.Tls12;
         }
 
-        /// <summary>用当前已保存的配置翻译。</summary>
-        public static Task<string> TranslateAsync(string text)
+        /// <summary>用当前已保存的配置和指定提示词翻译。翻译窗口按有无选中文本挑提示词。</summary>
+        public static Task<string> TranslateAsync(string text, string prompt)
         {
-            return TranslateAsync(text, Select.AI_BASE_URL, Select.AI_API_KEY, Select.AI_MODEL);
+            return TranslateAsync(text, Select.AI_BASE_URL, Select.AI_API_KEY, Select.AI_MODEL, prompt);
         }
 
-        /// <summary>用指定的配置翻译。设置窗口的「测试」按钮传界面上的当前值，不读已保存的配置。</summary>
-        public static async Task<string> TranslateAsync(string text, string baseUrl, string apiKey, string model)
+        /// <summary>用指定的配置和整句提示词翻译。设置窗口的「测试」按钮传界面上的当前值，不读已保存的配置。</summary>
+        public static Task<string> TranslateAsync(string text, string baseUrl, string apiKey, string model)
+        {
+            return TranslateAsync(text, baseUrl, apiKey, model, Select.AI_PROMPT_SENTENCE);
+        }
+
+        public static async Task<string> TranslateAsync(string text, string baseUrl, string apiKey, string model, string prompt)
         {
             if (string.IsNullOrWhiteSpace(baseUrl)
                 || string.IsNullOrWhiteSpace(apiKey)
@@ -64,7 +58,7 @@ namespace ToastFish.Model.Ai
                     {
                         new Dictionary<string, object>
                         {
-                            { "role", "system" }, { "content", SystemPrompt }
+                            { "role", "system" }, { "content", prompt }
                         },
                         new Dictionary<string, object>
                         {
