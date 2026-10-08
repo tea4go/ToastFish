@@ -4,9 +4,10 @@
         Title="翻译" WindowStartupLocation="CenterScreen">
     <Grid x:Name="RootGrid">
         <Grid.RowDefinitions>
-            <RowDefinition Height="*" />
+            <!-- 上半部分初始高度在构造函数里设成右侧三个按钮的总高，可用分隔线拖动 -->
+            <RowDefinition x:Name="TopRow" Height="*" MinHeight="60" />
             <RowDefinition Height="Auto" />
-            <RowDefinition Height="*" />
+            <RowDefinition Height="*" MinHeight="60" />
         </Grid.RowDefinitions>
 
         <Grid Grid.Row="0">
@@ -23,10 +24,17 @@
             <StackPanel x:Name="ActionPanel" Grid.Column="1">
                 <Button x:Name="TranslateButton" Content="翻译" />
                 <Button x:Name="PlayButton" Content="播放" />
+                <Button x:Name="ConfigButton" Content="配置" />
             </StackPanel>
         </Grid>
 
-        <Border x:Name="SplitLine" Grid.Row="1" BorderThickness="0,1,0,0" />
+        <!-- Border 是那条 1px 的视觉线，GridSplitter 透明叠在上面提供拖动区 -->
+        <Grid Grid.Row="1">
+            <Border x:Name="SplitLine" BorderThickness="0,1,0,0" VerticalAlignment="Center" />
+            <GridSplitter x:Name="SplitGrip" HorizontalAlignment="Stretch"
+                          VerticalAlignment="Center" Background="Transparent"
+                          ResizeBehavior="PreviousAndNext" ResizeDirection="Rows" />
+        </Grid>
 
         <TextBox x:Name="OutputBox" Grid.Row="2"
                  IsReadOnly="True" AcceptsReturn="True" TextWrapping="Wrap"

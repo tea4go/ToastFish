@@ -23,9 +23,17 @@ namespace ToastFish.View
         /// <summary>「测试」按钮发给大模型的固定文本。</summary>
         private const string SampleText = "Hello, world!";
 
-        public SettingsWindow()
+        /// <summary>「播放配置」在页签里的序号。翻译窗口的「配置」按钮直接落到这一页。</summary>
+        public const int PlaybackTab = 1;
+
+        public SettingsWindow() : this(0)
+        {
+        }
+
+        public SettingsWindow(int tabIndex)
         {
             InitializeComponent();
+            Tabs.SelectedIndex = tabIndex;
             LoadCurrent();
         }
 

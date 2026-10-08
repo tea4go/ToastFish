@@ -12,8 +12,9 @@ using ToastFish.View.Notify;
 namespace ToastFish.View
 {
     /// <summary>
-    /// 翻译窗口：上半部分是原文输入框，右侧竖排「翻译」「播放」两个按钮；
-    /// 下半部分显示译文。整窗口随基准字号等比缩放，配色跟随明暗主题。
+    /// 翻译窗口：上半部分是原文输入框，右侧竖排「翻译」「播放」「配置」三个按钮；
+    /// 下半部分显示译文，中间的分隔线可拖动调整上下比例。
+    /// 整窗口随基准字号等比缩放，配色跟随明暗主题。
     /// </summary>
     public partial class TranslationWindow : Window
     {
@@ -61,11 +62,18 @@ namespace ToastFish.View
             ActionPanel.Margin = new Thickness(S(10), 0, 0, 0);
             StyleButton(TranslateButton);
             StyleButton(PlayButton);
+            StyleButton(ConfigButton);
             TranslateButton.Click += Translate_Click;
             PlayButton.Click += Play_Click;
+            ConfigButton.Click += Config_Click;
+
+            // 上半部分只占右侧三个按钮的总高（3×34 + 2×8），要更高就拖分隔线
+            TopRow.Height = new GridLength(S(118));
 
             SplitLine.BorderBrush = NotifyTheme.Border;
-            SplitLine.Margin = new Thickness(0, S(12), 0, S(12));
+            // 拖动区做高一点好抓，上下各留 8 让分隔线的间距和原来一致
+            SplitGrip.Height = S(9);
+            SplitGrip.Margin = new Thickness(0, S(8), 0, S(8));
         }
 
         /// <summary>输入框与译文框统一外观：主题底色、主题边框、主题字色。</summary>
@@ -132,6 +140,12 @@ namespace ToastFish.View
             {
                 TranslateButton.IsEnabled = true;
             }
+        }
+
+        /// <summary>打开设置窗口，直接落在「播放配置」页签。</summary>
+        private void Config_Click(object sender, RoutedEventArgs e)
+        {
+            new SettingsWindow(SettingsWindow.PlaybackTab) { Owner = this }.ShowDialog();
         }
 
         /// <summary>朗读原文，有选中文本时只读选中部分。空内容不发声。播放是阻塞的，放到后台线程。</summary>
