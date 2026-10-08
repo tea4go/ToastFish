@@ -5,6 +5,8 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using ToastFish.Model.Ai;
+using ToastFish.Model.Log;
 using ToastFish.Model.Notify;
 using ToastFish.View.Notify;
 
@@ -60,6 +62,7 @@ namespace ToastFish.View
             ActionPanel.Margin = new Thickness(S(10), 0, 0, 0);
             StyleButton(TranslateButton);
             StyleButton(PlayButton);
+            TranslateButton.Click += Translate_Click;
             PlayButton.Click += Play_Click;
 
             SplitLine.BorderBrush = NotifyTheme.Border;
@@ -93,6 +96,30 @@ namespace ToastFish.View
             button.BorderBrush = NotifyTheme.ButtonBorder;
             button.Cursor = Cursors.Hand;
             button.Template = NotifyWindowBase.CreateButtonTemplate();
+        }
+
+        /// <summary>把输入框里的原文交给 AI 翻译，译文写进下半部分的输出框。</summary>
+        private async void Translate_Click(object sender, RoutedEventArgs e)
+        {
+            string text = InputBox.Text;
+            if (string.IsNullOrWhiteSpace(text))
+                return;
+
+            TranslateButton.IsEnabled = false;
+            OutputBox.Text = "翻译中…";
+            try
+            {
+                OutputBox.Text = await AiTranslator.TranslateAsync(text);
+            }
+            catch (Exception ex)
+            {
+                OutputBox.Text = "翻译失败：" + ex.Message;
+                Logger.Write("翻译失败：" + ex);
+            }
+            finally
+            {
+                TranslateButton.IsEnabled = true;
+            }
         }
 
         /// <summary>朗读输入框里的原文。空内容不发声。</summary>

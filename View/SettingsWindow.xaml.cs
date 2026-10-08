@@ -32,6 +32,10 @@ namespace ToastFish.View
             FontBox.SelectedItem = Select.FONT_FAMILY;
 
             FontSizeBox.Text = Select.FONT_SIZE.ToString();
+
+            AiBaseUrlBox.Text = Select.AI_BASE_URL;
+            AiApiKeyBox.Text = Select.AI_API_KEY;
+            AiModelBox.Text = Select.AI_MODEL;
         }
 
         private void SelectNumber(int number)
@@ -63,6 +67,10 @@ namespace ToastFish.View
             int size;
             if (int.TryParse(FontSizeBox.Text.Trim(), out size) && size >= 12 && size <= 28)
                 Select.FONT_SIZE = size;
+
+            Select.AI_BASE_URL = AiBaseUrlBox.Text.Trim();
+            Select.AI_API_KEY = AiApiKeyBox.Text.Trim();
+            Select.AI_MODEL = AiModelBox.Text.Trim();
 
             new Select().UpdateGlobalConfig();
 

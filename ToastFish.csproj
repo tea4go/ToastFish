@@ -126,6 +126,7 @@
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="System.Net.Http" />
+    <Reference Include="System.Web.Extensions" />
     <Reference Include="System.Xaml">
       <RequiredTargetFramework>4.0</RequiredTargetFramework>
     </Reference>
@@ -138,6 +139,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="Model\Ai\AiTranslator.cs" />
     <Compile Include="Model\Log\CreateLog.cs" />
     <Compile Include="Model\Log\Logger.cs" />
     <Compile Include="Model\Mp3\DownloadMp3.cs" />

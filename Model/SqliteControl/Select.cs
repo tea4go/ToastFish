@@ -23,6 +23,9 @@ namespace ToastFish.Model.SqliteControl
         public static string FONT_FAMILY = "Microsoft YaHei UI";  // 卡片字体家族
         public static int FONT_SIZE = 22;  // 卡片基准字号，范围 12-28
         public static int THEME = 0;  // 0=跟随系统 1=浅色 2=深色
+        public static string AI_BASE_URL = "";  // AI 翻译接口地址，OpenAI 兼容，如 https://api.deepseek.com/v1
+        public static string AI_API_KEY = "";  // AI 翻译接口密钥
+        public static string AI_MODEL = "";  // AI 翻译使用的模型名
         public SQLiteConnection DataBase;
         public IEnumerable<Word> AllWordList;
         public IEnumerable<JpWord> AllJpWordList;
@@ -195,6 +198,21 @@ namespace ToastFish.Model.SqliteControl
                 Update.CommandText = $"ALTER TABLE Global ADD COLUMN theme INTEGER NOT NULL DEFAULT {THEME}";
                 Update.ExecuteNonQuery();
             }
+            if (HeadTileList.Contains("aiBaseUrl") == false)
+            {
+                Update.CommandText = $"ALTER TABLE Global ADD COLUMN aiBaseUrl TEXT NOT NULL DEFAULT '{AI_BASE_URL}'";
+                Update.ExecuteNonQuery();
+            }
+            if (HeadTileList.Contains("aiApiKey") == false)
+            {
+                Update.CommandText = $"ALTER TABLE Global ADD COLUMN aiApiKey TEXT NOT NULL DEFAULT '{AI_API_KEY}'";
+                Update.ExecuteNonQuery();
+            }
+            if (HeadTileList.Contains("aiModel") == false)
+            {
+                Update.CommandText = $"ALTER TABLE Global ADD COLUMN aiModel TEXT NOT NULL DEFAULT '{AI_MODEL}'";
+                Update.ExecuteNonQuery();
+            }
             Global Temp = new Global();
             var GlobalVariable = DataBase.Query<Global>("select * from Global", Temp).ToArray();
             WORD_NUMBER = int.Parse(GlobalVariable[0].currentWordNumber);
@@ -205,6 +223,9 @@ namespace ToastFish.Model.SqliteControl
             FONT_FAMILY = GlobalVariable[0].fontFamily;
             FONT_SIZE = GlobalVariable[0].fontSize;
             THEME = GlobalVariable[0].theme;
+            AI_BASE_URL = GlobalVariable[0].aiBaseUrl;
+            AI_API_KEY = GlobalVariable[0].aiApiKey;
+            AI_MODEL = GlobalVariable[0].aiModel;
             EnsureCountColumns();
         }
 
@@ -218,8 +239,17 @@ namespace ToastFish.Model.SqliteControl
                 $", autoLog = '{AUTO_LOG}'" +
                 $", fontFamily = '{FONT_FAMILY}'" +
                 $", fontSize = '{FONT_SIZE}'" +
-                $", theme = '{THEME}'";
+                $", theme = '{THEME}'" +
+                $", aiBaseUrl = '{Quote(AI_BASE_URL)}'" +
+                $", aiApiKey = '{Quote(AI_API_KEY)}'" +
+                $", aiModel = '{Quote(AI_MODEL)}'";
             Update.ExecuteNonQuery();
+        }
+
+        /// <summary>配置值直接拼进 SQL，转义单引号，免得密钥或地址里的引号把语句截断。</summary>
+        private static string Quote(string value)
+        {
+            return value == null ? "" : value.Replace("'", "''");
         }
 
         public void UpdateBookName(string TableName)
@@ -733,6 +763,9 @@ namespace ToastFish.Model.SqliteControl
         public string fontFamily { get; set; }
         public int fontSize { get; set; }
         public int theme { get; set; }
+        public string aiBaseUrl { get; set; }
+        public string aiApiKey { get; set; }
+        public string aiModel { get; set; }
     }
 
     [Serializable]
