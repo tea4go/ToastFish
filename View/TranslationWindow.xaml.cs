@@ -4,7 +4,6 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using ToastFish.Model.Ai;
-using ToastFish.Model.Log;
 using ToastFish.Model.Notify;
 using ToastFish.Model.Speech;
 using ToastFish.Model.SqliteControl;
@@ -126,8 +125,8 @@ namespace ToastFish.View
             }
             catch (Exception ex)
             {
+                // 详细日志由 AiTranslator 统一记录，这里只负责在界面上提示
                 OutputBox.Text = "翻译失败：" + ex.Message;
-                Logger.Write("翻译失败：" + ex);
             }
             finally
             {

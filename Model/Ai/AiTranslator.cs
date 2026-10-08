@@ -1,11 +1,13 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Net;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 using System.Web.Script.Serialization;
+using ToastFish.Model.Log;
 using ToastFish.Model.SqliteControl;
 
 namespace ToastFish.Model.Ai
@@ -46,10 +48,12 @@ namespace ToastFish.Model.Ai
                 || string.IsNullOrWhiteSpace(apiKey)
                 || string.IsNullOrWhiteSpace(model))
             {
+                Logger.Write("翻译未配置：接口地址 / API Key / 模型 有空缺");
                 throw new Exception(
                     "翻译功能还没配置好，请在托盘菜单「参数设置」里填写接口地址、API Key 和模型。");
             }
 
+            string endpoint = Endpoint(baseUrl);
             var serializer = new JavaScriptSerializer { MaxJsonLength = int.MaxValue };
             string requestBody = serializer.Serialize(new Dictionary<string, object>
             {
@@ -68,20 +72,55 @@ namespace ToastFish.Model.Ai
                 }
             });
 
+            var watch = Stopwatch.StartNew();
             using (var client = new HttpClient { Timeout = Timeout })
             {
                 client.DefaultRequestHeaders.Add("Authorization", "Bearer " + apiKey);
                 var content = new StringContent(requestBody, Encoding.UTF8, "application/json");
-                HttpResponseMessage response = await client.PostAsync(Endpoint(baseUrl), content);
-                string responseBody = await response.Content.ReadAsStringAsync();
+
+                HttpResponseMessage response;
+                string responseBody;
+                try
+                {
+                    response = await client.PostAsync(endpoint, content);
+                    responseBody = await response.Content.ReadAsStringAsync();
+                }
+                catch (Exception ex)
+                {
+                    // 网络不通 / 超时 / SSL 握手失败等，请求根本没拿到响应
+                    watch.Stop();
+                    Logger.Write("翻译请求失败 接口=" + endpoint + " 模型=" + model
+                        + " 提示词=" + PromptHead(prompt) + " 原文=" + Head(text, 80)
+                        + " 耗时=" + watch.ElapsedMilliseconds + "ms 异常：" + ex);
+                    throw;
+                }
+                watch.Stop();
 
                 if (!response.IsSuccessStatusCode)
                 {
+                    Logger.Write("翻译接口报错 接口=" + endpoint + " 状态码=" + (int)response.StatusCode
+                        + " 耗时=" + watch.ElapsedMilliseconds + "ms 响应=" + Shorten(responseBody));
                     throw new Exception("翻译接口返回 " + (int)response.StatusCode + "："
                         + Shorten(responseBody));
                 }
 
-                return ExtractTranslation(serializer, responseBody);
+                string result;
+                try
+                {
+                    result = ExtractTranslation(serializer, responseBody);
+                }
+                catch (Exception ex)
+                {
+                    // 拿到了 2xx，但返回体不是预期的 choices[0].message.content
+                    Logger.Write("翻译响应异常 接口=" + endpoint + " 状态码=" + (int)response.StatusCode
+                        + " 耗时=" + watch.ElapsedMilliseconds + "ms 响应=" + Shorten(responseBody)
+                        + " 异常：" + ex);
+                    throw;
+                }
+
+                Logger.Write("翻译成功 接口=" + endpoint + " 原文=" + text.Length + "字 译文="
+                    + result.Length + "字 耗时=" + watch.ElapsedMilliseconds + "ms");
+                return result;
             }
         }
 
@@ -144,10 +183,26 @@ namespace ToastFish.Model.Ai
         /// <summary>报错时把接口原文截短，避免一大段 JSON 糊满输出框。</summary>
         private static string Shorten(string text)
         {
+            return Head(text, 200);
+        }
+
+        /// <summary>日志用：把文本压成一行并截短到 n 字，避免长文把日志刷爆。</summary>
+        private static string Head(string text, int n)
+        {
             if (string.IsNullOrEmpty(text))
                 return "（空）";
             text = text.Replace("\r", " ").Replace("\n", " ").Trim();
-            return text.Length <= 200 ? text : text.Substring(0, 200) + "…";
+            return text.Length <= n ? text : text.Substring(0, n) + "…";
+        }
+
+        /// <summary>日志用：提示词首行的前 20 字，一眼分辨用的是整句还是单词提示词。</summary>
+        private static string PromptHead(string prompt)
+        {
+            if (string.IsNullOrEmpty(prompt))
+                return "（空）";
+            int i = prompt.IndexOf('\n');
+            string first = (i < 0 ? prompt : prompt.Substring(0, i)).Trim();
+            return first.Length <= 20 ? first : first.Substring(0, 20) + "…";
         }
     }
 }
