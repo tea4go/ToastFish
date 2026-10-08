@@ -1,10 +1,15 @@
 using System;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 using System.Text;
+using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
+using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Shapes;
+using System.Windows.Threading;
 using Markdig;
 using Markdig.Syntax;
 using Markdig.Syntax.Inlines;
@@ -182,17 +187,31 @@ namespace ToastFish.Model.Markdown
         /// <summary>
         /// 代码块。WPF 的 Paragraph 画不出圆角（Block 没有 CornerRadius），
         /// 只能换成 BlockUIContainer 包一层 Border，再塞个 TextBlock 装代码。
+        /// 代价是里面的文字不参与 FlowDocument 的选择（选择只覆盖 TextElement），
+        /// 所以右上角配一个复制按钮作为取用出口。
         /// </summary>
         private static WpfBlock Code(CodeBlock source, double fontSize)
         {
+            string code = CodeText(source);
             var text = new TextBlock
             {
-                Text = CodeText(source),
+                Text = code,
                 FontFamily = MonoFont,
                 FontSize = fontSize * 0.95,
                 Foreground = NotifyTheme.Markdown.Text,
                 TextWrapping = TextWrapping.Wrap
             };
+
+            // 复制按钮单独占一列，正文少占这点宽度，换来按钮永远压不到代码上
+            var content = new Grid();
+            content.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+            content.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+            content.Children.Add(text);
+
+            Border copy = CopyButton(code, fontSize);
+            Grid.SetColumn(copy, 1);
+            content.Children.Add(copy);
+
             return new BlockUIContainer(new Border
             {
                 Background = NotifyTheme.Markdown.CodeBackground,
@@ -201,8 +220,78 @@ namespace ToastFish.Model.Markdown
                 CornerRadius = new CornerRadius(16),
                 Padding = new Thickness(fontSize * 0.5),
                 Margin = new Thickness(0, 0, 0, fontSize * 0.5),
-                Child = text
+                Child = content
             });
+        }
+
+        /// <summary>
+        /// 代码块右上角的复制按钮。图标用 Path 画两张叠着的纸，免得受用户自定义字体影响。
+        /// 点击区包一层透明 Border：Transparent 参与命中测试而 null 不参与。
+        /// </summary>
+        private static Border CopyButton(string code, double fontSize)
+        {
+            var glyph = new Path
+            {
+                // 后面那张纸只画被前面那张挡不住的三条边，否则两张纸的轮廓会在里面交叉
+                Data = Geometry.Parse("M 0.6,0.6 H 7.4 V 4.6 M 0.6,0.6 V 7.4 H 4.6 M 4.6,4.6 H 11.4 V 11.4 H 4.6 Z"),
+                Stroke = NotifyTheme.Muted,
+                StrokeThickness = 1.2,
+                StrokeLineJoin = PenLineJoin.Round,
+                StrokeStartLineCap = PenLineCap.Round,
+                StrokeEndLineCap = PenLineCap.Round,
+                Width = fontSize * 0.62,
+                Height = fontSize * 0.62,
+                Stretch = Stretch.Uniform
+            };
+            var button = new Border
+            {
+                Padding = new Thickness(fontSize * 0.2),
+                Background = Brushes.Transparent,
+                Cursor = Cursors.Hand,
+                ToolTip = "复制代码",
+                HorizontalAlignment = HorizontalAlignment.Right,
+                VerticalAlignment = VerticalAlignment.Top,
+                Child = glyph
+            };
+            button.MouseEnter += (s, e) => glyph.Stroke = NotifyTheme.Foreground;
+            button.MouseLeave += (s, e) => glyph.Stroke = NotifyTheme.Muted;
+            button.MouseLeftButtonUp += (s, e) =>
+            {
+                if (!TryCopy(code))
+                    return;
+                // 复制成功图标短暂变绿；鼠标还停在按钮上时恢复成悬停色而不是常态色
+                glyph.Stroke = NotifyTheme.Copied;
+                var timer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(900) };
+                timer.Tick += (t, args) =>
+                {
+                    timer.Stop();
+                    glyph.Stroke = button.IsMouseOver ? NotifyTheme.Foreground : NotifyTheme.Muted;
+                };
+                timer.Start();
+            };
+            return button;
+        }
+
+        /// <summary>剪贴板常被其他程序短暂占用，失败时重试几次再放弃。</summary>
+        private static bool TryCopy(string text)
+        {
+            if (string.IsNullOrEmpty(text))
+                return false;
+            for (int attempt = 0; attempt < 3; attempt++)
+            {
+                try
+                {
+                    // 用 WinForms 的 Win32 实现而非 System.Windows 的 OLE 实现：
+                    // 后者在某些受限的启动上下文里会抛 CLIPBRD_E_CANT_OPEN，前者不会
+                    System.Windows.Forms.Clipboard.SetText(text);
+                    return true;
+                }
+                catch (ExternalException)
+                {
+                    Thread.Sleep(60);
+                }
+            }
+            return false;
         }
 
         /// <summary>把代码块的多行拼成一段文本。</summary>
