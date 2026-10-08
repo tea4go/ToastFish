@@ -24,6 +24,63 @@ namespace ToastFish.View
         private const string DefaultInput =
             "Share Engine Windows SDK (documented version 1.0.0.300) for both sending and receiving  files. Personal, non-commercial project.";
 
+        /// <summary>
+        /// 译文区打开时预填的示例。挑一份把各级标题、代码块、行内代码、引用、表格、
+        /// 链接都覆盖到的 Markdown，一开窗就能看到各部分各自的配色，不必先去翻一次翻译。
+        /// </summary>
+        private const string DefaultOutput = @"Markdown测试文档
+
+# 一级标题
+
+## 二级标题
+
+### 三级标题
+
+#### 四级标题
+
+##### 五级标题
+
+###### 六级标题
+
+### 代码块
+
+以下是Python代码
+
+```python
+@requires_authorization
+def somefunc(param1='', param2=0):
+    '''A docstring'''
+    if param1 > param2: # interesting
+        print 'Greater'
+    return (param2 - param1 + 1) or None
+class SomeClass:
+    pass
+>>> message = '''interpreter
+... prompt'''
+```
+
+此代码只是测试使用。
+
+### 标记
+
+`标记`
+
+### 引用块
+
+> Markdown 是一种轻量级标记语言，它允许人们使用易读易写的纯文本格式编写文档，然后转换成格式丰富的 HTML 页面。
+
+### 表格
+
+| Item     | Value    | Qty |
+| :-------- | --------: | :---: |
+| Computer | 1600 USD | 5   |
+| Phone    | 12 USD   | 12  |
+| Pipe     | 1 USD    | 234 |
+
+### 链接
+
+[链接](http://www.example.com)";
+
         /// <summary>已经打开的窗口。同一时刻只留一个，重复点菜单只把它提到前面。</summary>
         private static TranslationWindow _open;
 
@@ -65,6 +122,7 @@ namespace ToastFish.View
             StyleBox(InputBox);
             StyleOutput();
             InputBox.Text = DefaultInput;
+            ShowOutput(DefaultOutput);
 
             ActionPanel.Margin = new Thickness(S(10), 0, 0, 0);
             StyleButton(TranslateButton);
@@ -100,7 +158,6 @@ namespace ToastFish.View
             OutputBox.Background = NotifyTheme.ButtonBackground;
             OutputBox.Foreground = NotifyTheme.Foreground;
             OutputBox.BorderBrush = NotifyTheme.Border;
-            ShowOutput("");
         }
 
         /// <summary>
