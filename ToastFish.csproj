@@ -156,6 +156,7 @@
     <Compile Include="Model\SqliteControl\Select.cs" />
     <Compile Include="Model\StartWithWindows\HotKey.cs" />
     <Compile Include="Model\StartWithWindows\StartWithWindows.cs" />
+    <Compile Include="Model\Notify\MarkdownPalette.cs" />
     <Compile Include="Model\Notify\NotifyTheme.cs" />
     <Compile Include="Model\Phonetic\PhoneticData.cs" />
     <Compile Include="Model\Phonetic\PhoneticSymbol.cs" />

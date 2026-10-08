@@ -78,6 +78,9 @@ namespace ToastFish.Model.Notify
         /// <summary>可点击的网址链接色。灰阶界面里没有能表达「可点」的颜色，单独给一个蓝。</summary>
         public static Brush Link { get; private set; }
 
+        /// <summary>译文窗口 Markdown 渲染的整套配色。见 <see cref="MarkdownPalette"/>。</summary>
+        public static MarkdownPalette Markdown { get; private set; }
+
         public static void Load()
         {
             int baseSize = Select.FONT_SIZE;
@@ -118,6 +121,21 @@ namespace ToastFish.Model.Notify
                 ButtonPressedBackground = Brush("#23272C");
                 Copied = Brush("#5FD08A");
                 Link = Brush("#58A6FF");
+                Markdown = new MarkdownPalette
+                {
+                    Text = Brush("#D6DEE8"),
+                    Heading = Brush("#58A6FF"),
+                    Link = Brush("#58A6FF"),
+                    QuoteText = Brush("#9AA3AD"),
+                    QuoteBorder = Brush("#3A4048"),
+                    QuoteBackground = Brush("#1A668099"),
+                    CodeBackground = Brush("#2C3138"),
+                    CodeBorder = Brush("#3E4A57"),
+                    TableBackground = Brush("#1E2126"),
+                    TableBorder = Brush("#3A4550"),
+                    TableHeaderBackground = Brush("#2A3038"),
+                    TableEvenRowBackground = Brush("#1A668099")
+                };
             }
             else
             {
@@ -134,6 +152,21 @@ namespace ToastFish.Model.Notify
                 ButtonPressedBackground = Brush("#C6CCD5");
                 Copied = Brush("#2E9E5B");
                 Link = Brush("#1F6FEB");
+                Markdown = new MarkdownPalette
+                {
+                    Text = Brush("#2C3E50"),
+                    Heading = Brush("#0077BB"),
+                    Link = Brush("#0000FF"),
+                    QuoteText = Brush("#777777"),
+                    QuoteBorder = Brush("#D6DBDF"),
+                    QuoteBackground = Brush("#0D668099"),
+                    CodeBackground = Brush("#EEEEEE"),
+                    CodeBorder = Brush("#7EA9C9"),
+                    TableBackground = Brush("#FFFFFF"),
+                    TableBorder = Brush("#C8E1FF"),
+                    TableHeaderBackground = Brush("#F1F8FF"),
+                    TableEvenRowBackground = Brush("#0D668099")
+                };
             }
         }
 

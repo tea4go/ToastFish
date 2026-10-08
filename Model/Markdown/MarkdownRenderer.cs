@@ -47,7 +47,7 @@ namespace ToastFish.Model.Markdown
                 // 必须显式钉成 Normal：WPF 的 FontWeight 默认值跟随系统「消息字体」，
                 // 用户把系统字体设成粗体时整份文档都会变粗，**...** 加粗就完全看不出来了
                 FontWeight = FontWeights.Normal,
-                Foreground = NotifyTheme.Foreground,
+                Foreground = NotifyTheme.Markdown.Text,
                 Background = Brushes.Transparent,
                 PagePadding = new Thickness(0),
                 // 不设的话 FlowDocument 会按默认列宽分成好几栏
@@ -113,6 +113,7 @@ namespace ToastFish.Model.Markdown
             {
                 FontSize = fontSize * HeadingScale[level - 1],
                 FontWeight = FontWeights.Bold,
+                Foreground = NotifyTheme.Markdown.Heading,
                 Margin = new Thickness(0, fontSize * (level <= 2 ? 0.9 : 0.6), 0, fontSize * 0.35)
             };
             AddInlines(paragraph.Inlines, heading.Inline, paragraph.FontSize);
@@ -150,11 +151,12 @@ namespace ToastFish.Model.Markdown
         {
             var section = new Section
             {
-                BorderBrush = NotifyTheme.Border,
+                BorderBrush = NotifyTheme.Markdown.QuoteBorder,
                 BorderThickness = new Thickness(fontSize * 0.2, 0, 0, 0),
                 Padding = new Thickness(fontSize * 0.6, 0, 0, 0),
                 Margin = new Thickness(0, 0, 0, fontSize * 0.4),
-                Foreground = NotifyTheme.Muted
+                Background = NotifyTheme.Markdown.QuoteBackground,
+                Foreground = NotifyTheme.Markdown.QuoteText
             };
             AddBlocks(section.Blocks, source, fontSize);
             return section;
@@ -166,7 +168,9 @@ namespace ToastFish.Model.Markdown
             {
                 FontFamily = MonoFont,
                 FontSize = fontSize * 0.95,
-                Background = NotifyTheme.ButtonBackground,
+                Background = NotifyTheme.Markdown.CodeBackground,
+                BorderBrush = NotifyTheme.Markdown.CodeBorder,
+                BorderThickness = new Thickness(1),
                 Padding = new Thickness(fontSize * 0.5),
                 Margin = new Thickness(0, 0, 0, fontSize * 0.5)
             };
@@ -176,11 +180,13 @@ namespace ToastFish.Model.Markdown
         private static string CodeText(LeafBlock source)
         {
             var text = new StringBuilder();
-            foreach (var line in source.Lines.Lines)
+            // 只能按 Count 取：Lines 是 Markdig 内部的扩容数组，长度大于实际行数，
+            // 直接 foreach 会把数组尾巴上的空槽也拼进来，代码块底下多出几行空白
+            for (int i = 0; i < source.Lines.Count; i++)
             {
                 if (text.Length > 0)
                     text.Append('\n');
-                text.Append(line.ToString());
+                text.Append(source.Lines.Lines[i].ToString());
             }
             return text.ToString();
         }
@@ -200,11 +206,13 @@ namespace ToastFish.Model.Markdown
             var table = new System.Windows.Documents.Table
             {
                 CellSpacing = 0,
-                BorderBrush = NotifyTheme.Border,
+                Background = NotifyTheme.Markdown.TableBackground,
+                BorderBrush = NotifyTheme.Markdown.TableBorder,
                 BorderThickness = new Thickness(1),
                 Margin = new Thickness(0, 0, 0, fontSize * 0.5)
             };
             var group = new TableRowGroup();
+            int rowIndex = 0;
             foreach (MdBlock rowBlock in source)
             {
                 var row = rowBlock as MdTableRow;
@@ -212,7 +220,15 @@ namespace ToastFish.Model.Markdown
                     continue;
                 var tableRow = new TableRow();
                 if (row.IsHeader)
+                {
                     tableRow.FontWeight = FontWeights.Bold;
+                    tableRow.Background = NotifyTheme.Markdown.TableHeaderBackground;
+                }
+                // 表头算第 1 行，往下第 2、4、6… 行（1 起数）铺一层浅色底，方便横向读
+                else if (rowIndex % 2 == 1)
+                {
+                    tableRow.Background = NotifyTheme.Markdown.TableEvenRowBackground;
+                }
                 foreach (MdBlock cellBlock in row)
                 {
                     var cell = cellBlock as MdTableCell;
@@ -220,7 +236,7 @@ namespace ToastFish.Model.Markdown
                         continue;
                     var tableCell = new TableCell
                     {
-                        BorderBrush = NotifyTheme.Border,
+                        BorderBrush = NotifyTheme.Markdown.TableBorder,
                         BorderThickness = new Thickness(1),
                         Padding = new Thickness(fontSize * 0.4, fontSize * 0.15, fontSize * 0.4, fontSize * 0.15)
                     };
@@ -228,6 +244,7 @@ namespace ToastFish.Model.Markdown
                     tableRow.Cells.Add(tableCell);
                 }
                 group.Rows.Add(tableRow);
+                rowIndex++;
             }
             table.RowGroups.Add(group);
             return table;
@@ -257,7 +274,7 @@ namespace ToastFish.Model.Markdown
                 {
                     FontFamily = MonoFont,
                     FontSize = fontSize * 0.95,
-                    Background = NotifyTheme.ButtonBackground
+                    Background = NotifyTheme.Markdown.CodeBackground
                 });
                 return;
             }
@@ -311,10 +328,14 @@ namespace ToastFish.Model.Markdown
                 AddInlines(target, container, fontSize);
         }
 
-        /// <summary>链接用主题的链接色，点不点得开取决于 URL 合不合法，不合法就只当普通文字。</summary>
+        /// <summary>链接用主题的链接色并加下划线，点不点得开取决于 URL 合不合法，不合法就只当普通文字。</summary>
         private static Hyperlink MakeHyperlink(string url, ContainerInline children, double fontSize)
         {
-            var hyperlink = new Hyperlink { Foreground = NotifyTheme.Link };
+            var hyperlink = new Hyperlink
+            {
+                Foreground = NotifyTheme.Markdown.Link,
+                TextDecorations = TextDecorations.Underline
+            };
             if (children != null)
                 AddInlines(hyperlink.Inlines, children, fontSize);
             else
