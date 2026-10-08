@@ -116,6 +116,19 @@ namespace ToastFish.Model.Markdown
                 Foreground = NotifyTheme.Markdown.Heading,
                 Margin = new Thickness(0, fontSize * (level <= 2 ? 0.9 : 0.6), 0, fontSize * 0.35)
             };
+            // H1/H2 底下压一条通栏横线：H1 粗、用标题色，H2 细、用浅灰，H3 往下不画
+            if (level == 1)
+            {
+                paragraph.BorderBrush = NotifyTheme.Markdown.HeadingRule1;
+                paragraph.BorderThickness = new Thickness(0, 0, 0, Math.Round(fontSize * 0.12));
+                paragraph.Padding = new Thickness(0, 0, 0, fontSize * 0.3);
+            }
+            else if (level == 2)
+            {
+                paragraph.BorderBrush = NotifyTheme.Markdown.HeadingRule2;
+                paragraph.BorderThickness = new Thickness(0, 0, 0, 1);
+                paragraph.Padding = new Thickness(0, 0, 0, fontSize * 0.2);
+            }
             AddInlines(paragraph.Inlines, heading.Inline, paragraph.FontSize);
             return paragraph;
         }

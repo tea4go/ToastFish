@@ -14,6 +14,12 @@ namespace ToastFish.Model.Notify
         /// <summary>H1–H6 标题色。</summary>
         public Brush Heading { get; set; }
 
+        /// <summary>H1 底下那条通栏横线的颜色。参考图里比正文标题稍淡一点。</summary>
+        public Brush HeadingRule1 { get; set; }
+
+        /// <summary>H2 底下那条细横线的颜色。</summary>
+        public Brush HeadingRule2 { get; set; }
+
         /// <summary>链接色。链接一律带下划线，在渲染器里加。</summary>
         public Brush Link { get; set; }
 

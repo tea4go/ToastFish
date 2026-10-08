@@ -125,6 +125,8 @@ namespace ToastFish.Model.Notify
                 {
                     Text = Brush("#D6DEE8"),
                     Heading = Brush("#58A6FF"),
+                    HeadingRule1 = Brush("#2F6FA8"),
+                    HeadingRule2 = Brush("#3A4550"),
                     Link = Brush("#58A6FF"),
                     QuoteText = Brush("#9AA3AD"),
                     QuoteBorder = Brush("#3A4048"),
@@ -156,6 +158,8 @@ namespace ToastFish.Model.Notify
                 {
                     Text = Brush("#2C3E50"),
                     Heading = Brush("#0077BB"),
+                    HeadingRule1 = Brush("#0077BB"),
+                    HeadingRule2 = Brush("#D2D5DA"),
                     Link = Brush("#0000FF"),
                     QuoteText = Brush("#777777"),
                     QuoteBorder = Brush("#D6DBDF"),
