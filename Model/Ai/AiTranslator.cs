@@ -79,6 +79,12 @@ namespace ToastFish.Model.Ai
                 { "model", model },
                 // 要流式返回。网关不认这个参数时会退回一整段 JSON，下面按响应类型分流
                 { "stream", true },
+                // 关掉思维链。网关后面的 deepseek-v4-flash 是推理模型：思考内容走
+                // delta.reasoning_content，而正文 delta.content 在思考期间恒为空串，
+                // 要等思考完才开始吐译文。一次查词得干等 40~56 秒，而且这期间一个回调都收不到，
+                // 界面就卡在「翻译中…」不动——流式等于白做。翻译是机械任务，不需要思维链；
+                // 不认这个参数的网关会忽略它。
+                { "reasoning_effort", "none" },
                 { "messages", new object[]
                     {
                         new Dictionary<string, object>
