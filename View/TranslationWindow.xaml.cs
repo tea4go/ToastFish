@@ -238,16 +238,14 @@ class SomeClass:
                 // 模型输出的 Markdown 千奇百怪，渲染失败就退回原样显示，别让整个窗口崩掉
                 document = new FlowDocument(new Paragraph(new Run(text)));
             }
-            document.PagePadding = new Thickness(S(8));
-            OutputBox.Document = document;
-            // 换文档会重建内部的 selection，这个开关得在装好文档之后再置一次才推得到它身上，
-            // 少了「失焦后选中仍高亮」就不生效
-            OutputBox.IsInactiveSelectionHighlightEnabled = true;
+            Install(document);
         }
 
         /// <summary>
-        /// 流式翻译每收到一段就调一次，把「目前已收到的全文」重渲染一遍。
-        /// 最后那一次由 Translate_Click 用完整译文补上，所以这里可以放心限流。
+        /// 流式翻译每收到一段就调一次，把「目前已收到的全文」铺进译文区。
+        /// 这一段是纯文本、不解析 Markdown：每收一段都解析一遍既费时，又会在半截语法上抖
+        /// （表格没写完、代码围栏没闭合）。整段回来后再由 Translate_Click 用 ShowOutput
+        /// 渲染成 Markdown。限流是因为整篇重铺文档比追加贵，100ms 一次已经够「实时」。
         /// </summary>
         private void ShowStreaming(string text)
         {
@@ -255,7 +253,15 @@ class SomeClass:
             if ((now - _lastStreamPaint).TotalMilliseconds < StreamPaintMs)
                 return;
             _lastStreamPaint = now;
-            ShowOutput(text);
+            Install(MarkdownRenderer.RenderPlain(text, S(15)));
+        }
+
+        /// <summary>装进译文区。换文档会重建内部的 selection，这个开关得在装好文档之后再置一次才推得到它身上。</summary>
+        private void Install(FlowDocument document)
+        {
+            document.PagePadding = new Thickness(S(8));
+            OutputBox.Document = document;
+            OutputBox.IsInactiveSelectionHighlightEnabled = true;
         }
 
         /// <summary>

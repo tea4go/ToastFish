@@ -46,7 +46,41 @@ namespace ToastFish.Model.Markdown
         /// <summary>把 Markdown 文本渲染成 FlowDocument。空文本返回一个空文档。</summary>
         public static FlowDocument Render(string markdown, double fontSize)
         {
-            var document = new FlowDocument
+            FlowDocument document = Base(fontSize);
+            if (string.IsNullOrEmpty(markdown))
+                return document;
+
+            AddBlocks(document.Blocks, Markdig.Markdown.Parse(markdown, Pipeline), fontSize);
+            return document;
+        }
+
+        /// <summary>
+        /// 把文本原样铺成纯文本，不解析 Markdown。流式翻译边收边显示时用这个：
+        /// 每来一段都重新解析一遍 Markdown 既费时，又会在半截语法上抖（表格没写完、
+        /// 代码围栏没闭合），等整段回来再换成 Render 出来的 Markdown 版。
+        /// </summary>
+        public static FlowDocument RenderPlain(string text, double fontSize)
+        {
+            FlowDocument document = Base(fontSize);
+            if (string.IsNullOrEmpty(text))
+                return document;
+
+            var paragraph = new Paragraph { Margin = new Thickness(0) };
+            string[] lines = text.Replace("\r\n", "\n").Replace('\r', '\n').Split('\n');
+            for (int i = 0; i < lines.Length; i++)
+            {
+                if (i > 0)
+                    paragraph.Inlines.Add(new LineBreak());
+                paragraph.Inlines.Add(new Run(lines[i]));
+            }
+            document.Blocks.Add(paragraph);
+            return document;
+        }
+
+        /// <summary>文档外壳：主题字体、正文字号与颜色。纯文本和 Markdown 两条路共用，切过去时才不会跳版。</summary>
+        private static FlowDocument Base(double fontSize)
+        {
+            return new FlowDocument
             {
                 FontFamily = NotifyTheme.Font,
                 FontSize = fontSize,
@@ -60,12 +94,6 @@ namespace ToastFish.Model.Markdown
                 ColumnWidth = double.PositiveInfinity,
                 TextAlignment = TextAlignment.Left
             };
-
-            if (string.IsNullOrEmpty(markdown))
-                return document;
-
-            AddBlocks(document.Blocks, Markdig.Markdown.Parse(markdown, Pipeline), fontSize);
-            return document;
         }
 
         private static void AddBlocks(BlockCollection target, ContainerBlock source, double fontSize)
