@@ -503,11 +503,9 @@ class SomeClass:
             button.Cursor = enabled ? Cursors.Hand : Cursors.Arrow;
         }
 
-        /// <summary>翻译成功：记一条历史并选中它。当前不在末尾时先截断后面的，同浏览器历史。</summary>
+        /// <summary>记一条历史并选中它。总是追加到末尾，右边已有的页签都留着。</summary>
         private void PushHistory(string text, string output)
         {
-            if (_historyIndex < _history.Count - 1)
-                _history.RemoveRange(_historyIndex + 1, _history.Count - 1 - _historyIndex);
             _history.Add(new TranslationEntry
             {
                 Text = text,
@@ -531,16 +529,29 @@ class SomeClass:
 
         /// <summary>
         /// 输入框恢复成记这条时的样子：填回完整原文，并把当时处理的那段重新选中。
-        /// 当时翻的是译文区里选中的一段时，那段不在原文里，就只把光标落到末尾。
+        /// 当时处理的是译文区里选中的一段时，那段不在原文里，就把输入框换成这段并全选——
+        /// 选中即代表「按词处理」，再按翻译/播放才还针对它，而不是退化成整句。
         /// </summary>
         private void RestoreInput(TranslationEntry entry)
         {
-            InputBox.Text = entry.Input;
-            int at = entry.Text == null ? -1 : entry.Input.IndexOf(entry.Text, StringComparison.Ordinal);
-            if (at >= 0 && entry.Text != entry.Input)
-                InputBox.Select(at, entry.Text.Length);
-            else
+            if (string.IsNullOrEmpty(entry.Text) || entry.Text == entry.Input)
+            {
+                InputBox.Text = entry.Input;
                 InputBox.Select(InputBox.Text.Length, 0);
+                return;
+            }
+
+            int at = entry.Input.IndexOf(entry.Text, StringComparison.Ordinal);
+            if (at >= 0)
+            {
+                InputBox.Text = entry.Input;
+                InputBox.Select(at, entry.Text.Length);
+            }
+            else
+            {
+                InputBox.Text = entry.Text;
+                InputBox.SelectAll();
+            }
         }
 
         /// <summary>在当前历史里前后移动。</summary>
@@ -652,7 +663,14 @@ class SomeClass:
                 ToolTip = _history[index].Text,
                 Child = host
             };
-            tab.MouseLeftButtonUp += (s, e) => SelectHistory(index);
+            tab.MouseLeftButtonUp += (s, e) =>
+            {
+                // 重听用记下来的文本，不靠原文框里的选中：从译文区选中的词原文框里根本没有，
+                // 切回历史后不会有选中，按选中去播就会退化成整句。
+                string text = _history[index].Text;
+                SelectHistory(index);
+                Task.Run(() => SpeechReader.Create(text).SpeakAsync(text));
+            };
             return tab;
         }
 

@@ -99,6 +99,9 @@ namespace ToastFish.Model.Ai
                 }
             });
 
+            Logger.Write("翻译开始 接口=" + endpoint + " 模型=" + model + " 提示词=" + PromptHead(prompt)
+                + " 原文=" + text.Length + "字 原文开头=" + Head(text, 60));
+
             var watch = Stopwatch.StartNew();
             using (var deadline = new CancellationTokenSource(OverallTimeout))
             using (var client = new HttpClient { Timeout = Timeout.InfiniteTimeSpan })
@@ -137,13 +140,25 @@ namespace ToastFish.Model.Ai
                             + Shorten(body));
                     }
 
+                    bool streaming = IsEventStream(response);
+                    Logger.Write("翻译响应头 状态码=" + (int)response.StatusCode
+                        + " Content-Type=" + ContentType(response) + " 走流式=" + streaming
+                        + " 首包耗时=" + watch.ElapsedMilliseconds + "ms");
+
                     string result;
                     try
                     {
-                        result = IsEventStream(response)
-                            ? await ReadStream(serializer, response, onUpdate)
-                            : ExtractTranslation(serializer,
-                                await response.Content.ReadAsStringAsync());
+                        if (streaming)
+                        {
+                            result = await ReadStream(serializer, response, onUpdate, watch);
+                        }
+                        else
+                        {
+                            string body = await response.Content.ReadAsStringAsync();
+                            Logger.Write("翻译整段响应 " + body.Length + "字节 耗时="
+                                + watch.ElapsedMilliseconds + "ms（网关不认 stream，退回老解析）");
+                            result = ExtractTranslation(serializer, body);
+                        }
                     }
                     catch (Exception ex)
                     {
@@ -184,8 +199,9 @@ namespace ToastFish.Model.Ai
         /// SSE 的格式是一串「data: {...}」行，空行分隔事件，最后一行是 data: [DONE]。
         /// </summary>
         private static async Task<string> ReadStream(JavaScriptSerializer serializer,
-            HttpResponseMessage response, Action<string> onUpdate)
+            HttpResponseMessage response, Action<string> onUpdate, Stopwatch watch)
         {
+            bool firstDelta = true;
             var result = new StringBuilder();
             using (var stream = await response.Content.ReadAsStreamAsync())
             using (var reader = new StreamReader(stream, Encoding.UTF8))
@@ -205,6 +221,13 @@ namespace ToastFish.Model.Ai
                     string delta = ExtractDelta(serializer, payload);
                     if (string.IsNullOrEmpty(delta))
                         continue;                    // 只带 role 或 finish_reason 的块，没有正文
+                    // 首段译文到得越早，界面越早动起来；推理模型忘了关思维链时这里会明显偏大
+                    if (firstDelta)
+                    {
+                        firstDelta = false;
+                        Logger.Write("翻译首段译文 耗时=" + watch.ElapsedMilliseconds + "ms 首段="
+                            + Head(delta, 40));
+                    }
                     result.Append(delta);
                     if (onUpdate != null)
                         onUpdate(result.ToString());
@@ -215,6 +238,13 @@ namespace ToastFish.Model.Ai
             if (text.Length == 0)
                 throw new Exception("翻译接口没有返回译文。");
             return text;
+        }
+
+        /// <summary>日志用：响应头里的 Content-Type，没有就记「（无）」。</summary>
+        private static string ContentType(HttpResponseMessage response)
+        {
+            var type = response.Content.Headers.ContentType;
+            return type == null ? "（无）" : type.ToString();
         }
 
         /// <summary>响应是不是 SSE 流。网关不认 stream 参数时会退回一整段 JSON，那条路走原来的解析。</summary>
