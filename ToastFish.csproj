@@ -143,6 +143,7 @@
     <Compile Include="Model\Log\CreateLog.cs" />
     <Compile Include="Model\Log\Logger.cs" />
     <Compile Include="Model\Markdown\MarkdownRenderer.cs" />
+    <Compile Include="Model\Markdown\SyntaxHighlighter.cs" />
     <Compile Include="Model\Mp3\DownloadMp3.cs" />
     <Compile Include="Model\Mp3\PlayMp3.cs" />
     <Compile Include="Model\PushControl\PushCustomizeWords.cs" />

@@ -199,7 +199,7 @@ namespace ToastFish.Model.Markdown
             var section = new Section
             {
                 BorderBrush = NotifyTheme.Markdown.QuoteBorder,
-                BorderThickness = new Thickness(fontSize * 0.2, 0, 0, 0),
+                BorderThickness = new Thickness(NotifyTheme.Markdown.QuoteBorderWidth, 0, 0, 0),
                 Padding = new Thickness(fontSize * 0.6, 0, 0, 0),
                 Margin = new Thickness(0, 0, 0, fontSize * 0.4),
                 Background = NotifyTheme.Markdown.QuoteBackground,
@@ -220,12 +220,12 @@ namespace ToastFish.Model.Markdown
             string code = CodeText(source);
             var text = new TextBlock
             {
-                Text = code,
                 FontFamily = MonoFont,
                 FontSize = fontSize * 0.95,
                 Foreground = NotifyTheme.Markdown.Text,
                 TextWrapping = TextWrapping.Wrap
             };
+            Highlight(text, code, FenceLanguage(source));
 
             // 复制按钮单独占一列，正文少占这点宽度，换来按钮永远压不到代码上
             var content = new Grid();
@@ -247,6 +247,46 @@ namespace ToastFish.Model.Markdown
                 Margin = new Thickness(0, 0, 0, fontSize * 0.5),
                 Child = content
             });
+        }
+
+        /// <summary>围栏上的语言标识（```python 里的 python）。缩进式代码块没有，返回 null。</summary>
+        private static string FenceLanguage(CodeBlock source)
+        {
+            var fenced = source as FencedCodeBlock;
+            return fenced == null ? null : fenced.Info;
+        }
+
+        /// <summary>
+        /// 按语言把代码切成带色的 Run 填进 TextBlock。认不出的语言整段按正文色铺，等同于原来的单色。
+        /// 换行符直接留在 Run 里，TextBlock 会自己断行。
+        /// </summary>
+        private static void Highlight(TextBlock target, string code, string language)
+        {
+            IReadOnlyList<CodeToken> tokens = SyntaxHighlighter.Highlight(code, language);
+            for (int i = 0; i < tokens.Count; i++)
+            {
+                CodeToken token = tokens[i];
+                var run = new Run(token.Text);
+                if (token.Kind != TokenKind.Plain)
+                    run.Foreground = TokenBrush(token.Kind);
+                target.Inlines.Add(run);
+            }
+        }
+
+        /// <summary>高亮片段类型对应的颜色。</summary>
+        private static Brush TokenBrush(TokenKind kind)
+        {
+            MarkdownPalette palette = NotifyTheme.Markdown;
+            switch (kind)
+            {
+                case TokenKind.Keyword: return palette.CodeKeyword;
+                case TokenKind.String: return palette.CodeString;
+                case TokenKind.Comment: return palette.CodeComment;
+                case TokenKind.Number: return palette.CodeNumber;
+                case TokenKind.Function: return palette.CodeFunction;
+                case TokenKind.Type: return palette.CodeType;
+                default: return palette.Text;
+            }
         }
 
         /// <summary>

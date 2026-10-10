@@ -27,8 +27,19 @@ namespace ToastFish.Model.Notify
         public Brush QuoteBorder { get; set; }
         public Brush QuoteBackground { get; set; }
 
+        /// <summary>引用块左边框的宽度（DIP）。参考图里是一条粗色带，不是细细一条线。</summary>
+        public double QuoteBorderWidth { get; set; }
+
         public Brush CodeBackground { get; set; }
         public Brush CodeBorder { get; set; }
+
+        /// <summary>代码块语法高亮的取色。未识别出类型的片段用正文色。</summary>
+        public Brush CodeKeyword { get; set; }
+        public Brush CodeString { get; set; }
+        public Brush CodeComment { get; set; }
+        public Brush CodeNumber { get; set; }
+        public Brush CodeFunction { get; set; }
+        public Brush CodeType { get; set; }
 
         /// <summary>行内代码（`code`）的底色。参考图里是米黄小圆角块，跟代码块的灰底区分开。</summary>
         public Brush InlineCodeBackground { get; set; }
