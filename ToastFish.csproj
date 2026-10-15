@@ -140,6 +140,9 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="Model\Ai\AiTranslator.cs" />
+    <Compile Include="Model\Edge\EdgeTranslator.cs" />
+    <Compile Include="Model\Edge\EdgeTts.cs" />
+    <Compile Include="Model\Edge\SecMsGec.cs" />
     <Compile Include="Model\Log\CreateLog.cs" />
     <Compile Include="Model\Log\Logger.cs" />
     <Compile Include="Model\Markdown\MarkdownRenderer.cs" />
@@ -152,6 +155,7 @@
     <Compile Include="Model\PushControl\PushWords.cs" />
     <Compile Include="Model\PushControl\WordType.cs" />
     <Compile Include="Model\Speech\SpeechReader.cs" />
+    <Compile Include="Model\Speech\Speaker.cs" />
     <Compile Include="Model\SM2plus\Card.cs" />
     <Compile Include="Model\SM2plus\Parameters.cs" />
     <Compile Include="Model\SqliteControl\Select.cs" />

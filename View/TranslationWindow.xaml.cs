@@ -10,6 +10,7 @@ using System.Windows.Media;
 using System.Windows.Shapes;
 using System.Windows.Threading;
 using ToastFish.Model.Ai;
+using ToastFish.Model.Edge;
 using ToastFish.Model.Markdown;
 using ToastFish.Model.Notify;
 using ToastFish.Model.Speech;
@@ -317,9 +318,10 @@ class SomeClass:
         }
 
         /// <summary>
-        /// 把输入框里的原文交给 AI 翻译，译文写进下半部分的输出框。
-        /// 有选中文本时只翻选中部分，并改用单词提示词（词典式释义），否则翻整框、用整句提示词。
-        /// 译文是流式来的：模型吐一段就显示一段，不必等整段生成完。
+        /// 把输入框里的原文交给当前渠道翻译，译文写进下半部分的输出框。
+        /// 有选中文本时只翻选中部分。
+        /// AI 渠道按选中与否挑提示词（词典式释义 / 整句），译文流式显示，模型吐一段显示一段；
+        /// Edge 渠道没有提示词、也不支持流式，一次性拿回直译结果。
         /// </summary>
         private async void Translate_Click(object sender, RoutedEventArgs e)
         {
@@ -328,19 +330,27 @@ class SomeClass:
             if (string.IsNullOrWhiteSpace(text))
                 return;
 
-            string prompt = hasSelection ? Select.AI_PROMPT_WORD : Select.AI_PROMPT_SENTENCE;
             TranslateButton.IsEnabled = false;
             ShowOutput("翻译中…");
             try
             {
-                string result = await AiTranslator.TranslateAsync(text, prompt, ShowStreaming);
+                string result;
+                if (Select.CHANNEL == Select.CHANNEL_EDGE)
+                {
+                    result = await EdgeTranslator.TranslateAsync(text);
+                }
+                else
+                {
+                    string prompt = hasSelection ? Select.AI_PROMPT_WORD : Select.AI_PROMPT_SENTENCE;
+                    result = await AiTranslator.TranslateAsync(text, prompt, ShowStreaming);
+                }
                 ShowOutput(result);
                 // 只有翻成功才记历史，「翻译中…」「翻译失败」都不算
                 PushHistory(text, result);
             }
             catch (Exception ex)
             {
-                // 详细日志由 AiTranslator 统一记录，这里只负责在界面上提示
+                // 详细日志由翻译实现统一记录，这里只负责在界面上提示
                 ShowOutput("翻译失败：" + ex.Message);
             }
             finally
@@ -383,7 +393,7 @@ class SomeClass:
             else if (!alreadyShowing)
                 ShowOutput(PlayOnlyHint);
 
-            Task.Run(() => SpeechReader.Create(text).SpeakAsync(text));
+            Task.Run(() => Speaker.Speak(text));
         }
 
         /// <summary>
@@ -669,7 +679,7 @@ class SomeClass:
                 // 切回历史后不会有选中，按选中去播就会退化成整句。
                 string text = _history[index].Text;
                 SelectHistory(index);
-                Task.Run(() => SpeechReader.Create(text).SpeakAsync(text));
+                Task.Run(() => Speaker.Speak(text));
             };
             return tab;
         }

@@ -48,6 +48,19 @@
 
             <TabItem Header="播放配置">
                 <StackPanel Margin="14">
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                        <TextBlock Text="渠道" Width="90" VerticalAlignment="Center" />
+                        <ComboBox x:Name="ChannelBox" Width="321"
+                                  SelectionChanged="Channel_Changed">
+                            <ComboBoxItem Content="AI（大模型翻译 + 系统语音）" />
+                            <ComboBoxItem Content="Edge（Edge 翻译 + Edge 朗读）" />
+                        </ComboBox>
+                    </StackPanel>
+
+                    <TextBlock Text="渠道同时决定翻译窗口的翻译和朗读：AI 用大模型翻译、本机语音朗读，Edge 用必应翻译、Edge 在线朗读"
+                               TextWrapping="Wrap" FontSize="11" Foreground="Gray"
+                               Margin="90,0,0,14" />
+
                     <StackPanel Orientation="Horizontal" Margin="0,0,0,14">
                         <TextBlock Text="发音类型" Width="90" VerticalAlignment="Center" />
                         <ComboBox x:Name="EngTypeBox" Width="120">

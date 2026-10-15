@@ -57,6 +57,7 @@ namespace ToastFish.View
             LoadVoices(VoiceEnBox, "en", Select.TTS_VOICE_EN);
             LoadVoices(VoiceCnBox, "zh", Select.TTS_VOICE_CN);
             SelectRate(Select.TTS_RATE);
+            ChannelBox.SelectedIndex = Select.CHANNEL == Select.CHANNEL_EDGE ? 1 : 0;
 
             AiBaseUrlBox.Text = Select.AI_BASE_URL;
             AiApiKeyBox.Text = Select.AI_API_KEY;
@@ -125,6 +126,19 @@ namespace ToastFish.View
             return box != null && box.Tag != null && int.TryParse(box.Tag.ToString(), out rate) ? rate : 0;
         }
 
+        private int SelectedChannel()
+        {
+            return ChannelBox.SelectedIndex == 1 ? Select.CHANNEL_EDGE : Select.CHANNEL_AI;
+        }
+
+        /// <summary>Edge 渠道朗读不读本机语音，把两个语音下拉置灰，免得改了以为会生效。</summary>
+        private void Channel_Changed(object sender, SelectionChangedEventArgs e)
+        {
+            bool sapi = SelectedChannel() == Select.CHANNEL_AI;
+            VoiceEnBox.IsEnabled = sapi;
+            VoiceCnBox.IsEnabled = sapi;
+        }
+
         private int CurrentRate()
         {
             return RateOf(RateBox.SelectedItem);
@@ -157,9 +171,13 @@ namespace ToastFish.View
             }
         }
 
-        /// <summary>用界面上当前选的语音和语速念一句例句，不写数据库。播放是阻塞的，放到后台线程。</summary>
+        /// <summary>
+        /// 用界面上当前选的渠道、语音和语速念一句例句，不写数据库。播放是阻塞的，放到后台线程。
+        /// Edge 渠道下语音下拉用不上，Speaker 会按文本语言自己挑在线语音。
+        /// </summary>
         private void TestSpeak_Click(object sender, RoutedEventArgs e)
         {
+            int channel = SelectedChannel();
             string voiceEn = SelectedVoice(VoiceEnBox);
             string voiceCn = SelectedVoice(VoiceCnBox);
             int rate = CurrentRate();
@@ -170,8 +188,7 @@ namespace ToastFish.View
             {
                 try
                 {
-                    using (SpeechSynthesizer synth = SpeechReader.Create(SampleSentence, voiceEn, voiceCn, rate))
-                        synth.Speak(SampleSentence);
+                    Speaker.Speak(SampleSentence, channel, voiceEn, voiceCn, rate);
                 }
                 catch (Exception ex)
                 {
@@ -206,6 +223,7 @@ namespace ToastFish.View
             Select.TTS_VOICE_EN = SelectedVoice(VoiceEnBox);
             Select.TTS_VOICE_CN = SelectedVoice(VoiceCnBox);
             Select.TTS_RATE = CurrentRate();
+            Select.CHANNEL = SelectedChannel();
 
             Select.AI_BASE_URL = AiBaseUrlBox.Text.Trim();
             Select.AI_API_KEY = AiApiKeyBox.Text.Trim();

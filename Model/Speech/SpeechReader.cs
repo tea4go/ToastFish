@@ -75,8 +75,8 @@ namespace ToastFish.Model.Speech
             }
         }
 
-        /// <summary>字母里拉丁字母占多数即认为是英文，数字标点不计入。</summary>
-        private static bool IsMostlyLatin(string text)
+        /// <summary>字母里拉丁字母占多数即认为是英文，数字标点不计入。挑语音时也用它。</summary>
+        public static bool IsMostlyLatin(string text)
         {
             int latin = 0, other = 0;
             foreach (char c in text ?? "")

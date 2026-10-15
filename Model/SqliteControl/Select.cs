@@ -30,6 +30,9 @@ namespace ToastFish.Model.SqliteControl
         public static string TTS_VOICE_EN = "";  // 英文朗读语音名，空 = 跟随系统默认
         public static string TTS_VOICE_CN = "";  // 中文朗读语音名，空 = 跟随系统默认
         public static int TTS_RATE = 0;  // 朗读语速，直接存系统语音的 Rate 值（-10 ~ 10）
+        public const int CHANNEL_AI = 0;  // 渠道：大模型翻译 + 系统语音朗读
+        public const int CHANNEL_EDGE = 1;  // 渠道：Edge 在线翻译 + Edge 在线朗读
+        public static int CHANNEL = CHANNEL_AI;  // 翻译窗口的翻译与播放走哪个渠道
         // 整句翻译的提示词。翻译窗口没选中文本、要翻整个输入框时用这套
         public static string AI_PROMPT_SENTENCE =
             "你是一个专业翻译引擎。把用户发来的文本翻译成简体中文；" +
@@ -249,6 +252,11 @@ namespace ToastFish.Model.SqliteControl
                 Update.CommandText = $"ALTER TABLE Global ADD COLUMN ttsRate INTEGER NOT NULL DEFAULT {TTS_RATE}";
                 Update.ExecuteNonQuery();
             }
+            if (HeadTileList.Contains("channel") == false)
+            {
+                Update.CommandText = $"ALTER TABLE Global ADD COLUMN channel INTEGER NOT NULL DEFAULT {CHANNEL}";
+                Update.ExecuteNonQuery();
+            }
             if (HeadTileList.Contains("aiPromptSentence") == false)
             {
                 Update.CommandText = $"ALTER TABLE Global ADD COLUMN aiPromptSentence TEXT NOT NULL DEFAULT '{Quote(AI_PROMPT_SENTENCE)}'";
@@ -275,6 +283,7 @@ namespace ToastFish.Model.SqliteControl
             TTS_VOICE_EN = GlobalVariable[0].ttsVoiceEn;
             TTS_VOICE_CN = GlobalVariable[0].ttsVoiceCn;
             TTS_RATE = GlobalVariable[0].ttsRate;
+            CHANNEL = GlobalVariable[0].channel;
             AI_PROMPT_SENTENCE = GlobalVariable[0].aiPromptSentence;
             AI_PROMPT_WORD = GlobalVariable[0].aiPromptWord;
             EnsureCountColumns();
@@ -297,6 +306,7 @@ namespace ToastFish.Model.SqliteControl
                 $", ttsVoiceEn = '{Quote(TTS_VOICE_EN)}'" +
                 $", ttsVoiceCn = '{Quote(TTS_VOICE_CN)}'" +
                 $", ttsRate = '{TTS_RATE}'" +
+                $", channel = '{CHANNEL}'" +
                 $", aiPromptSentence = '{Quote(AI_PROMPT_SENTENCE)}'" +
                 $", aiPromptWord = '{Quote(AI_PROMPT_WORD)}'";
             Update.ExecuteNonQuery();
@@ -840,6 +850,7 @@ namespace ToastFish.Model.SqliteControl
         public string ttsVoiceEn { get; set; }
         public string ttsVoiceCn { get; set; }
         public int ttsRate { get; set; }
+        public int channel { get; set; }
         public string aiPromptSentence { get; set; }
         public string aiPromptWord { get; set; }
     }
