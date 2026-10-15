@@ -359,7 +359,7 @@ class SomeClass:
             try
             {
                 string result;
-                if (Select.CHANNEL == Select.CHANNEL_EDGE)
+                if (Select.TRANSLATE_CHANNEL == Select.CHANNEL_EDGE)
                 {
                     result = await EdgeTranslator.TranslateAsync(text);
                 }

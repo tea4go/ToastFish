@@ -28,7 +28,7 @@ namespace ToastFish.Model.Speech
         /// <summary>按当前保存的配置朗读。</summary>
         public static void Speak(string text)
         {
-            Speak(text, Select.CHANNEL, Select.TTS_VOICE_EN, Select.TTS_VOICE_CN, Select.TTS_RATE);
+            Speak(text, Select.SPEAK_CHANNEL, Select.TTS_VOICE_EN, Select.TTS_VOICE_CN, Select.TTS_RATE);
         }
 
         /// <summary>

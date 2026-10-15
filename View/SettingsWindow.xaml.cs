@@ -57,7 +57,8 @@ namespace ToastFish.View
             LoadVoices(VoiceEnBox, "en", Select.TTS_VOICE_EN);
             LoadVoices(VoiceCnBox, "zh", Select.TTS_VOICE_CN);
             SelectRate(Select.TTS_RATE);
-            ChannelBox.SelectedIndex = Select.CHANNEL == Select.CHANNEL_EDGE ? 1 : 0;
+            TranslateChannelBox.SelectedIndex = Select.TRANSLATE_CHANNEL == Select.CHANNEL_EDGE ? 1 : 0;
+            SpeakChannelBox.SelectedIndex = Select.SPEAK_CHANNEL == Select.CHANNEL_EDGE ? 1 : 0;
 
             AiBaseUrlBox.Text = Select.AI_BASE_URL;
             AiApiKeyBox.Text = Select.AI_API_KEY;
@@ -126,15 +127,20 @@ namespace ToastFish.View
             return box != null && box.Tag != null && int.TryParse(box.Tag.ToString(), out rate) ? rate : 0;
         }
 
-        private int SelectedChannel()
+        private int SelectedTranslateChannel()
         {
-            return ChannelBox.SelectedIndex == 1 ? Select.CHANNEL_EDGE : Select.CHANNEL_AI;
+            return TranslateChannelBox.SelectedIndex == 1 ? Select.CHANNEL_EDGE : Select.CHANNEL_AI;
+        }
+
+        private int SelectedSpeakChannel()
+        {
+            return SpeakChannelBox.SelectedIndex == 1 ? Select.CHANNEL_EDGE : Select.CHANNEL_AI;
         }
 
         /// <summary>Edge 渠道朗读不读本机语音，把两个语音下拉置灰，免得改了以为会生效。</summary>
         private void Channel_Changed(object sender, SelectionChangedEventArgs e)
         {
-            bool sapi = SelectedChannel() == Select.CHANNEL_AI;
+            bool sapi = SelectedSpeakChannel() == Select.CHANNEL_AI;
             VoiceEnBox.IsEnabled = sapi;
             VoiceCnBox.IsEnabled = sapi;
         }
@@ -177,7 +183,7 @@ namespace ToastFish.View
         /// </summary>
         private void TestSpeak_Click(object sender, RoutedEventArgs e)
         {
-            int channel = SelectedChannel();
+            int channel = SelectedSpeakChannel();
             string voiceEn = SelectedVoice(VoiceEnBox);
             string voiceCn = SelectedVoice(VoiceCnBox);
             int rate = CurrentRate();
@@ -223,7 +229,8 @@ namespace ToastFish.View
             Select.TTS_VOICE_EN = SelectedVoice(VoiceEnBox);
             Select.TTS_VOICE_CN = SelectedVoice(VoiceCnBox);
             Select.TTS_RATE = CurrentRate();
-            Select.CHANNEL = SelectedChannel();
+            Select.TRANSLATE_CHANNEL = SelectedTranslateChannel();
+            Select.SPEAK_CHANNEL = SelectedSpeakChannel();
 
             Select.AI_BASE_URL = AiBaseUrlBox.Text.Trim();
             Select.AI_API_KEY = AiApiKeyBox.Text.Trim();
