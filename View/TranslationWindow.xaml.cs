@@ -11,6 +11,7 @@ using System.Windows.Shapes;
 using System.Windows.Threading;
 using ToastFish.Model.Ai;
 using ToastFish.Model.Edge;
+using ToastFish.Model.Log;
 using ToastFish.Model.Markdown;
 using ToastFish.Model.Notify;
 using ToastFish.Model.Speech;
@@ -182,7 +183,8 @@ class SomeClass:
             InputBox.GotKeyboardFocus += (s, e) => _inputPickedLast = true;
             OutputBox.GotKeyboardFocus += (s, e) => _inputPickedLast = false;
             StyleHistoryBar();
-            InputBox.Text = DefaultInput;
+            // 上次关窗时留的文本接着用；从没存过才给默认例句
+            InputBox.Text = string.IsNullOrEmpty(Select.LAST_INPUT) ? DefaultInput : Select.LAST_INPUT;
             ShowOutput(DefaultOutput);
             RebuildTabs();
 
@@ -193,6 +195,8 @@ class SomeClass:
             TranslateButton.Click += Translate_Click;
             PlayButton.Click += Play_Click;
             ConfigButton.Click += Config_Click;
+            // 关窗时把输入框留的文本存下来，下次开窗接着用
+            Closed += (s, e) => SaveLastInput();
 
             // 上半部分 = 右侧三个按钮的总高（3×34 + 2×8）+ 标签栏一行（8 间距 + 26 高），
             // 输入框仍与第三个按钮等高，要更高就拖分隔线
@@ -204,6 +208,24 @@ class SomeClass:
             SplitLine.Margin = new Thickness(0, S(5), 0, 0);
             SplitGrip.Height = S(25);
             SplitGrip.Margin = new Thickness(0);
+        }
+
+        /// <summary>
+        /// 把输入框里的文本存进配置，下次开窗直接接着用。
+        /// 只更新 lastInput 一列，不走 UpdateGlobalConfig，免得顺带写回别的配置。
+        /// </summary>
+        private void SaveLastInput()
+        {
+            try
+            {
+                Select.LAST_INPUT = InputBox.Text;
+                new Select().UpdateLastInput(Select.LAST_INPUT);
+            }
+            catch (Exception ex)
+            {
+                // 存不上最多是下次开窗没接上，别让关窗流程崩掉
+                Logger.Write("保存翻译输入失败：" + ex);
+            }
         }
 
         /// <summary>输入框外观：主题底色、主题边框、主题字色。</summary>

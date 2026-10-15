@@ -33,6 +33,7 @@ namespace ToastFish.Model.SqliteControl
         public const int CHANNEL_AI = 0;  // 渠道：大模型翻译 + 系统语音朗读
         public const int CHANNEL_EDGE = 1;  // 渠道：Edge 在线翻译 + Edge 在线朗读
         public static int CHANNEL = CHANNEL_AI;  // 翻译窗口的翻译与播放走哪个渠道
+        public static string LAST_INPUT = "";  // 翻译窗口输入框的文本，关窗时存、开窗时载
         // 整句翻译的提示词。翻译窗口没选中文本、要翻整个输入框时用这套
         public static string AI_PROMPT_SENTENCE =
             "你是一个专业翻译引擎。把用户发来的文本翻译成简体中文；" +
@@ -257,6 +258,11 @@ namespace ToastFish.Model.SqliteControl
                 Update.CommandText = $"ALTER TABLE Global ADD COLUMN channel INTEGER NOT NULL DEFAULT {CHANNEL}";
                 Update.ExecuteNonQuery();
             }
+            if (HeadTileList.Contains("lastInput") == false)
+            {
+                Update.CommandText = $"ALTER TABLE Global ADD COLUMN lastInput TEXT NOT NULL DEFAULT '{Quote(LAST_INPUT)}'";
+                Update.ExecuteNonQuery();
+            }
             if (HeadTileList.Contains("aiPromptSentence") == false)
             {
                 Update.CommandText = $"ALTER TABLE Global ADD COLUMN aiPromptSentence TEXT NOT NULL DEFAULT '{Quote(AI_PROMPT_SENTENCE)}'";
@@ -284,6 +290,7 @@ namespace ToastFish.Model.SqliteControl
             TTS_VOICE_CN = GlobalVariable[0].ttsVoiceCn;
             TTS_RATE = GlobalVariable[0].ttsRate;
             CHANNEL = GlobalVariable[0].channel;
+            LAST_INPUT = GlobalVariable[0].lastInput;
             AI_PROMPT_SENTENCE = GlobalVariable[0].aiPromptSentence;
             AI_PROMPT_WORD = GlobalVariable[0].aiPromptWord;
             EnsureCountColumns();
@@ -316,6 +323,14 @@ namespace ToastFish.Model.SqliteControl
         private static string Quote(string value)
         {
             return value == null ? "" : value.Replace("'", "''");
+        }
+
+        /// <summary>只存翻译窗口输入框的文本，不碰其它配置列。</summary>
+        public void UpdateLastInput(string text)
+        {
+            SQLiteCommand Update = DataBase.CreateCommand();
+            Update.CommandText = $"UPDATE Global SET lastInput = '{Quote(text)}'";
+            Update.ExecuteNonQuery();
         }
 
         public void UpdateBookName(string TableName)
@@ -851,6 +866,7 @@ namespace ToastFish.Model.SqliteControl
         public string ttsVoiceCn { get; set; }
         public int ttsRate { get; set; }
         public int channel { get; set; }
+        public string lastInput { get; set; }
         public string aiPromptSentence { get; set; }
         public string aiPromptWord { get; set; }
     }
