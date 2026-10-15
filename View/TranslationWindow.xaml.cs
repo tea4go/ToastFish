@@ -199,9 +199,11 @@ class SomeClass:
             TopRow.Height = new GridLength(S(118 + 34));
 
             SplitLine.BorderBrush = NotifyTheme.Border;
-            // 拖动区做高一点好抓，上下各留 8 让分隔线的间距和原来一致
-            SplitGrip.Height = S(9);
-            SplitGrip.Margin = new Thickness(0, S(8), 0, S(8));
+            // 分隔线贴拖动行顶部、离标签条下沿 S(5)。行高仍是 S(25)（=原 9+8+8），
+            // 译文区位置不动；拖动区铺满整行，好抓
+            SplitLine.Margin = new Thickness(0, S(5), 0, 0);
+            SplitGrip.Height = S(25);
+            SplitGrip.Margin = new Thickness(0);
         }
 
         /// <summary>输入框外观：主题底色、主题边框、主题字色。</summary>
@@ -457,8 +459,10 @@ class SomeClass:
         /// <summary>历史标签栏外观：两端箭头、中间折行的标签区。</summary>
         private void StyleHistoryBar()
         {
-            HistoryBar.MinHeight = S(26);
-            HistoryBar.Margin = new Thickness(0, S(8), 0, 0);
+            // 高度贴住一行标签（标签自身带上边距），别比内容高，否则底部会多出一截空白
+            HistoryBar.MinHeight = S(24);
+            // 标签带 S(4) 上边距，这里配 S(4) 凑够原来的 S(8)
+            HistoryBar.Margin = new Thickness(0, S(4), 0, 0);
 
             PrevButton.Child = Chevron(false);
             NextButton.Child = Chevron(true);
@@ -666,9 +670,11 @@ class SomeClass:
                 BorderBrush = NotifyTheme.Border,
                 BorderThickness = new Thickness(1),
                 CornerRadius = new CornerRadius(4),
-                // 右边留一点给 × 的可点区域，文字的让位交给 label 的 Margin
+                // 右边留一点给 × 的可点区域，文字的让位交给 label 的 Margin。
+                // 上下间距走 top 不走 bottom：折行时行间照样分开，末行却不会在标签条底部
+                // 留一截空白把分隔线顶下去
                 Padding = new Thickness(S(7), S(2), S(4), S(2)),
-                Margin = new Thickness(0, 0, S(4), S(4)),
+                Margin = new Thickness(0, S(4), S(4), 0),
                 Cursor = Cursors.Hand,
                 ToolTip = _history[index].Text,
                 Child = host
