@@ -10,6 +10,7 @@ using System.Windows.Media;
 using System.Windows.Shapes;
 using System.Windows.Threading;
 using ToastFish.Model.Ai;
+using ToastFish.Model.Download;
 using ToastFish.Model.Edge;
 using ToastFish.Model.Log;
 using ToastFish.Model.Markdown;
@@ -492,6 +493,19 @@ class SomeClass:
             StyleNav(NextButton);
             PrevButton.MouseLeftButtonUp += (s, e) => StepHistory(-1);
             NextButton.MouseLeftButtonUp += (s, e) => StepHistory(1);
+            ClearHistoryButton.Click += (s, e) => ClearHistory();
+
+            ClearHistoryButton.Height = S(22);
+            ClearHistoryButton.Margin = new Thickness(S(4), 0, 0, 0);
+            ClearHistoryButton.Padding = new Thickness(S(8), 0, S(8), 0);
+            ClearHistoryButton.VerticalAlignment = VerticalAlignment.Center;
+            ClearHistoryButton.FontFamily = NotifyTheme.Font;
+            ClearHistoryButton.FontSize = S(12);
+            ClearHistoryButton.Background = NotifyTheme.ButtonBackground;
+            ClearHistoryButton.Foreground = NotifyTheme.ButtonForeground;
+            ClearHistoryButton.BorderBrush = NotifyTheme.ButtonBorder;
+            ClearHistoryButton.Cursor = Cursors.Hand;
+            ClearHistoryButton.Template = NotifyWindowBase.CreateButtonTemplate();
 
             TabsScroll.Background = Brushes.Transparent;
             TabsScroll.BorderThickness = new Thickness(0);
@@ -615,6 +629,19 @@ class SomeClass:
                 ShowOutput(_history[_historyIndex].Output);
                 RestoreInput(_history[_historyIndex]);
             }
+        }
+
+        /// <summary>
+        /// 清空历史标签和译文区，并删掉已下载的语音缓存。输入框里的原文不动——
+        /// 那是用户正在编辑的内容，不是历史缓存。
+        /// </summary>
+        private void ClearHistory()
+        {
+            _history.Clear();
+            _historyIndex = -1;
+            RebuildTabs();
+            ShowOutput("");
+            DownloadMp3.ClearCache();
         }
 
         /// <summary>按当前历史重建标签。条数不多，整体重建比增量维护省事。</summary>

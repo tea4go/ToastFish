@@ -175,12 +175,6 @@
 
         </TabControl>
 
-        <!-- 叠在页签条右端：TabControl 的页签行右侧是空的，页面内容从页签下方才开始 -->
-        <Button x:Name="ClearButton" Grid.Row="0" Content="清空"
-                HorizontalAlignment="Right" VerticalAlignment="Top"
-                Width="56" Height="24" Margin="0,2,8,0"
-                Click="Clear_Click" />
-
         <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right"
                     Margin="0,14,0,0">
             <Button Content="确定" Width="80" Margin="0,0,8,0" Click="Ok_Click" />
