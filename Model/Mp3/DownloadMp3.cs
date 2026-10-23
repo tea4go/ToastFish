@@ -95,5 +95,27 @@ namespace ToastFish.Model.Download
             else { ret = false; };
             return ret;
         }
-    } 
+
+        /// <summary>
+        /// 删掉 Mp3Cache 里已下载的发音文件。正在播放的文件会被 MCI 占住，
+        /// 删除失败就跳过，留着下次再清。
+        /// </summary>
+        public static void ClearCache()
+        {
+            string cachePath = Path.Combine(Directory.GetCurrentDirectory(), "Mp3Cache");
+            if (!Directory.Exists(cachePath))
+                return;
+            foreach (string file in Directory.GetFiles(cachePath, "*.mp3"))
+            {
+                try
+                {
+                    File.Delete(file);
+                }
+                catch (Exception ex)
+                {
+                    Logger.Write($"ClearCache() Error Message:{ex.Message}");
+                }
+            }
+        }
+    }
 }

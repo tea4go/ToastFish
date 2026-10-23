@@ -7,6 +7,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using ToastFish.Model.Ai;
+using ToastFish.Model.Download;
 using ToastFish.Model.Log;
 using ToastFish.Model.Notify;
 using ToastFish.Model.Speech;
@@ -209,6 +210,87 @@ namespace ToastFish.View
                     });
                 }
             });
+        }
+
+        /// <summary>
+        /// 「清空」：把当前页签恢复为内置默认配置并立即写库，同时删掉 Mp3Cache 里的语音缓存。
+        /// 删缓存不可撤销，先确认一次。
+        /// </summary>
+        private void Clear_Click(object sender, RoutedEventArgs e)
+        {
+            if (MessageBox.Show(this, "将把当前页签恢复为默认配置，并删除已缓存的语音文件，确定吗？",
+                    "清空", MessageBoxButton.OKCancel, MessageBoxImage.Question) != MessageBoxResult.OK)
+                return;
+
+            switch (Tabs.SelectedIndex)
+            {
+                case 0: ClearGeneral(); break;
+                case 1: ClearPlayback(); break;
+                case 2: ClearAi(); break;
+                default: ClearPrompts(); break;
+            }
+
+            new Select().UpdateGlobalConfig();
+            DownloadMp3.ClearCache();
+
+            NotifyTheme.Load();
+            if (NotifyWindowBase.Current != null)
+            {
+                // 主题或字号被重置时，正显示的卡片也要跟着变
+                NotifyWindowBase.Current.Close();
+            }
+        }
+
+        private void ClearGeneral()
+        {
+            SelectNumber(Select.DEFAULT_WORD_NUMBER);
+            ThemeBox.SelectedIndex = Select.DEFAULT_THEME;
+            FontBox.SelectedItem = Select.DEFAULT_FONT_FAMILY;
+            if (FontBox.SelectedIndex < 0)
+                FontBox.SelectedIndex = 0;  // 系统没装默认字体，退回列表第一项
+            FontSizeBox.Text = Select.DEFAULT_FONT_SIZE.ToString();
+
+            Select.WORD_NUMBER = Select.DEFAULT_WORD_NUMBER;
+            Select.THEME = Select.DEFAULT_THEME;
+            Select.FONT_FAMILY = FontBox.SelectedItem != null ? FontBox.SelectedItem.ToString() : Select.FONT_FAMILY;
+            Select.FONT_SIZE = Select.DEFAULT_FONT_SIZE;
+        }
+
+        private void ClearPlayback()
+        {
+            EngTypeBox.SelectedIndex = 0;
+            TranslateChannelBox.SelectedIndex = 0;
+            SpeakChannelBox.SelectedIndex = 0;
+            VoiceEnBox.SelectedIndex = 0;
+            VoiceCnBox.SelectedIndex = 0;
+            SelectRate(Select.DEFAULT_TTS_RATE);
+
+            Select.ENG_TYPE = Select.DEFAULT_ENG_TYPE;
+            Select.TRANSLATE_CHANNEL = Select.CHANNEL_AI;
+            Select.SPEAK_CHANNEL = Select.CHANNEL_AI;
+            Select.TTS_VOICE_EN = "";
+            Select.TTS_VOICE_CN = "";
+            Select.TTS_RATE = Select.DEFAULT_TTS_RATE;
+        }
+
+        private void ClearAi()
+        {
+            AiBaseUrlBox.Text = Select.DEFAULT_AI_BASE_URL;
+            AiApiKeyBox.Text = "";
+            AiModelBox.Text = Select.DEFAULT_AI_MODEL;
+
+            Select.AI_BASE_URL = Select.DEFAULT_AI_BASE_URL;
+            Select.AI_API_KEY = "";
+            Select.AI_MODEL = Select.DEFAULT_AI_MODEL;
+        }
+
+        private void ClearPrompts()
+        {
+            AiPromptSentenceBox.Text = Select.DEFAULT_PROMPT_SENTENCE;
+            AiPromptWordBox.Text = Select.DEFAULT_PROMPT_WORD;
+
+            Select.AI_PROMPT_SENTENCE = Select.DEFAULT_PROMPT_SENTENCE;
+            Select.AI_PROMPT_WORD = Select.DEFAULT_PROMPT_WORD;
         }
 
         private void Ok_Click(object sender, RoutedEventArgs e)

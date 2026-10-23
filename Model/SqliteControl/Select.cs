@@ -17,26 +17,18 @@ namespace ToastFish.Model.SqliteControl
  
         public static string TABLE_NAME = "VOA_1500";  // 当前书籍名字
         public const string CET6_WORD_TABLE = "CET6_3";  // 六级完整词汇的表名
-        public static int WORD_NUMBER = 10;  // 当前单词数量
-        public static int ENG_TYPE = 1;  // 英语类型1：美语，2：英语
-        public static int AUTO_PLAY = 1;  // 英语自动发音
-        public static int AUTO_LOG  = 1;  // 英语自动发音
-        public static string FONT_FAMILY = "Microsoft YaHei UI";  // 卡片字体家族
-        public static int FONT_SIZE = 22;  // 卡片基准字号，范围 12-28
-        public static int THEME = 0;  // 0=跟随系统 1=浅色 2=深色
-        public static string AI_BASE_URL = "https://www.tokensaver.net";  // AI 翻译接口地址，OpenAI 兼容，填站点根或 /v1 均可
-        public static string AI_API_KEY = "";  // AI 翻译接口密钥
-        public static string AI_MODEL = "deepseek-v4-flash";  // AI 翻译使用的模型名
-        public static string TTS_VOICE_EN = "";  // 英文朗读语音名，空 = 跟随系统默认
-        public static string TTS_VOICE_CN = "";  // 中文朗读语音名，空 = 跟随系统默认
-        public static int TTS_RATE = 0;  // 朗读语速，直接存系统语音的 Rate 值（-10 ~ 10）
-        public const int CHANNEL_AI = 0;  // 渠道值：AI（大模型翻译 / 本机系统语音）
-        public const int CHANNEL_EDGE = 1;  // 渠道值：Edge（必应在线翻译 / Edge 在线朗读）
-        public static int TRANSLATE_CHANNEL = CHANNEL_AI;  // 翻译窗口的翻译走哪个渠道
-        public static int SPEAK_CHANNEL = CHANNEL_AI;  // 翻译窗口的朗读走哪个渠道
-        public static string LAST_INPUT = "";  // 翻译窗口输入框的文本，关窗时存、开窗时载
+
+        // 各项配置的内置默认值。设置窗口的「清空」按钮据此把当前页签恢复原状
+        public const int DEFAULT_WORD_NUMBER = 10;
+        public const int DEFAULT_ENG_TYPE = 1;  // 1：美语，2：英语
+        public const string DEFAULT_FONT_FAMILY = "Microsoft YaHei UI";
+        public const int DEFAULT_FONT_SIZE = 22;
+        public const int DEFAULT_THEME = 0;
+        public const string DEFAULT_AI_BASE_URL = "https://www.tokensaver.net";
+        public const string DEFAULT_AI_MODEL = "deepseek-v4-flash";
+        public const int DEFAULT_TTS_RATE = 0;
         // 整句翻译的提示词。翻译窗口没选中文本、要翻整个输入框时用这套
-        public static string AI_PROMPT_SENTENCE =
+        public const string DEFAULT_PROMPT_SENTENCE =
             "你是一个专业翻译引擎。把用户发来的文本翻译成简体中文；" +
             "如果原文本身是中文，就翻译成地道的英文。\n" +
             "严格遵守以下要求：\n" +
@@ -44,7 +36,7 @@ namespace ToastFish.Model.SqliteControl
             "2. 保留原文的段落划分和换行结构。\n" +
             "3. 专有名词、代码、公式、网址、数字保持原样。";
         // 单词翻译的提示词。翻译窗口里选中了文本时用这套
-        public static string AI_PROMPT_WORD =
+        public const string DEFAULT_PROMPT_WORD =
             "你是一个词典引擎。用户发来的是一个单词或短语，请给出它的中文释义。\n" +
             "严格遵守以下要求：\n" +
             "1. 按词性分组，每个词性占一行，行首写词性缩写（n. / v. / adj. / adv. / prep. 等），" +
@@ -52,6 +44,27 @@ namespace ToastFish.Model.SqliteControl
             "2. 最后另起一行，先给一个英文例句（行首写「例：」），再给它的中文翻译（行首写「译：」）。\n" +
             "3. 不要输出音标、不要复述原文、不要输出任何解释性说明。\n" +
             "4. 如果发来的不是单个词而是一整句，就直接翻译成简体中文，不要套用词典格式。";
+
+        public static int WORD_NUMBER = DEFAULT_WORD_NUMBER;  // 当前单词数量
+        public static int ENG_TYPE = DEFAULT_ENG_TYPE;  // 英语类型1：美语，2：英语
+        public static int AUTO_PLAY = 1;  // 英语自动发音
+        public static int AUTO_LOG  = 1;  // 英语自动发音
+        public static string FONT_FAMILY = DEFAULT_FONT_FAMILY;  // 卡片字体家族
+        public static int FONT_SIZE = DEFAULT_FONT_SIZE;  // 卡片基准字号，范围 12-28
+        public static int THEME = DEFAULT_THEME;  // 0=跟随系统 1=浅色 2=深色
+        public static string AI_BASE_URL = DEFAULT_AI_BASE_URL;  // AI 翻译接口地址，OpenAI 兼容，填站点根或 /v1 均可
+        public static string AI_API_KEY = "";  // AI 翻译接口密钥
+        public static string AI_MODEL = DEFAULT_AI_MODEL;  // AI 翻译使用的模型名
+        public static string TTS_VOICE_EN = "";  // 英文朗读语音名，空 = 跟随系统默认
+        public static string TTS_VOICE_CN = "";  // 中文朗读语音名，空 = 跟随系统默认
+        public static int TTS_RATE = DEFAULT_TTS_RATE;  // 朗读语速，直接存系统语音的 Rate 值（-10 ~ 10）
+        public const int CHANNEL_AI = 0;  // 渠道值：AI（大模型翻译 / 本机系统语音）
+        public const int CHANNEL_EDGE = 1;  // 渠道值：Edge（必应在线翻译 / Edge 在线朗读）
+        public static int TRANSLATE_CHANNEL = CHANNEL_AI;  // 翻译窗口的翻译走哪个渠道
+        public static int SPEAK_CHANNEL = CHANNEL_AI;  // 翻译窗口的朗读走哪个渠道
+        public static string LAST_INPUT = "";  // 翻译窗口输入框的文本，关窗时存、开窗时载
+        public static string AI_PROMPT_SENTENCE = DEFAULT_PROMPT_SENTENCE;
+        public static string AI_PROMPT_WORD = DEFAULT_PROMPT_WORD;
         public SQLiteConnection DataBase;
         public IEnumerable<Word> AllWordList;
         public IEnumerable<JpWord> AllJpWordList;
