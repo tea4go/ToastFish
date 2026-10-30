@@ -1,6 +1,7 @@
 using System;
 using System.Windows;
 using System.Windows.Media;
+using MarkdownKit;
 using Microsoft.Win32;
 using ToastFish.Model.SqliteControl;
 
@@ -78,9 +79,6 @@ namespace ToastFish.Model.Notify
         /// <summary>可点击的网址链接色。灰阶界面里没有能表达「可点」的颜色，单独给一个蓝。</summary>
         public static Brush Link { get; private set; }
 
-        /// <summary>译文窗口 Markdown 渲染的整套配色。见 <see cref="MarkdownPalette"/>。</summary>
-        public static MarkdownPalette Markdown { get; private set; }
-
         public static void Load()
         {
             int baseSize = Select.FONT_SIZE;
@@ -121,32 +119,6 @@ namespace ToastFish.Model.Notify
                 ButtonPressedBackground = Brush("#23272C");
                 Copied = Brush("#5FD08A");
                 Link = Brush("#58A6FF");
-                Markdown = new MarkdownPalette
-                {
-                    Text = Brush("#D6DEE8"),
-                    Heading = Brush("#EEEEEE"),
-                    HeadingRule1 = Brush("#1A7778"),
-                    HeadingRule2 = Brush("#2E4B4B"),
-                    Link = Brush("#2EA0FF"),
-                    QuoteText = Brush("#999999"),
-                    QuoteBorder = Brush("#1A7778"),
-                    QuoteBackground = Brush("#3B87810D"),
-                    QuoteBorderWidth = 10,
-                    CodeBackground = Brush("#00202B"),
-                    CodeBorder = Brush("#1A7778"),
-                    CodeKeyword = Brush("#FF7B72"),
-                    CodeString = Brush("#A5D6FF"),
-                    CodeComment = Brush("#8B949E"),
-                    CodeNumber = Brush("#79C0FF"),
-                    CodeFunction = Brush("#D2A8FF"),
-                    CodeType = Brush("#FFA657"),
-                    InlineCodeBackground = Brush("#3F444C"),
-                    InlineCodeText = Brush("#839496"),
-                    TableBackground = Brush("#002C37"),
-                    TableBorder = Brush("#1A7778"),
-                    TableHeaderBackground = Brush("#004F5E"),
-                    TableEvenRowBackground = Brush("#00404D")
-                };
             }
             else
             {
@@ -163,33 +135,23 @@ namespace ToastFish.Model.Notify
                 ButtonPressedBackground = Brush("#C6CCD5");
                 Copied = Brush("#2E9E5B");
                 Link = Brush("#1F6FEB");
-                Markdown = new MarkdownPalette
-                {
-                    Text = Brush("#2C3E50"),
-                    Heading = Brush("#0077BB"),
-                    HeadingRule1 = Brush("#0077BB"),
-                    HeadingRule2 = Brush("#D2D5DA"),
-                    Link = Brush("#0000FF"),
-                    QuoteText = Brush("#777777"),
-                    QuoteBorder = Brush("#D6DBDF"),
-                    QuoteBackground = Brush("#0D668099"),
-                    QuoteBorderWidth = 3,
-                    CodeBackground = Brush("#EEEEEE"),
-                    CodeBorder = Brush("#7EA9C9"),
-                    CodeKeyword = Brush("#D73A49"),
-                    CodeString = Brush("#032F62"),
-                    CodeComment = Brush("#6A737D"),
-                    CodeNumber = Brush("#005CC5"),
-                    CodeFunction = Brush("#6F42C1"),
-                    CodeType = Brush("#E36209"),
-                    InlineCodeBackground = Brush("#FEE9CC"),
-                    InlineCodeText = Brush("#2C3E50"),
-                    TableBackground = Brush("#FFFFFF"),
-                    TableBorder = Brush("#C8E1FF"),
-                    TableHeaderBackground = Brush("#F1F8FF"),
-                    TableEvenRowBackground = Brush("#17668099")
-                };
             }
+
+            // 译文区的 Markdown 渲染：配色跟随 MdView，字体与其它窗口保持一致
+            MarkdownTheme.Configure(new MarkdownStyle
+            {
+                Markdown = IsDark ? MarkdownPalette.Dark() : MarkdownPalette.Light(),
+                PreviewFamily = Font,
+                EditorFamily = new FontFamily("Consolas"),
+                DiagramFamily = Font,
+                IsDark = IsDark,
+                DefaultFont = "Microsoft YaHei UI",
+                Background = Background,
+                Foreground = Foreground,
+                Muted = Muted,
+                Border = Border,
+                Copied = Copied
+            });
         }
 
         public static void Apply(Window window)
