@@ -22,8 +22,7 @@ namespace ToastFish.Model.Speech
         private const string EdgeVoiceCn = "zh-CN-XiaoxiaoNeural";
 
         /// <summary>合成好的音频放这里，和有道发音共用一个缓存目录。</summary>
-        private static readonly string CacheDir =
-            Path.Combine(Directory.GetCurrentDirectory(), "Mp3Cache");
+        private static readonly string CacheDir = UserData.Mp3CacheDir;
 
         /// <summary>按当前保存的配置朗读。</summary>
         public static void Speak(string text)

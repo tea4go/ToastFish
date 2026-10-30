@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ToastFish 的 MSI 安装包定义（WiX v5）。
+  全机器安装：装到 Program Files\ToastFish，装 / 卸都需要管理员权限。
+  程序把数据库、日志、缓存写在 exe 目录，装到 Program Files 后普通用户不可写，
+  所以运行时的 UserData 会自动改用 %LOCALAPPDATA%\ToastFish（见 Model\UserData.cs）。
+
+  由 buildmsi.ps1 调用，需传入两个预处理器变量：
+    ProductVersion  major.minor.build 形式的版本号
+    BuildDir        编译产物目录（bin\Release）
+-->
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+
+  <Package
+      Name="ToastFish"
+      Manufacturer="tea4go"
+      Version="$(var.ProductVersion)"
+      UpgradeCode="AD1AF965-2824-4977-B8A8-32F5070071E4"
+      Scope="perMachine"
+      Compressed="yes"
+      InstallerVersion="500">
+
+    <MajorUpgrade DowngradeErrorMessage="已安装更高版本的 ToastFish。若要降级，请先在「应用和功能」里卸载当前版本。" />
+
+    <MediaTemplate EmbedCab="yes" />
+
+    <!-- 控制面板「应用和功能」里显示的图标，直接从 exe 里取 -->
+    <Icon Id="AppIcon" SourceFile="$(var.BuildDir)\ToastFish.exe" />
+    <Property Id="ARPPRODUCTICON" Value="AppIcon" />
+
+    <!--
+      前置条件：.NET Framework 4.7.2 或更高。
+      NDP\v4\Full 的 Release 值 4.7.2 = 461808，4.8 = 528040，取 >= 461808。
+      条件里 "#" 前缀让 MSI 按数值而非字符串比较。
+    -->
+    <Property Id="NETFX_RELEASE">
+      <RegistrySearch Id="NetfxReleaseSearch" Root="HKLM"
+                      Key="SOFTWARE\Microsoft\NET Framework Setup\NDP\v4\Full"
+                      Name="Release" Type="raw" Bitness="always64" />
+    </Property>
+
+    <Launch Condition="Installed OR NETFX_RELEASE &gt;= &quot;#461808&quot;"
+            Message="ToastFish 需要 .NET Framework 4.7.2 或更高版本，请先安装后重试：https://dotnet.microsoft.com/download/dotnet-framework/net472" />
+
+    <StandardDirectory Id="ProgramFiles64Folder">
+      <Directory Id="INSTALLFOLDER" Name="ToastFish">
+        <!-- 模板库、音标与五十音音频、自定义模板；程序按 exe 目录下的相对路径读取 -->
+        <Directory Id="ResourcesFolder" Name="Resources" />
+        <!-- SQLite 的 native 依赖按进程位数从 x86/x64 子目录取 -->
+        <Directory Id="X86Folder" Name="x86" />
+        <Directory Id="X64Folder" Name="x64" />
+      </Directory>
+    </StandardDirectory>
+
+    <StandardDirectory Id="ProgramMenuFolder">
+      <Directory Id="AppMenuFolder" Name="ToastFish" />
+    </StandardDirectory>
+
+    <StandardDirectory Id="DesktopFolder" />
+
+    <Feature Id="MainFeature" Title="ToastFish" Level="1">
+      <ComponentGroupRef Id="AppFiles" />
+      <ComponentGroupRef Id="ResourceFiles" />
+    </Feature>
+
+  </Package>
+
+  <Fragment>
+    <ComponentGroup Id="AppFiles" Directory="INSTALLFOLDER">
+
+      <!-- 主程序本体 -->
+      <Component Id="MainExecutable" Guid="*">
+        <File Id="FileToastFishExe" Source="$(var.BuildDir)\ToastFish.exe" KeyPath="yes" />
+      </Component>
+
+      <Component Id="AppConfig" Guid="*">
+        <File Id="FileToastFishExeConfig" Source="$(var.BuildDir)\ToastFish.exe.config" KeyPath="yes" />
+      </Component>
+
+      <!--
+        运行时依赖：exe 同目录下的全部程序集，按构建产物自动收集。
+        不逐个手写——依赖一变就会漏，漏一个装到别的机器上就起不来。
+      -->
+      <Files Include="$(var.BuildDir)\*.dll" />
+
+      <!-- SQLite native 依赖不在根目录，*.dll 通配收不到子目录，必须单独列 -->
+      <Component Id="SqliteX86" Directory="X86Folder" Guid="*">
+        <File Id="SqliteInteropX86" Source="$(var.BuildDir)\x86\SQLite.Interop.dll" KeyPath="yes" />
+      </Component>
+
+      <Component Id="SqliteX64" Directory="X64Folder" Guid="*">
+        <File Id="SqliteInteropX64" Source="$(var.BuildDir)\x64\SQLite.Interop.dll" KeyPath="yes" />
+      </Component>
+
+      <!--
+        开始菜单与桌面快捷方式。
+        快捷方式算 per-user 数据，跟 Program Files 里的文件挤在同一组件会触发 ICE57，
+        所以单独成组件，并以 HKCU 下的一个标记值作 KeyPath——这是 WiX 对快捷方式的标准写法。
+        WorkingDirectory 必须是安装目录：程序按 .\Resources\... 的相对路径读音频。
+      -->
+      <Component Id="AppShortcuts" Guid="*">
+        <Shortcut Id="StartMenuShortcut" Directory="AppMenuFolder"
+                  Name="ToastFish" Target="[INSTALLFOLDER]ToastFish.exe"
+                  WorkingDirectory="INSTALLFOLDER" Icon="AppIcon" Advertise="no" />
+
+        <Shortcut Id="DesktopShortcut" Directory="DesktopFolder"
+                  Name="ToastFish" Target="[INSTALLFOLDER]ToastFish.exe"
+                  WorkingDirectory="INSTALLFOLDER" Icon="AppIcon" Advertise="no" />
+
+        <RemoveFolder Id="RemoveAppMenuFolder" Directory="AppMenuFolder" On="uninstall" />
+
+        <RegistryValue Root="HKCU" Key="Software\ToastFish" Name="ShortcutsInstalled"
+                       Type="integer" Value="1" KeyPath="yes" />
+      </Component>
+
+    </ComponentGroup>
+  </Fragment>
+
+  <Fragment>
+    <!-- Resources 整棵树：inami.db 模板、Goin\ 与 Phonetic\ 的音频、自定义模板、mute.mp3 -->
+    <ComponentGroup Id="ResourceFiles" Directory="ResourcesFolder">
+      <Files Include="$(var.BuildDir)\Resources\**" />
+    </ComponentGroup>
+  </Fragment>
+
+</Wix>

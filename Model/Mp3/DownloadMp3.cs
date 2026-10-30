@@ -21,7 +21,7 @@ namespace ToastFish.Model.Download
         /// <returns></returns>
         public bool HttpDownload(string Url, string Name)
         {
-            string CachePath = System.IO.Directory.GetCurrentDirectory() + @"\Mp3Cache";
+            string CachePath = UserData.Mp3CacheDir;
             if (!System.IO.Directory.Exists(CachePath))
             {
                 System.IO.Directory.CreateDirectory(CachePath);  //创建临时文件目录
@@ -77,7 +77,7 @@ namespace ToastFish.Model.Download
         {
             bool ret = true;
             List<string> TempSpeech = (List<string>)Speech;
-            string mp3_full_name = System.IO.Directory.GetCurrentDirectory() + @"\Mp3Cache\" + TempSpeech[0] + ".mp3";
+            string mp3_full_name = System.IO.Path.Combine(UserData.Mp3CacheDir, TempSpeech[0] + ".mp3");
             if (File.Exists(mp3_full_name)){
                 MUSIC MIC = new MUSIC();
                 MIC.FileName = mp3_full_name;
@@ -102,7 +102,7 @@ namespace ToastFish.Model.Download
         /// </summary>
         public static void ClearCache()
         {
-            string cachePath = Path.Combine(Directory.GetCurrentDirectory(), "Mp3Cache");
+            string cachePath = UserData.Mp3CacheDir;
             if (!Directory.Exists(cachePath))
                 return;
             foreach (string file in Directory.GetFiles(cachePath, "*.mp3"))

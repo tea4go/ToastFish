@@ -43,6 +43,18 @@
                         <TextBlock Text="（12 - 28）" Margin="8,0,0,0" VerticalAlignment="Center"
                                    Foreground="Gray" />
                     </StackPanel>
+
+                    <Separator Margin="0,16,0,12" />
+
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock x:Name="VersionText" Width="90" VerticalAlignment="Center"
+                                   Foreground="Gray" />
+                        <Button x:Name="CheckUpdateButton" Content="检查更新"
+                                Width="100" Height="30" Click="CheckUpdate_Click" />
+                        <TextBlock x:Name="UpdateStatus" Margin="10,0,0,0"
+                                   VerticalAlignment="Center" Foreground="Gray"
+                                   TextTrimming="CharacterEllipsis" />
+                    </StackPanel>
                 </StackPanel>
             </TabItem>
 

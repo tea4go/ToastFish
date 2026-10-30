@@ -6,6 +6,7 @@ using ToastFish.ViewModel;
 using ToastFish.Resources;
 using System.Windows.Forms;
 using ToastFish.Model.SqliteControl;
+using ToastFish.Model.Update;
 using System.Threading;
 using ToastFish.Model.Mp3;
 using System.Diagnostics;
@@ -60,6 +61,9 @@ namespace ToastFish
             // 所以播个没声音的音频先。
             PlayMute();
             //this.WindowState = (WindowState)FormWindowState.Minimized;
+
+            Title = "ToastFish v" + BuildInfo.Version;
+            UpdateRunner.StartSilentCheck(this);
         }
 
         private void OnHotKeyHandler(HotKey hotKey)

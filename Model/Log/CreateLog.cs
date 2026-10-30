@@ -13,6 +13,7 @@ namespace ToastFish.Model.Log
     {
         public void OutputExcel(String Path, object ObjList, String Type)
         {
+            Path = ResolveLogPath(Path);
             IWorkbook WorkBook = new XSSFWorkbook();
             ISheet sheet = WorkBook.CreateSheet("Word");
             List<Word> WordList;
@@ -91,6 +92,15 @@ namespace ToastFish.Model.Log
                 WorkBook.Write(stream);
             }
         }
+        /// <summary>调用方传的是「Log\xxx.xlsx」相对路径；装到 Program Files 时改落在用户数据目录。</summary>
+        private static string ResolveLogPath(string path)
+        {
+            if (System.IO.Path.IsPathRooted(path))
+                return path;
+            System.IO.Directory.CreateDirectory(UserData.LogDir);
+            return System.IO.Path.Combine(UserData.LogDir, System.IO.Path.GetFileName(path));
+        }
+
         public object ImportExcel(string path)
         {
             List<Word> WordList = new List<Word>();

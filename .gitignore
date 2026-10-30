@@ -1,8 +1,13 @@
 obj/
 bin/
-Log/
+/Log/
 token.txt
 .vs/
 .github/
 Mp3Cache/
 .superpowers/
+# 构建时自动生成，不入库（build-number.txt 要入库，版本号靠它延续）
+Properties/BuildInfo.g.cs
+
+# 发布用的令牌，别入库（.env.example 是模板，要提交）
+.env

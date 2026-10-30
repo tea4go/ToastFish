@@ -68,8 +68,8 @@ namespace ToastFish.Model.SqliteControl
         {
             //var databasePath = @"Data Source=./Resources/inami.db;Version=3";
             //var databasePath = @"Data Source="+System.IO.Directory.GetCurrentDirectory() + @"\Resources\inami.db;Version=3";
-            string strExeFilePath = System.Reflection.Assembly.GetExecutingAssembly().Location;
-            string databasePath = @"Data Source=" + System.IO.Path.GetDirectoryName(strExeFilePath) + @"\Resources\inami.db;Version=3";
+            // 装到 Program Files 时用户目录不可写，UserData 会把模板库复制到 AppData 再连那份
+            string databasePath = @"Data Source=" + UserData.DatabaseFile + ";Version=3";
             return new SQLiteConnection(databasePath);
         }
 

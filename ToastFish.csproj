@@ -160,6 +160,9 @@
     <Compile Include="Model\PushControl\WordType.cs" />
     <Compile Include="Model\Speech\SpeechReader.cs" />
     <Compile Include="Model\Speech\Speaker.cs" />
+    <Compile Include="Model\UserData.cs" />
+    <Compile Include="Model\Update\UpdateChecker.cs" />
+    <Compile Include="Model\Update\UpdateRunner.cs" />
     <Compile Include="Model\SM2plus\Card.cs" />
     <Compile Include="Model\SM2plus\Parameters.cs" />
     <Compile Include="Model\SqliteControl\Select.cs" />
@@ -225,6 +228,7 @@
     <Compile Include="Properties\AssemblyInfo.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Properties\BuildInfo.g.cs" />
     <Compile Include="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -630,4 +634,62 @@
     </BootstrapperPackage>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+
+  <!--
+    构建时生成 Properties\BuildInfo.g.cs：版本号 + 构建时间 + 程序集版本特性。
+    版本号存在 build-number.txt 里，三段各一位十进制，逢十进一（0.0.9 的下一个是 0.1.0），
+    到 9.9.9 后回到 0.0.1。
+    普通编译沿用文件里的当前值不变；只有打 MSI 时（buildmsi.ps1 传 -p:BumpVersion=true）
+    才 +1 并写回文件，这样日常调试不会白白消耗版本号。
+    程序集版本写在生成的文件里而不是 AssemblyInfo.cs：它是编译时才算出来的，写死不了。
+  -->
+  <!--
+    钩子挂 BeforeBuild 而不是 BeforeCompile：WPF 项目带 XAML 时先由临时项目
+    （*_wpftmp.csproj）编译一遍，那次构建不经过 BeforeCompile，生成的文件就还没落地，
+    临时项目会直接报 CS2001 找不到源文件。
+  -->
+  <Target Name="GenerateBuildInfo" BeforeTargets="BeforeBuild;BeforeCompile">
+    <PropertyGroup>
+      <_BuildNumberFile>$(MSBuildProjectDirectory)\build-number.txt</_BuildNumberFile>
+      <_BuildInfoFile>$(MSBuildProjectDirectory)\Properties\BuildInfo.g.cs</_BuildInfoFile>
+      <_PrevNumber Condition="Exists('$(_BuildNumberFile)')">$([System.IO.File]::ReadAllText('$(_BuildNumberFile)').Trim())</_PrevNumber>
+      <_PrevNumber Condition="'$(_PrevNumber)' == ''">0</_PrevNumber>
+      <_BuildNumber Condition="'$(BumpVersion)' == 'true'">$([MSBuild]::Add($(_PrevNumber), 1))</_BuildNumber>
+      <_BuildNumber Condition="'$(BumpVersion)' != 'true'">$(_PrevNumber)</_BuildNumber>
+      <_BuildNumber Condition="$(_BuildNumber) &gt; 999">1</_BuildNumber>
+      <_BuildNumber Condition="$(_BuildNumber) &lt; 1">1</_BuildNumber>
+      <_Padded Condition="'$(_BuildNumber.Length)' == '1'">00$(_BuildNumber)</_Padded>
+      <_Padded Condition="'$(_BuildNumber.Length)' == '2'">0$(_BuildNumber)</_Padded>
+      <_Padded Condition="'$(_BuildNumber.Length)' == '3'">$(_BuildNumber)</_Padded>
+      <_Version>$(_Padded.Substring(0,1)).$(_Padded.Substring(1,1)).$(_Padded.Substring(2,1))</_Version>
+      <_BuildTime>$([System.DateTime]::Now.ToString('yyyy-MM-dd HH:mm:ss'))</_BuildTime>
+    </PropertyGroup>
+
+    <WriteLinesToFile File="$(_BuildNumberFile)" Lines="$(_BuildNumber)" Overwrite="true" />
+
+    <ItemGroup>
+      <_BuildInfoLine Include="// &lt;auto-generated /&gt;" />
+      <!--
+        程序集版本：不写这几行的话 exe 的文件版本是 0.0.0.0，属性页上一片空白。
+        文件版本带上构建号（3.0.0.300），同一个 3.0.0 的几次构建也分得出来；
+        产品版本只到三段，跟程序里显示、Gitee 上的 tag 一致。
+        AssemblyVersion 用三段 + 0：它决定程序集标识，没必要跟着构建号天天变。
+      -->
+      <_BuildInfoLine Include="[assembly: System.Reflection.AssemblyVersion(&quot;$(_Version).0&quot;)]" />
+      <_BuildInfoLine Include="[assembly: System.Reflection.AssemblyFileVersion(&quot;$(_Version).$(_BuildNumber)&quot;)]" />
+      <_BuildInfoLine Include="[assembly: System.Reflection.AssemblyInformationalVersion(&quot;$(_Version)&quot;)]" />
+      <_BuildInfoLine Include="namespace ToastFish" />
+      <_BuildInfoLine Include="{" />
+      <_BuildInfoLine Include="    /// &lt;summary&gt;构建时由 csproj 生成：版本号与构建时间。&lt;/summary&gt;" />
+      <_BuildInfoLine Include="    internal static class BuildInfo" />
+      <_BuildInfoLine Include="    {" />
+      <_BuildInfoLine Include="        public const string Version = &quot;$(_Version)&quot;%3B" />
+      <_BuildInfoLine Include="        public const string BuildTime = &quot;$(_BuildTime)&quot;%3B" />
+      <_BuildInfoLine Include="    }" />
+      <_BuildInfoLine Include="}" />
+    </ItemGroup>
+    <WriteLinesToFile File="$(_BuildInfoFile)" Lines="@(_BuildInfoLine)" Overwrite="true" />
+
+    <Message Importance="high" Text="ToastFish 版本 $(_Version)（构建 $(_BuildNumber)），构建时间 $(_BuildTime)" />
+  </Target>
 </Project>

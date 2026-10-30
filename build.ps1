@@ -24,6 +24,10 @@
 .PARAMETER NoRestore
     跳过 NuGet 还原。
 
+.PARAMETER BumpVersion
+    编译前把 build-number.txt 里的版本号 +1。默认不加——普通编译沿用当前值，
+    只有打 MSI 时由 buildmsi.ps1 传入。
+
 .PARAMETER Verbosity
     MSBuild 输出详细级别，默认 minimal。
 
@@ -51,6 +55,8 @@ param(
     [string]$OutputZip,
 
     [switch]$NoRestore,
+
+    [switch]$BumpVersion,
 
     [ValidateSet('quiet', 'minimal', 'normal', 'detailed', 'diagnostic')]
     [string]$Verbosity = 'minimal'
@@ -96,8 +102,13 @@ try {
         if ($LASTEXITCODE -ne 0) { throw "NuGet 还原失败，退出码 $LASTEXITCODE。" }
     }
 
+    # 版本号只在打 MSI 时递增，普通编译保持不变。
+    # 注意必须装进数组再 splat —— 字符串被 splat 时 PowerShell 会按字符拆成一个参数一个字符
+    $versionArg = @()
+    if ($BumpVersion) { $versionArg = @('-p:BumpVersion=true') }
+
     Write-Host '[build] 编译 ...'
-    & $msbuild $Solution "-p:Configuration=$Configuration" "-p:Platform=$Platform" "-v:$Verbosity" -nologo
+    & $msbuild $Solution "-p:Configuration=$Configuration" "-p:Platform=$Platform" "-v:$Verbosity" -nologo @versionArg
     if ($LASTEXITCODE -ne 0) { throw "编译失败，退出码 $LASTEXITCODE。" }
 
     $exe = Join-Path $OutDir 'ToastFish.exe'

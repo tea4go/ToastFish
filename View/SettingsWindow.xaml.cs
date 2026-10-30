@@ -11,6 +11,7 @@ using ToastFish.Model.Log;
 using ToastFish.Model.Notify;
 using ToastFish.Model.Speech;
 using ToastFish.Model.SqliteControl;
+using ToastFish.Model.Update;
 using ToastFish.View.Notify;
 
 namespace ToastFish.View
@@ -39,6 +40,7 @@ namespace ToastFish.View
 
         private void LoadCurrent()
         {
+            VersionText.Text = "版本 " + BuildInfo.Version;
             SelectNumber(Select.WORD_NUMBER);
             EngTypeBox.SelectedIndex = Select.ENG_TYPE == 1 ? 0 : 1;
             ThemeBox.SelectedIndex = Select.THEME < 0 || Select.THEME > 2 ? 0 : Select.THEME;
@@ -208,6 +210,18 @@ namespace ToastFish.View
                         SpeakTestResult.Text = "";
                     });
                 }
+            });
+        }
+
+        /// <summary>手动检查更新。查到新版后由 UpdateRunner 弹框确认并下载安装。</summary>
+        private void CheckUpdate_Click(object sender, RoutedEventArgs e)
+        {
+            CheckUpdateButton.IsEnabled = false;
+            UpdateRunner.Check(this, true, text =>
+            {
+                UpdateStatus.Text = text;
+                if (text.Length == 0)
+                    CheckUpdateButton.IsEnabled = true;
             });
         }
 

@@ -21,8 +21,9 @@ namespace ToastFish.Model.Log
             {
                 try
                 {
-                    Directory.CreateDirectory("Log");
-                    string path = Path.Combine("Log", "toastfish-" + DateTime.Now.ToString("yyyy-MM-dd") + ".log");
+                    string dir = UserData.LogDir;
+                    Directory.CreateDirectory(dir);
+                    string path = Path.Combine(dir, "toastfish-" + DateTime.Now.ToString("yyyy-MM-dd") + ".log");
                     File.AppendAllText(path, line + Environment.NewLine, new UTF8Encoding(false));
                 }
                 catch
